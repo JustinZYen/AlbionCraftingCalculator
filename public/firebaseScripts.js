@@ -13,7 +13,7 @@ const firebaseConfig = {
   storageBucket: "albion-project-9585a.appspot.com",
   messagingSenderId: "897223201752",
   appId: "1:897223201752:web:b82536955d7eb8344dd8ad",
-  measurementId: "G-243WD30YNN"
+  measurementId: "G-243WD30YNN",
 };
 
 // Initialize Firebase

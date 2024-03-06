@@ -1,4 +1,4 @@
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const storage = getStorage();
 getDownloadURL(ref(storage, 'firebasetxt.txt'))

@@ -1,24 +1,3 @@
-import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-
-const storage = getStorage();
-getDownloadURL(ref(storage, 'textfiles/test'))
-  .then((url) => {
-    //console.log(url);
-    const xhr = new XMLHttpRequest();
-    xhr.responseType = 'blob';
-    xhr.onload = (event) => {
-      const blob = xhr.response;
-    };
-    xhr.open('GET', url);
-    xhr.send();
-
-    // Or inserted into an <img> element
-    const img = document.getElementById('myimg');
-    img.setAttribute('src', url);
-  })
-  .catch((error) => {
-    // Handle any errors
-  });
 
 
 const movement = (event) => {

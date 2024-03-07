@@ -3,7 +3,7 @@ import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebas
 const storage = getStorage();
 getDownloadURL(ref(storage, 'firebasetxt.txt'))
   .then((url) => {
-    console.log(url);
+    //console.log(url);
     const xhr = new XMLHttpRequest();
     xhr.responseType = 'blob';
     xhr.onload = (event) => {

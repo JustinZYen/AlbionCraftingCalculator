@@ -1,5 +1,5 @@
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
-import {db,letter} from "./firebaseScripts.js";
+import {db} from "./firebaseScripts.js";
 
 console.log(letter);
 const querySnapshot = await getDocs(collection(db, "users"));

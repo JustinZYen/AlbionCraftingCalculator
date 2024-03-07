@@ -1,7 +1,7 @@
 import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const storage = getStorage();
-getDownloadURL(ref(storage, 'firebasetxt.txt'))
+getDownloadURL(ref(storage, 'textfiles/test'))
   .then((url) => {
     //console.log(url);
     const xhr = new XMLHttpRequest();

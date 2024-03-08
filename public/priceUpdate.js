@@ -2,6 +2,6 @@ import { collection, getDocs, doc, updateDoc} from "https://www.gstatic.com/fire
 import { db } from "./firebaseScripts.js"
 
 const targetDocument = doc(db,"textfiles","test");
-const date = new Date(Date.now()).getTime().toString();
+const date = new Date(Date.now()).toTimeString();
 console.log(`Time: ${date}`);
 await updateDoc(targetDocument, {time:date});

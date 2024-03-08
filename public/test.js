@@ -2,7 +2,7 @@ import {db} from "./firebaseScripts.js";
 
 const querySnapshot = await getDocs(collection(db, "textfiles"));
 querySnapshot.forEach((doc) => {
-  console.log(`${doc.id} => ${doc.data()}`);
+  console.log(`${doc.id} => ${JSON.stringify(doc.data())}`);
 });
 
 

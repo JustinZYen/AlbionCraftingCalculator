@@ -1,7 +1,6 @@
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 import {db} from "./firebaseScripts.js";
 
-console.log(letter);
 const querySnapshot = await getDocs(collection(db, "textfiles"));
 querySnapshot.forEach((doc) => {
   console.log(`${doc.id} => ${doc.data()}`);

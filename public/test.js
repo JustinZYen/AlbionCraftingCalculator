@@ -34,6 +34,6 @@ document.body.onmousedown = () => mouseDown = true;
 document.body.onmouseup = () => mouseDown = false;
 
 $("#my-button").on("click", () => {
-    alert("AAAA");
+    alert($("#item-name").val());
 });
 

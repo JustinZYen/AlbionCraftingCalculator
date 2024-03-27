@@ -3,19 +3,23 @@ import {db} from "./firebaseScripts.js";
 
 
 async function getIDFromName() {
-    const document = doc(db,"Test","One");
-    const result = await getDoc(document);
-    alert(JSON.stringify(result));
+    const input = $("#item-name").val();
+    console.log(input);
+    if (nameToID.hasOwnProperty(input)) {
+        console.log(nameToID[input]);
+    }
 }
+
 
 
 function calculateProfit(itemID) {
     
 }
-/*
-$("#my-button").on("click", () => {
-    alert($("#item-name").val());
-});
-*/
 
+
+// Get document of names to ids
+// Get document of recipe paths
+const nameToIDDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID"));
+const nameToID = nameToIDDoc.data();
+console.log(JSON.stringify(nameToID));
 $("#my-button").on("click", getIDFromName);

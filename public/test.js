@@ -14,16 +14,24 @@ class Recipe {
     }
 }
 
-async function getIDFromName() {
+function getIDFromName() {
     const input = $("#item-name").val();
     console.log(input);
     if (nameToID.hasOwnProperty(input)) {
-        let id = nameToID[input];
+        let id = structuredClone(nameToID[input]);
         console.log(id);
         id.forEach((element,index,array) => {
             // Add in a number before the @ so that it functions correctly for albion online data api
-            array[index] = element.replace(/@(.)/,(match,p1)=>p1+"@"+p1);
-
+            const secondValue = parseInt(element.charAt(1));
+            if (element.charAt(0) == "T" && secondValue != NaN) {
+                // Current item has different tiers since it is T-some number
+                const stringRemainder = element.slice(2);
+                for (let i = MIN_TIER; i < MAX_TIER; i++) {
+                    if (i != secondValue) {
+                        array.push("T"+i+stringRemainder);
+                    }
+                }
+            }
         });
         console.log(id);
        //getAveragePrices();
@@ -34,9 +42,6 @@ async function getIDFromName() {
 function getRecipeIDs() {
 
 }
-function fixID(id) {
-    return ;
-}
 
 function calculateProfit(itemID,tax) {
     const sellPrice = getAveragePrices(itemID);
@@ -46,6 +51,8 @@ function calculateProfit(itemID,tax) {
 
 // Get document of names to ids
 // Get document of recipe paths
+const MIN_TIER = 4;
+const MAX_TIER = 8;
 const nameToIDDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID"));
 const nameToID = nameToIDDoc.data();
 const recipeDoc = await getDoc(doc(db,"General/Item Data/Recipes/Recipes"));

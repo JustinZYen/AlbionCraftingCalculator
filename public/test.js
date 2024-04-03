@@ -1,16 +1,33 @@
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 import {db} from "./firebaseScripts.js";
 
-class Recipe {
-    constructor(ids, totalCost) {
-        this.ids = ids;
-        this.totalCost = totalCost;
+class Item {
+    // Price will be instantiated as a group to reduce api calls
+    price;
+    constructor(id) {
+        this.id = id;
+        this.tier = this.#getTier();
+        this.enchantment = this.#getEnchantment();
     }
-    getIDs() {
-        return this.ids;
+
+    #getTier() {
+        const secondValue = parseInt(this.id.charAt(1));
+        if (this.id.charAt(0) === "T" && secondValue != NaN) {
+            this.tier = secondValue;
+        }
     }
-    getCost() {
-        return this.totalCost;
+
+    #getEnchantment() {
+        const lastVal = parseInt(this.id.charAt(this.id.length-1));
+        if (lastVal != NaN) {
+            this.enchantment = lastVal;
+        } else {
+            this.enchantment = 0;
+        }
+    }
+
+    toString() {
+        return `id: ${id}, tier: ${tier}, enchantment: ${enchantment}, price: ${price}`;
     }
 }
 
@@ -18,12 +35,12 @@ function getIDFromName() {
     const input = $("#item-name").val();
     console.log(input);
     if (nameToID.hasOwnProperty(input)) {
-        let id = structuredClone(nameToID[input]);
-        console.log(id);
-        id.forEach((element,index,array) => {
+        let ids = structuredClone(nameToID[input]);
+        console.log(ids);
+        ids.forEach((element,index,array) => {
             // Add in a number before the @ so that it functions correctly for albion online data api
             const secondValue = parseInt(element.charAt(1));
-            if (element.charAt(0) == "T" && secondValue != NaN) {
+            if (element.charAt(0) === "T" && secondValue != NaN) {
                 // Current item has different tiers since it is T-some number
                 const stringRemainder = element.slice(2);
                 for (let i = MIN_TIER; i < MAX_TIER; i++) {
@@ -33,7 +50,7 @@ function getIDFromName() {
                 }
             }
         });
-        console.log(id);
+        console.log(ids);
        //getAveragePrices();
     }
 
@@ -58,6 +75,8 @@ const nameToID = nameToIDDoc.data();
 const recipeDoc = await getDoc(doc(db,"General/Item Data/Recipes/Recipes"));
 const recipes = recipeDoc.data();
 const names = Object.keys(nameToIDDoc.data());
+let priceQueue = []; // Array of item ids that still need their prices calculated
+const items = new Map(); // HashMap of all items so far (for saving prices);
 $("#my-button").on("click", getIDFromName);
 $( "#item-name" ).autocomplete({
     source: names

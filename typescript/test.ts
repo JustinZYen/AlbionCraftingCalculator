@@ -1,33 +1,37 @@
+// @ts-ignore
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
-import {db} from "./firebaseScripts.js";
+import {db} from "../public/firebaseScripts.js";
 
 class Item {
     // Price will be instantiated as a group to reduce api calls
-    price;
-    constructor(id) {
+    price: number = NaN;
+    id: String;
+    tier: number = NaN;
+    enchantment: number = 0;
+    constructor(id: String) {
         this.id = id;
-        this.tier = this.#getTier();
-        this.enchantment = this.#getEnchantment();
+        this.setTier();
+        this.setEnchantment;
     }
 
-    #getTier() {
-        const secondValue = parseInt(this.id.charAt(1));
-        if (this.id.charAt(0) === "T" && secondValue != NaN) {
+    private setTier(): void {
+        const secondValue: number = parseInt(this.id.charAt(1));
+        if (this.id.charAt(0) === "T" && !Number.isNaN(secondValue)) {
             this.tier = secondValue;
+        } else {
+            throw new Error("Tier missing");
         }
     }
 
-    #getEnchantment() {
+    private setEnchantment(): void {
         const lastVal = parseInt(this.id.charAt(this.id.length-1));
-        if (lastVal != NaN) {
+        if (!Number.isNaN(lastVal)) {
             this.enchantment = lastVal;
-        } else {
-            this.enchantment = 0;
         }
     }
 
     toString() {
-        return `id: ${id}, tier: ${tier}, enchantment: ${enchantment}, price: ${price}`;
+        return `id: ${this.id}, tier: ${this.tier}, enchantment: ${this.enchantment}, price: ${this.price}`;
     }
 }
 
@@ -37,12 +41,12 @@ function getIDFromName() {
     if (nameToID.hasOwnProperty(input)) {
         let ids = structuredClone(nameToID[input]);
         console.log(ids);
-        ids.forEach((element,index,array) => {
+        ids.forEach((currentID:string,index:number,array:string[]) => {
             // Add in a number before the @ so that it functions correctly for albion online data api
-            const secondValue = parseInt(element.charAt(1));
-            if (element.charAt(0) === "T" && secondValue != NaN) {
+            const secondValue = parseInt(currentID.charAt(1));
+            if (currentID.charAt(0) === "T" && !Number.isNaN(secondValue)) {
                 // Current item has different tiers since it is T-some number
-                const stringRemainder = element.slice(2);
+                const stringRemainder = currentID.slice(2);
                 for (let i = MIN_TIER; i < MAX_TIER; i++) {
                     if (i != secondValue) {
                         array.push("T"+i+stringRemainder);
@@ -60,10 +64,10 @@ function getRecipeIDs() {
 
 }
 
-function calculateProfit(itemID,tax) {
-    const sellPrice = getAveragePrices(itemID);
-    const craftPrice = getCraftingPrice(itemID);
-    return (1-tax)*sellPrice-craftPrice;
+function calculateProfit(itemID:string,tax:number) {
+    //const sellPrice = getAveragePrices(itemID);
+    //const craftPrice = getCraftingPrice(itemID);
+    //return (1-tax)*sellPrice-craftPrice;
 }
 
 // Get document of names to ids
@@ -78,6 +82,6 @@ const names = Object.keys(nameToIDDoc.data());
 let priceQueue = []; // Array of item ids that still need their prices calculated
 const items = new Map(); // HashMap of all items so far (for saving prices);
 $("#my-button").on("click", getIDFromName);
-$( "#item-name" ).autocomplete({
+(<any>$( "#item-name" )).autocomplete({
     source: names
  });

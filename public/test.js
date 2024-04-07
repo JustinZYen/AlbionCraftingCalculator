@@ -3,26 +3,28 @@ import {db} from "./firebaseScripts.js";
 
 class Item {
     // Price will be instantiated as a group to reduce api calls
-    price;
+    price = NaN;
+    tier = NaN;
+    enchantment = 0;
     constructor(id) {
         this.id = id;
-        this.tier = this.#getTier();
-        this.enchantment = this.#getEnchantment();
+        this.#setTier();
+        this.#setEnchantment();
     }
 
-    #getTier() {
+    #setTier() {
         const secondValue = parseInt(this.id.charAt(1));
         if (this.id.charAt(0) === "T" && secondValue != NaN) {
             this.tier = secondValue;
+        } else {
+            console.log(`Id ${id} has no tier found`);
         }
     }
 
-    #getEnchantment() {
+    #setEnchantment() {
         const lastVal = parseInt(this.id.charAt(this.id.length-1));
         if (lastVal != NaN) {
             this.enchantment = lastVal;
-        } else {
-            this.enchantment = 0;
         }
     }
 

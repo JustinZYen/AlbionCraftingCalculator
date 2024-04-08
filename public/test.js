@@ -22,7 +22,7 @@ class Item {
     id;
     baseId;
     // Recipes will be array of recipes, which will each be arrays of "tuples"
-    recipes = null;
+    recipes = [];
     constructor(id) {
         this.id = id;
         this.#setbaseId();
@@ -57,17 +57,48 @@ class Item {
     }
 
     #setRecipes() {
-        console.log(`id: ${this.id}`);
-        const path = recipes[this.id];
+        const path = recipes[this.baseId];
         if (path == null) {
-            console.log(`No path found for id ${this.id}`);
+            console.log(`No path found for id ${this.baseId}`);
             return;
         }
         let itemInfo = itemsJSON;
         path.forEach(element=>{
             itemInfo = itemInfo[element];
         })
-        console.log(itemInfo);
+        //console.log(itemInfo);
+        if (itemInfo.hasOwnProperty("enchantments") && this.enchantment > 0) {
+            itemInfo = itemInfo.enchantments.enchantment[this.enchantment-1];
+        }
+        let craftingRequirements = itemInfo.craftingrequirements;
+        // Add a recipe based on the contents of craftingrequirements
+        const addRecipe= element => {
+            let currentRecipe = new Recipe(element["@craftingfocus"],element["@silver"],element["@time"],element.craftresource);
+            if (element.hasOwnProperty("@amountcrafted")) {
+                currentRecipe.amount = element["@amountcrafted"];
+            }
+            this.recipes.push(currentRecipe);
+        }
+        if (Array.isArray(craftingRequirements)) {
+            craftingRequirements.forEach(addRecipe);
+        } else {
+            addRecipe(craftingRequirements);
+        }
+        
+        // Item id must end with @number
+        if (itemInfo.hasOwnProperty("upgraderequirements")) {
+            let upgradeRequirements = itemInfo.upgraderequirements;
+            let previousId;
+            if (this.enchantment === 1) {
+                previousId = this.baseId;
+            } else {
+                previousId = this.id.slice(0,-1)+(this.enchantment-1);
+            }
+            let initialRecipe = new Recipe(0,0,0,[itemInfo.upgraderequirements.upgraderesource]);
+            initialRecipe.resources.push([previousId,1]);
+            this.recipes.push(initialRecipe);
+        }
+        console.log(this.recipes);
     }
 
     toString() {
@@ -75,6 +106,29 @@ class Item {
     }
 }
 
+class Recipe {
+    // Might be issue with results being strings
+    focus;
+    silver;
+    time;
+    resources = [];
+    amount = 0;
+    /**
+     * 
+     * @param {number} focus 
+     * @param {number} silver 
+     * @param {number} time 
+     * @param {array} resources 
+     */
+    constructor (focus,silver,time,resources) {
+        this.focus = focus;
+        this.silver = silver;
+        this.time = time;
+        resources.forEach(element => {
+            this.resources.push([element["@uniquename"],element["@count"]]);
+        })
+    }
+}
 function getIDFromName() {
     const input = $("#item-name").val();
     console.log(input);
@@ -95,12 +149,24 @@ function getIDFromName() {
                 }
             }
         });
-        //console.log(ids);
-        let items = new Set();
+        // Set containing all strings for which prices need to be determined
+        let uncheckedItems = new Set();
+        // Stack containing items that still need to be determined whether a price check is needed
+        let itemStack = [];
+        // Set up stack with all items in ids array
+        
         ids.forEach(element=>{
-            items.add(new Item(element));
+            let currentItem = new Item(element);
+            items.set(element,currentItem)
+            itemStack.push(currentItem);
         });
-        console.log(items);
+        /*
+        while (itemStack.length > 0) {
+            let currentItem = itemStack.pop();
+            if (!uncheckedItems.has(currentItem) && !)
+        }
+        console.log(uncheckedItems);
+        */
        //getAveragePrices();
     }
 

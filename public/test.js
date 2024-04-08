@@ -112,7 +112,8 @@ class Recipe {
     silver;
     time;
     resources = [];
-    amount = 0;
+    // amount is amount crafted
+    amount = 1;
     /**
      * 
      * @param {number} focus 
@@ -121,11 +122,11 @@ class Recipe {
      * @param {array} resources 
      */
     constructor (focus,silver,time,resources) {
-        this.focus = focus;
-        this.silver = silver;
-        this.time = time;
+        this.focus = parseFloat(focus);
+        this.silver = parseFloat(silver);
+        this.time = parseFloat(time);
         resources.forEach(element => {
-            this.resources.push([element["@uniquename"],element["@count"]]);
+            this.resources.push([element["@uniquename"],parseFloat(element["@count"])]);
         })
     }
 }

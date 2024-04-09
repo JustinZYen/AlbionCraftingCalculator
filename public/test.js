@@ -178,9 +178,7 @@ function getIDFromName() {
             if (!uncheckedItems.has(currentItem) && !checkedItems.has(currentItem.id)) {
                 //console.log(`currentItem: ${typeof currentItem}`);
                 currentItem.recipes.forEach((element) => {
-                    console.log("test"+element.resources);
                     element.resources.forEach((element)=> {
-                        console.log(`element:${element[0]}`);
                         itemStack.push(new Item(element[0]));
                     });
                 });

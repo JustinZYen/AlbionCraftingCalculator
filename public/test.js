@@ -12,7 +12,7 @@ const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
 let priceQueue = []; // Array of item ids that still need their prices calculated
-const items = new Map(); // HashMap of all items so far (for saving prices);
+const checkedItems = new Map(); // HashMap of all items so far (for saving prices);
 
 class Item {
     // Price will be instantiated as a group to reduce api calls
@@ -20,25 +20,26 @@ class Item {
     tier = NaN;
     enchantment = 0;
     id;
-    baseId;
-    // Recipes will be array of recipes, which will each be arrays of "tuples"
+    priceId;
+    // Recipes will be array of Recipe objects
     recipes = [];
     constructor(id) {
         this.id = id;
-        this.#setbaseId();
+        this.#setPriceId();
         this.#setTier();
         this.#setEnchantment();
         this.#setRecipes();
     }
 
-    #setbaseId() {
-        const convertedID = nameToID[idToName[this.id]];
-        if (typeof convertedID == String) {
-            this.baseId = convertedID;
-        } else {
-            this.baseId = convertedID[0];
+    #setPriceId() {
+        this.priceId = this.id;
+        let lastChar = parseInt(this.id.charAt(this.id.length-1));
+        // Checking if second to last letter is L for LEVEL
+        if (!isNaN(lastChar) && this.id.charAt(this.id.length-2)==="L") {
+            this.priceId = this.priceId+"@"+lastChar;
         }
     }
+
     #setTier() {
         const secondValue = parseInt(this.id.charAt(1));
         if (this.id.charAt(0) === "T" && secondValue != NaN) {
@@ -50,16 +51,19 @@ class Item {
 
     #setEnchantment() {
         const lastVal = parseInt(this.id.charAt(this.id.length-1));
-        console.log(`lastVal: ${lastVal}`);
-        if (!isNaN(lastVal)) {
+        if (!isNaN(lastVal) && this.id.charAt(this.id.length-2) != "_") {
             this.enchantment = lastVal;
         }
     }
 
     #setRecipes() {
-        const path = recipes[this.baseId];
+        let baseId = this.id;
+        if (this.id.charAt(this.id.length-2) == "@") {
+            baseId = baseId.slice(0,-2);
+        }
+        const path = recipes[baseId];
         if (path == null) {
-            console.log(`No path found for id ${this.baseId}`);
+            console.log(`No path found for id ${baseId}`);
             return;
         }
         let itemInfo = itemsJSON;
@@ -73,11 +77,19 @@ class Item {
         let craftingRequirements = itemInfo.craftingrequirements;
         // Add a recipe based on the contents of craftingrequirements
         const addRecipe= element => {
-            let currentRecipe = new Recipe(element["@craftingfocus"],element["@silver"],element["@time"],element.craftresource);
-            if (element.hasOwnProperty("@amountcrafted")) {
-                currentRecipe.amount = element["@amountcrafted"];
+            //console.log(`id: ${this.id}, addRecipe element: ${JSON.stringify(element)}`);
+            if (element.hasOwnProperty("craftresource")) {
+                let craftResource = element.craftresource;
+                if (!Array.isArray(craftResource)) {
+                    craftResource = [craftResource];
+                }
+                //console.log(`craftresource used to add to recipe: ${craftResource}`);
+                let currentRecipe = new Recipe(element["@craftingfocus"],element["@silver"],element["@time"],craftResource);
+                if (element.hasOwnProperty("@amountcrafted")) {
+                    currentRecipe.amount = element["@amountcrafted"];
+                }
+                this.recipes.push(currentRecipe);
             }
-            this.recipes.push(currentRecipe);
         }
         if (Array.isArray(craftingRequirements)) {
             craftingRequirements.forEach(addRecipe);
@@ -90,7 +102,7 @@ class Item {
             let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
-                previousId = this.baseId;
+                previousId = baseId;
             } else {
                 previousId = this.id.slice(0,-1)+(this.enchantment-1);
             }
@@ -98,7 +110,6 @@ class Item {
             initialRecipe.resources.push([previousId,1]);
             this.recipes.push(initialRecipe);
         }
-        console.log(this.recipes);
     }
 
     toString() {
@@ -111,6 +122,7 @@ class Recipe {
     focus;
     silver;
     time;
+    // formatted as item id followed by amount of resources
     resources = [];
     // amount is amount crafted
     amount = 1;
@@ -155,19 +167,28 @@ function getIDFromName() {
         // Stack containing items that still need to be determined whether a price check is needed
         let itemStack = [];
         // Set up stack with all items in ids array
-        
         ids.forEach(element=>{
-            let currentItem = new Item(element);
-            items.set(element,currentItem)
-            itemStack.push(currentItem);
+            itemStack.push(new Item(element));
         });
-        /*
+
+        console.log(itemStack);
         while (itemStack.length > 0) {
             let currentItem = itemStack.pop();
-            if (!uncheckedItems.has(currentItem) && !)
+            // If current item is not in checked or unchecked items
+            if (!uncheckedItems.has(currentItem) && !checkedItems.has(currentItem.id)) {
+                //console.log(`currentItem: ${typeof currentItem}`);
+                currentItem.recipes.forEach((element) => {
+                    console.log("test"+element.resources);
+                    element.resources.forEach((element)=> {
+                        console.log(`element:${element[0]}`);
+                        itemStack.push(new Item(element[0]));
+                    });
+                });
+                uncheckedItems.add(currentItem);
+            }
         }
         console.log(uncheckedItems);
-        */
+        
        //getAveragePrices();
     }
 

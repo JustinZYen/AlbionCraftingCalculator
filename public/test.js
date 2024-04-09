@@ -155,7 +155,7 @@ function getIDFromName() {
             if (element.charAt(0) === "T" && secondValue != NaN) {
                 // Current item has different tiers since it is T-some number
                 const stringRemainder = element.slice(2);
-                for (let i = MIN_TIER; i < MAX_TIER; i++) {
+                for (let i = MIN_TIER; i <= MAX_TIER; i++) {
                     if (i != secondValue) {
                         array.push("T"+i+stringRemainder);
                     }
@@ -202,8 +202,12 @@ function calculateProfit(itemID,tax) {
     return (1-tax)*sellPrice-craftPrice;
 }
 
-
 $("#my-button").on("click", getIDFromName);
+
 $( "#item-name" ).autocomplete({
     source: names
- });
+});
+$("#title").on("change",()=>{
+    console.log($("#title").val());
+});
+//price link https://west.albion-online-data.com/api/v2/stats/history/T4_BAG?date=4-4-2024&end_date=4-7-2024&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=6

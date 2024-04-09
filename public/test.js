@@ -11,12 +11,15 @@ const recipes = recipeDoc.data();
 const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json");
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
+const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
+const PRICE_URL_END_OLD = previousDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=6";
+const PRICE_URL_END_NEW = currentDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=6";
 let priceQueue = []; // Array of item ids that still need their prices calculated
 const checkedItems = new Map(); // HashMap of all items so far (for saving prices);
 
 class Item {
-    // Price will be instantiated as a group to reduce api calls
-    price = NaN;
+    oldPrice = new Map();
+    newPrice = new Map();
     tier = NaN;
     enchantment = 0;
     id;
@@ -172,10 +175,44 @@ function getProfits() {
             }
         }
         console.log(uncheckedItems);
-        
+        setPrices(uncheckedItems);
        //getAveragePrices();
+    } else {
+        console.log(`input string ${input} not found`);
     }
 
+}
+
+async function previousDateString() {
+    const patchDateDoc = await getDoc(doc(db,"General/Patch Data"));
+    const patchDates = await patchDateDoc.data();
+    const previousPatchDateDate = patchDates["Previous Date"];
+    const previousPatchDateString = previousPatchDateDate.getUTCFullYear()+"-"+
+        (previousPatchDateDate.getUTCMonth()+1)+"-"+
+        (previousPatchDateDate.getUTCDate());
+    const patchDateDate = await patchDates.Date;
+    const patchDateString = await patchDateDate.getUTCFullYear()+"-"+
+        (patchDateDate.getUTCMonth()+1)+"-"+
+        (patchDateDate.getUTCDate());
+    return dateString(previousPatchDateString,patchDateString);
+}
+
+async function currentDateString() {
+    const patchDateDoc = await getDoc(doc(db,"General/Patch Data"));
+    const patchDates = await patchDateDoc.data();
+    const previousPatchDateDate = new Date(patchDates.Date);
+    const previousPatchDateString = previousPatchDateDate.getUTCFullYear()+"-"+
+        (previousPatchDateDate.getUTCMonth()+1)+"-"+
+        (previousPatchDateDate.getUTCDate());
+    const currentDateDate = new Date();
+    const currentDateString = currentDateDate.getUTCFullYear()+"-"+
+        (currentDateDate.getUTCMonth()+1)+"-"+
+        (currentDateDate.getUTCDate());
+    return dateString(previousPatchDateString,currentDateString);
+
+}
+function dateString(startDate,endDate) {
+    return "?date="+startDate+"&end_date="+endDate;
 }
 
 function getItemIds(itemId) {
@@ -194,6 +231,13 @@ function getItemIds(itemId) {
         }
     });
     return ids;
+}
+
+function setPrices(uncheckedItems) {
+    
+    while (uncheckedItems.size > 0) {
+        
+    }  
 }
 
 function calculateProfit(itemID,tax) {

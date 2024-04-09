@@ -142,26 +142,12 @@ class Recipe {
         })
     }
 }
-function getIDFromName() {
+function getProfits() {
     const input = $("#item-name").val();
     console.log(input);
     // If input value is contained in nameToID
     if (nameToID.hasOwnProperty(input)) {
-        let ids = structuredClone(nameToID[input]);
-        console.log(ids);
-        ids.forEach((element,index,array) => {
-            // Add in a number before the @ so that it functions correctly for albion online data api
-            const secondValue = parseInt(element.charAt(1));
-            if (element.charAt(0) === "T" && secondValue != NaN) {
-                // Current item has different tiers since it is T-some number
-                const stringRemainder = element.slice(2);
-                for (let i = MIN_TIER; i <= MAX_TIER; i++) {
-                    if (i != secondValue) {
-                        array.push("T"+i+stringRemainder);
-                    }
-                }
-            }
-        });
+        let ids = getItemIds(input);
         // Set containing all strings for which prices need to be determined
         let uncheckedItems = new Set();
         // Stack containing items that still need to be determined whether a price check is needed
@@ -175,14 +161,14 @@ function getIDFromName() {
         while (itemStack.length > 0) {
             let currentItem = itemStack.pop();
             // If current item is not in checked or unchecked items
-            if (!uncheckedItems.has(currentItem) && !checkedItems.has(currentItem.id)) {
+            if (!uncheckedItems.has(currentItem.id) && !checkedItems.has(currentItem.id)) {
                 //console.log(`currentItem: ${typeof currentItem}`);
                 currentItem.recipes.forEach((element) => {
                     element.resources.forEach((element)=> {
                         itemStack.push(new Item(element[0]));
                     });
                 });
-                uncheckedItems.add(currentItem);
+                uncheckedItems.add(currentItem.id);
             }
         }
         console.log(uncheckedItems);
@@ -192,8 +178,22 @@ function getIDFromName() {
 
 }
 
-function getRecipeIDs() {
-
+function getItemIds(itemId) {
+    let ids = structuredClone(nameToID[itemId]);
+    console.log(ids);
+    ids.forEach((element,index,array) => {
+        const secondValue = parseInt(element.charAt(1));
+        if (element.charAt(0) === "T" && secondValue != NaN) {
+            // Current item has different tiers since it is T-some number
+            const stringRemainder = element.slice(2);
+            for (let i = MIN_TIER; i <= MAX_TIER; i++) {
+                if (i != secondValue) {
+                    array.push("T"+i+stringRemainder);
+                }
+            }
+        }
+    });
+    return ids;
 }
 
 function calculateProfit(itemID,tax) {
@@ -202,7 +202,7 @@ function calculateProfit(itemID,tax) {
     return (1-tax)*sellPrice-craftPrice;
 }
 
-$("#my-button").on("click", getIDFromName);
+$("#my-button").on("click", getProfits);
 
 $( "#item-name" ).autocomplete({
     source: names

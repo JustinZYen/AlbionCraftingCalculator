@@ -1,7 +1,6 @@
+"use strict";
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 import {db} from "./firebaseScripts.js";
-const MIN_TIER = 4;
-const MAX_TIER = 8;
 const nameToIDDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID"));
 const nameToID = nameToIDDoc.data();
 const idToNameDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"));
@@ -11,7 +10,6 @@ const recipes = recipeDoc.data();
 const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json");
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
-let priceQueue = []; // Array of item ids that still need their prices calculated
 const checkedItems = new Map(); // HashMap of all items so far (for saving prices);
 
 class Item {
@@ -213,6 +211,8 @@ function dateString(startDate,endDate) {
 }
 
 function getItemIds(itemId) {
+    const MIN_TIER = 4;
+    const MAX_TIER = 8;
     let ids = structuredClone(nameToID[itemId]);
     console.log(ids);
     ids.forEach((element,index,array) => {

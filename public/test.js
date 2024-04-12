@@ -11,9 +11,6 @@ const recipes = recipeDoc.data();
 const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json");
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
-const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
-const PRICE_URL_END_OLD = previousDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=6";
-const PRICE_URL_END_NEW = currentDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=6";
 let priceQueue = []; // Array of item ids that still need their prices calculated
 const checkedItems = new Map(); // HashMap of all items so far (for saving prices);
 
@@ -234,7 +231,10 @@ function getItemIds(itemId) {
 }
 
 function setPrices(uncheckedItems) {
-    
+    const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
+    const PRICE_URL_END_OLD = previousDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+    const PRICE_URL_END_NEW = currentDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+    // Note: Missing time scale so that I can test out all 3 possible timescales
     while (uncheckedItems.size > 0) {
         
     }  

@@ -11,10 +11,14 @@ const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
 const checkedItems = new Map(); // HashMap of all items so far (for saving prices);
+// checkedItems keys are priceId, not id (uses num@num)
 
 class Item {
+    // Prices are stored as [city,price]
     oldPrice = new Map();
+    oldPriceTimescale = 0;
     newPrice = new Map();
+    newPriceTimescale = 0;
     tier = NaN;
     enchantment = 0;
     id;
@@ -111,7 +115,7 @@ class Item {
     }
 
     toString() {
-        return `id: ${id}, base id: ${baseId}, tier: ${tier}, enchantment: ${enchantment}, price: ${price}`;
+        return `id: ${this.id}, price id: ${this.priceId}, tier: ${this.tier}, enchantment: ${this.enchantment}, price: ${this.price}`;
     }
 }
 
@@ -124,6 +128,8 @@ class Recipe {
     resources = [];
     // amount is amount crafted
     amount = 1;
+    // Whether or not the recipe can return resources
+    canReturn = true;
     /**
      * 
      * @param {number} focus 
@@ -140,24 +146,31 @@ class Recipe {
         })
     }
 }
-function getProfits() {
+
+class DateEnum {
+    OLD = new Symbol(0);
+    NEW = new Symbol(1);
+}
+async function getProfits() {
     const input = $("#item-name").val();
     console.log(input);
     // If input value is contained in nameToID
     if (nameToID.hasOwnProperty(input)) {
         let ids = getItemIds(input);
         // Set containing all strings for which prices need to be determined
-        let uncheckedItems = new Set();
+        let uncheckedItems = new Map();
         // Stack containing items that still need to be determined whether a price check is needed
         let itemStack = [];
         // Set up stack with all items in ids array
         ids.forEach(element=>{
+            console.log(`element: ${element}`);
             itemStack.push(new Item(element));
         });
 
         console.log(itemStack);
         while (itemStack.length > 0) {
-            let currentItem = itemStack.pop();
+            const currentItem = itemStack.pop();
+            // console.log(`current item: ${currentItem}`);
             // If current item is not in checked or unchecked items
             if (!uncheckedItems.has(currentItem.id) && !checkedItems.has(currentItem.id)) {
                 //console.log(`currentItem: ${typeof currentItem}`);
@@ -166,11 +179,11 @@ function getProfits() {
                         itemStack.push(new Item(element[0]));
                     });
                 });
-                uncheckedItems.add(currentItem.id);
+                uncheckedItems.set(currentItem.id,currentItem);
             }
         }
-        console.log(uncheckedItems);
-        setPrices(uncheckedItems);
+        //console.log(uncheckedItems);
+        await setPrices(uncheckedItems);
        //getAveragePrices();
     } else {
         console.log(`input string ${input} not found`);
@@ -181,11 +194,11 @@ function getProfits() {
 async function previousDateString() {
     const patchDateDoc = await getDoc(doc(db,"General/Patch Data"));
     const patchDates = await patchDateDoc.data();
-    const previousPatchDateDate = patchDates["Previous Date"];
+    const previousPatchDateDate = new Date(patchDates["Previous Date"]);
     const previousPatchDateString = previousPatchDateDate.getUTCFullYear()+"-"+
         (previousPatchDateDate.getUTCMonth()+1)+"-"+
         (previousPatchDateDate.getUTCDate());
-    const patchDateDate = await patchDates.Date;
+    const patchDateDate = new Date(patchDates.Date);
     const patchDateString = await patchDateDate.getUTCFullYear()+"-"+
         (patchDateDate.getUTCMonth()+1)+"-"+
         (patchDateDate.getUTCDate());
@@ -230,14 +243,56 @@ function getItemIds(itemId) {
     return ids;
 }
 
-function setPrices(uncheckedItems) {
+/**
+ * 
+ * @param {Set} uncheckedItems A set containing Items representing all items for which prices have not yet been calculated
+ */
+async function setPrices(uncheckedItems) {
     const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
-    const PRICE_URL_END_OLD = previousDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-    const PRICE_URL_END_NEW = currentDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+    const PRICE_URL_END_OLD = await previousDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+    const PRICE_URL_END_NEW = await currentDateString()+"&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+    const startStringLength = PRICE_URL_START.length;
+    const endStringLength = Math.max(PRICE_URL_END_OLD.length,PRICE_URL_END_NEW.length);
+    const MAX_URL_LENGTH = 4096;
     // Note: Missing time scale so that I can test out all 3 possible timescales
-    while (uncheckedItems.size > 0) {
-        
-    }  
+    let currentItemString = "";
+    uncheckedItems.forEach(async currentItem => {
+        // Check if more prices can fit into current URL
+        if (currentItemString.length + currentItem.priceId.length < MAX_URL_LENGTH) {
+            if (currentItemString.length == 0) {
+                currentItemString = currentItem.priceId;
+            } else {
+                currentItemString += (","+currentItem.priceId);
+            }
+        } else {
+            getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
+            getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
+            currentItemString = currentItem.Id;
+        }
+    });
+    getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
+    getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
+    uncheckedItems.clear();
+}
+
+/**
+ * 
+ * @param {String} priceURL URL needed for api, not including timescale
+ * @param {DateEnum} timeSpan OLD or NEW, representing previous patch or current patch, respectively
+ */
+async function getPrices(priceURL,timeSpan) {
+    console.log("checked items: "+checkedItems);
+    const timescales = [1,6,24]
+    timescales.forEach(async timescale => {
+        const priceContents = await fetch(priceURL+timescale);
+        const priceContentsJSON = await priceContents.json();
+        // Check timescale and update prices if timescale is higher
+        priceContentsJSON.forEach(element => {
+            console.log(element);
+            console.log(element.item_id);
+            console.log(checkedItems.has(element.item_id));
+        });
+    });
 }
 
 function calculateProfit(itemID,tax) {

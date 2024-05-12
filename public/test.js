@@ -216,8 +216,8 @@ class Recipe {
 }
 
 class DateEnum {
-    OLD = new Symbol(0);
-    NEW = new Symbol(1);
+    static OLD = Symbol("Old Prices");
+    static NEW = Symbol("New Prices");
 }
 async function getProfits() {
     const input = $("#item-name").val();

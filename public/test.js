@@ -22,24 +22,13 @@ class Item {
     tier = NaN;
     enchantment = 0;
     id;
-    priceId;
     // Recipes will be array of Recipe objects
     recipes = [];
     constructor(id) {
         this.id = id;
-        this.#setPriceId();
         this.#setTier();
         this.#setEnchantment();
         this.#setRecipes();
-    }
-
-    #setPriceId() {
-        this.priceId = this.id;
-        let lastChar = parseInt(this.id.charAt(this.id.length-1));
-        // Checking if second to last letter is L for LEVEL
-        if (!isNaN(lastChar) && this.id.charAt(this.id.length-2)==="L") {
-            this.priceId = this.priceId+"@"+lastChar;
-        }
     }
 
     #setTier() {
@@ -115,7 +104,84 @@ class Item {
     }
 
     toString() {
-        return `id: ${this.id}, price id: ${this.priceId}, tier: ${this.tier}, enchantment: ${this.enchantment}, price: ${this.price}`;
+        return `id: ${this.id}, tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${this.oldPrice}, new price: ${this.newPrice}`;
+    }
+
+    static getPriceId(s) {
+        if (s.endsWith("LEVEL",s.length-1)) {
+            // Convert resources ending with LEVEL# (T4_PLANKS_LEVEL1) to LEVEL#@# (T4_PLANKS_LEVEL1@1)
+            // Add exceptions for FISHSAUCE and ALCHEMY_EXTRACT
+            if (!s.startsWith("FISHSAUCE",3) && !s.startsWith("ALCHEMY_EXTRACT",3)) {
+                return s+"@"+s.charAt(s.length-1);
+            }
+        } 
+        else if (s.startsWith("RANDOM_DUNGEON",3)) {
+            const lastValue = parseInt(s.charAt(s.length-1));
+            if (lastValue > 1) {
+                return s+"@"+(lastValue-1);
+            }
+        }
+        else if (s.startsWith("UNIQUE_LOOTCHEST_COMMUNITY") && s.endsWith("PREMIUM")) {
+            return s+"@1";
+        }
+        // Cover edge cases
+        const enchantedMounts = [
+            "T8_MOUNT_MAMMOTH_BATTLE",
+            "T8_MOUNT_HORSE_UNDEAD",
+            "T5_MOUNT_COUGAR_KEEPER",
+            "T8_MOUNT_COUGAR_KEEPER",
+            "T8_MOUNT_ARMORED_HORSE_MORGANA",
+            "T8_MOUNT_RABBIT_EASTER_DARK"
+        ];
+        if(enchantedMounts.includes(s)) {
+            return s+"@1";
+        }
+        const enchantedDeco1 = [
+            "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_A",
+            "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_B",
+            "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_C",
+            "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_COMPANION",
+            "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_BARREL",
+            "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_MERLINCUBE",
+            "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_BARREL_B",
+            "UNIQUE_FURNITUREITEM_MORGANA_TORCH_C",
+            "UNIQUE_FURNITUREITEM_MORGANA_FIREBOWL_C"
+        ];
+        if (enchantedDeco1.includes(s)) {
+            return s+"@1";
+        }
+        const enchantedDeco2 = [
+            "UNIQUE_FURNITUREITEM_MORGANA_CAMPFIRE_D",
+            "UNIQUE_FURNITUREITEM_MORGANA_SIEGE_BALLISTA_A",
+            "UNIQUE_FURNITUREITEM_MORGANA_WEAPONCRATE_A"
+        ];
+        if (enchantedDeco2.includes(s)) {
+            return s+"@2";
+        }
+        const enchantedDeco3 = [
+            "UNIQUE_FURNITUREITEM_MORGANA_PENTAGRAM",
+            "UNIQUE_FURNITUREITEM_MORGANA_PRISON_CELL_C",
+            "UNIQUE_FURNITUREITEM_MORGANA_TENT_A"
+        ];
+        if (enchantedDeco3.includes(s)) {
+            return s+"@3";
+        }
+        if (s.startsWith("JOURNAL",3)) {
+            return s+"_EMPTY";
+        }
+        return s;
+    }
+    
+    static getBaseId(s) {
+        if (s.charAt(s.length-2)==="@") {
+            return s.slice(0,s.length-2)
+        }
+        else if (s.startsWith("JOURNAL",3) && (s.endsWith("EMPTY") || s.endsWith("FULL"))) {
+            console.log(s);
+            console.log(s.slice(0,s.lastIndexOf("_")));
+            return s.slice(0,s.lastIndexOf("_"));
+        }
+        return s;
     }
 }
 
@@ -141,9 +207,9 @@ class Recipe {
         this.focus = parseFloat(focus);
         this.silver = parseFloat(silver);
         this.time = parseFloat(time);
-        resources.forEach(element => {
-            this.resources.push([element["@uniquename"],parseFloat(element["@count"])]);
-        })
+        for (const resource of resources) {
+            this.resources.push([resource["@uniquename"],parseFloat(resource["@count"])]);
+        }
     }
 }
 
@@ -153,7 +219,7 @@ class DateEnum {
 }
 async function getProfits() {
     const input = $("#item-name").val();
-    console.log(input);
+    console.log("Input value: "+input);
     // If input value is contained in nameToID
     if (nameToID.hasOwnProperty(input)) {
         let ids = getItemIds(input);
@@ -162,12 +228,9 @@ async function getProfits() {
         // Stack containing items that still need to be determined whether a price check is needed
         let itemStack = [];
         // Set up stack with all items in ids array
-        ids.forEach(element=>{
-            console.log(`element: ${element}`);
-            itemStack.push(new Item(element));
-        });
-
-        console.log(itemStack);
+        for (const id of ids) {
+            itemStack.push(new Item(id));
+        }
         while (itemStack.length > 0) {
             const currentItem = itemStack.pop();
             // console.log(`current item: ${currentItem}`);
@@ -182,13 +245,18 @@ async function getProfits() {
                 uncheckedItems.set(currentItem.id,currentItem);
             }
         }
-        //console.log(uncheckedItems);
+        //console.log(uncheckedItems)
+        console.log("setting prices");
         await setPrices(uncheckedItems);
+        
+        checkedItems.forEach((value,key)=> {
+            console.log(`key: ${key}, value: ${value}`);
+        });
+        
        //getAveragePrices();
     } else {
         console.log(`input string ${input} not found`);
     }
-
 }
 
 async function previousDateString() {
@@ -227,7 +295,6 @@ function getItemIds(itemId) {
     const MIN_TIER = 4;
     const MAX_TIER = 8;
     let ids = structuredClone(nameToID[itemId]);
-    console.log(ids);
     ids.forEach((element,index,array) => {
         const secondValue = parseInt(element.charAt(1));
         if (element.charAt(0) === "T" && secondValue != NaN) {
@@ -256,22 +323,23 @@ async function setPrices(uncheckedItems) {
     const MAX_URL_LENGTH = 4096;
     // Note: Missing time scale so that I can test out all 3 possible timescales
     let currentItemString = "";
-    uncheckedItems.forEach(async currentItem => {
+    await uncheckedItems.forEach(async currentItem => {
         // Check if more prices can fit into current URL
-        if (currentItemString.length + currentItem.priceId.length < MAX_URL_LENGTH) {
+        let currentPriceId = Item.getPriceId(currentItem.id)
+        if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
             if (currentItemString.length == 0) {
-                currentItemString = currentItem.priceId;
+                currentItemString = currentPriceId;
             } else {
-                currentItemString += (","+currentItem.priceId);
+                currentItemString += (","+currentPriceId);
             }
         } else {
-            getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
-            getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
+            await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
+            await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
             currentItemString = currentItem.Id;
         }
     });
-    getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
-    getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
+    await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
+    await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
     uncheckedItems.clear();
 }
 
@@ -281,18 +349,20 @@ async function setPrices(uncheckedItems) {
  * @param {DateEnum} timeSpan OLD or NEW, representing previous patch or current patch, respectively
  */
 async function getPrices(priceURL,timeSpan) {
-    console.log("checked items: "+checkedItems);
     const timescales = [1,6,24]
-    timescales.forEach(async timescale => {
-        const priceContents = await fetch(priceURL+timescale);
-        const priceContentsJSON = await priceContents.json();
+    for (const timescale of timescales) {
+        let priceContents = await fetch(priceURL+timescale);
+        let priceContentsJSON = await priceContents.json();
         // Check timescale and update prices if timescale is higher
         priceContentsJSON.forEach(element => {
-            console.log(element);
-            console.log(element.item_id);
-            console.log(checkedItems.has(element.item_id));
+            let currentId = Item.getBaseId(element.item_id);
+            if (!checkedItems.has(currentId)) {
+                checkedItems.set(currentId,new Item(currentId))
+            }
+            //console.log(currentId);
         });
-    });
+        console.log("Done with timescale "+ timescale);
+    }
 }
 
 function calculateProfit(itemID,tax) {
@@ -300,6 +370,8 @@ function calculateProfit(itemID,tax) {
     const craftPrice = getCraftingPrice(itemID);
     return (1-tax)*sellPrice-craftPrice;
 }
+
+
 
 $("#my-button").on("click", getProfits);
 

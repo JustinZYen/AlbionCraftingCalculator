@@ -58,9 +58,9 @@ class Item {
             return;
         }
         let itemInfo = itemsJSON;
-        path.forEach(element=>{
-            itemInfo = itemInfo[element];
-        })
+        for (const pathElement of path) {
+            itemInfo = itemInfo[pathElement];
+        }
         //console.log(itemInfo);
         if (itemInfo.hasOwnProperty("enchantments") && this.enchantment > 0) {
             itemInfo = itemInfo.enchantments.enchantment[this.enchantment-1];
@@ -83,7 +83,9 @@ class Item {
             }
         }
         if (Array.isArray(craftingRequirements)) {
-            craftingRequirements.forEach(addRecipe);
+            for (const craftingRequirement of craftingRequirements) {
+                addRecipe(craftingRequirement);
+            }
         } else {
             addRecipe(craftingRequirements);
         }
@@ -237,11 +239,11 @@ async function getProfits() {
             // If current item is not in checked or unchecked items
             if (!uncheckedItems.has(currentItem.id) && !checkedItems.has(currentItem.id)) {
                 //console.log(`currentItem: ${typeof currentItem}`);
-                currentItem.recipes.forEach((element) => {
-                    element.resources.forEach((element)=> {
-                        itemStack.push(new Item(element[0]));
-                    });
-                });
+                for (const recipe of currentItem.recipes) {
+                    for (const resource of recipe.resources) {
+                        itemStack.push(new Item(resource[0]));
+                    }
+                }
                 uncheckedItems.set(currentItem.id,currentItem);
             }
         }
@@ -323,7 +325,7 @@ async function setPrices(uncheckedItems) {
     const MAX_URL_LENGTH = 4096;
     // Note: Missing time scale so that I can test out all 3 possible timescales
     let currentItemString = "";
-    await uncheckedItems.forEach(async currentItem => {
+    uncheckedItems.forEach(async currentItem => {
         // Check if more prices can fit into current URL
         let currentPriceId = Item.getPriceId(currentItem.id)
         if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
@@ -354,13 +356,12 @@ async function getPrices(priceURL,timeSpan) {
         let priceContents = await fetch(priceURL+timescale);
         let priceContentsJSON = await priceContents.json();
         // Check timescale and update prices if timescale is higher
-        priceContentsJSON.forEach(element => {
-            let currentId = Item.getBaseId(element.item_id);
+        for (const currentItem of priceContentsJSON) {
+            let currentId = Item.getBaseId(currentItem.item_id);
             if (!checkedItems.has(currentId)) {
                 checkedItems.set(currentId,new Item(currentId))
             }
-            //console.log(currentId);
-        });
+        }
         console.log("Done with timescale "+ timescale);
     }
 }

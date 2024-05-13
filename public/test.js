@@ -14,11 +14,10 @@ const checkedItems = new Map(); // HashMap of all items so far (for saving price
 // checkedItems keys are priceId, not id (uses num@num)
 
 class Item {
-    // Prices are stored as [city,price]
-    oldPrice = new Map();
-    oldPriceTimescale = 0;
-    newPrice = new Map();
-    newPriceTimescale = 0;
+    priceInfos = new Map([
+        [DateEnum.OLD,new PriceInfo()],
+        [DateEnum.NEW,new PriceInfo()]
+      ]);
     tier = NaN;
     enchantment = 0;
     id;
@@ -187,6 +186,17 @@ class Item {
     }
 }
 
+class PriceInfo {
+    // Prices are stored as [city,price]
+    price = new Map();
+    priceTimescale = new Map();
+    // Price qualities so that items with variable quality are saved as quality 2 if possible
+    priceQualities = new Map();
+    constructor() {
+
+    }
+}
+
 class Recipe {
     // Might be issue with results being strings
     focus;
@@ -219,6 +229,7 @@ class DateEnum {
     static OLD = Symbol("Old Prices");
     static NEW = Symbol("New Prices");
 }
+
 async function getProfits() {
     const input = $("#item-name").val();
     console.log("Input value: "+input);
@@ -336,12 +347,12 @@ async function setPrices(uncheckedItems) {
             }
         } else {
             await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
-            await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
+            await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_NEW,DateEnum.NEW);
             currentItemString = currentItem.Id;
         }
     });
     await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
-    await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.NEW);
+    await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_NEW,DateEnum.NEW);
     uncheckedItems.clear();
 }
 
@@ -357,10 +368,34 @@ async function getPrices(priceURL,timeSpan) {
         let priceContentsJSON = await priceContents.json();
         // Check timescale and update prices if timescale is higher
         for (const currentItem of priceContentsJSON) {
-            let currentId = Item.getBaseId(currentItem.item_id);
+            const currentId = Item.getBaseId(currentItem.item_id);
+            let targetItem; 
             if (!checkedItems.has(currentId)) {
-                checkedItems.set(currentId,new Item(currentId))
+                targetItem = new Item(currentId);
+                checkedItems.set(currentId,targetItem);
+            } else {
+                targetItem = checkedItems.get(currentId);
             }
+            // Get prices; set to appropriate location
+            const location = fixLocation(currentItem["location"]);
+            const quality = currentItem["quality"];
+            if (quality <= 2) {
+                if (!targetItem.priceInfos.get(timeSpan).priceQualities.has(location) || quality >= targetItem.priceInfos.get(timeSpan).priceQualities.get(location)) {
+                    // add price if timescale is better
+                    const data = currentItem["data"];
+                    // Find timescale difference
+                    const startDate = data[0]["timestamp"];
+                    const endDate = data[data.length-1]["timestamp"];
+                    const timescale = (Date.parse(endDate)-Date.parse(startDate));
+                    console.log("current data: "+data);
+                    console.log(`start date: ${startDate}, end date: ${endDate}`);
+                    for (const timestampData of data) {
+
+                    }
+                    // Find timescale
+                }
+            }
+            
         }
         console.log("Done with timescale "+ timescale);
     }
@@ -372,7 +407,13 @@ function calculateProfit(itemID,tax) {
     return (1-tax)*sellPrice-craftPrice;
 }
 
-
+function fixLocation(initialLocation) {
+    if (initialLocation = "5003") {
+        return "Brecilien";
+    } else {
+        return initialLocation;
+    }
+}
 
 $("#my-button").on("click", getProfits);
 

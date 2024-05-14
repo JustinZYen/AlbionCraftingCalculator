@@ -10,14 +10,13 @@ const recipes = recipeDoc.data();
 const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json");
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
-const checkedItems = new Map(); // HashMap of all items so far (for saving prices);
-// checkedItems keys are priceId, not id (uses num@num)
+const checkedItems = new Map(); // HashMap of all Items so far (for saving prices);
 
 class Item {
     priceInfos = new Map([
         [DateEnum.OLD,new PriceInfo()],
         [DateEnum.NEW,new PriceInfo()]
-      ]);
+    ]);
     tier = NaN;
     enchantment = 0;
     id;
@@ -105,7 +104,19 @@ class Item {
     }
 
     toString() {
-        return `id: ${this.id}, tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${this.oldPrice}, new price: ${this.newPrice}`;
+        function mapStringify(map) {
+            let returnString = "";
+            map.forEach((value,key)=>{
+                console.log(key);
+                returnString+=`City: ${key}, Average price: ${value}`;
+            })
+            return returnString;
+        }
+        //let oldPriceData = mapStringify(this.priceInfos.get(DateEnum.OLD).price);
+        //let newPriceData = mapStringify(this.priceInfos.get(DateEnum.NEW).price);
+        let oldPriceData = Array.from(this.priceInfos.get(DateEnum.OLD).price);
+        let newPriceData = Array.from(this.priceInfos.get(DateEnum.NEW).price);
+        return `id: ${this.id}, tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${oldPriceData}, new price: ${newPriceData}`;
     }
 
     static getPriceId(s) {
@@ -379,19 +390,28 @@ async function getPrices(priceURL,timeSpan) {
             // Get prices; set to appropriate location
             const location = fixLocation(currentItem["location"]);
             const quality = currentItem["quality"];
+            console.log("target item: "+targetItem);
+            const priceInfo = targetItem.priceInfos.get(timeSpan);
             if (quality <= 2) {
-                if (!targetItem.priceInfos.get(timeSpan).priceQualities.has(location) || quality >= targetItem.priceInfos.get(timeSpan).priceQualities.get(location)) {
+                if (!priceInfo.priceQualities.has(location) || quality >= priceInfo.priceQualities.get(location)) {
                     // add price if timescale is better
                     const data = currentItem["data"];
                     // Find timescale difference
                     const startDate = data[0]["timestamp"];
                     const endDate = data[data.length-1]["timestamp"];
                     const timescale = (Date.parse(endDate)-Date.parse(startDate));
-                    console.log("current data: "+data);
-                    console.log(`start date: ${startDate}, end date: ${endDate}`);
-                    for (const timestampData of data) {
-
+                    // console.log(`start date: ${startDate}, end date: ${endDate}`);
+                    if (!priceInfo.priceTimescale.has(location) || timescale > priceInfo.priceTimescale.get(location)) {
+                        let total = 0;
+                        for (const timestampData of data) {
+                            total += timestampData["avg_price"];
+                        }
+                        const average = total/data.length;
+                        console.log("average: "+average);
+                        priceInfo.price.set(location,average);
+                        //console.log("Updating with new prices")
                     }
+                    
                     // Find timescale
                 }
             }
@@ -408,7 +428,7 @@ function calculateProfit(itemID,tax) {
 }
 
 function fixLocation(initialLocation) {
-    if (initialLocation = "5003") {
+    if (initialLocation == "5003") {
         return "Brecilien";
     } else {
         return initialLocation;

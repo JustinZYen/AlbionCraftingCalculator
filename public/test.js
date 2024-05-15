@@ -1,6 +1,15 @@
 "use strict";
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 import {db} from "./firebaseScripts.js";
+class DateEnum {
+    static OLD = Symbol("Old Prices");
+    static NEW = Symbol("New Prices");
+}
+
+class CraftTypeEnum {
+    static REFINING = Symbol("Refining");
+    static CRAFTING = Symbol("Crafting")
+}
 const nameToIDDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID"));
 const nameToID = nameToIDDoc.data();
 const idToNameDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"));
@@ -10,8 +19,41 @@ const recipes = recipeDoc.data();
 const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json");
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
-const checkedItems = new Map(); // HashMap of all Items so far (for saving prices);
+// HashMap of all Items so far (for saving prices)
+// Uses priceIds as keys
+const checkedItems = new Map(); 
 
+// Hardcoding city crafting bonuses
+const cityBonuses = new Map([
+    ["Caerleon",new Map([
+        [CraftTypeEnum.REFINING,],
+        [CraftTypeEnum.CRAFTING,]
+    ])], 
+    ["Bridgewatch",new Map([
+        [CraftTypeEnum.REFINING,],
+        [CraftTypeEnum.CRAFTING,]
+    ])], 
+    ["Fort Sterling",new Map([
+        [CraftTypeEnum.REFINING,],
+        [CraftTypeEnum.CRAFTING,]
+    ])],
+    ["Lymhurst",new Map([
+        [CraftTypeEnum.REFINING,],
+        [CraftTypeEnum.CRAFTING,]
+    ])], 
+    ["Martlock",new Map([
+        [CraftTypeEnum.REFINING,],
+        [CraftTypeEnum.CRAFTING,]
+    ])], 
+    ["Thetford",new Map([
+        [CraftTypeEnum.REFINING,],
+        [CraftTypeEnum.CRAFTING,]
+    ])], 
+    ["Brecilien",new Map([
+        [CraftTypeEnum.REFINING,],
+        [CraftTypeEnum.CRAFTING,]
+    ])], 
+]);
 class Item {
     priceInfos = new Map([
         [DateEnum.OLD,new PriceInfo()],
@@ -20,13 +62,17 @@ class Item {
     tier = NaN;
     enchantment = 0;
     id;
+    priceId;
     // Recipes will be array of Recipe objects
     recipes = [];
-    constructor(id) {
-        this.id = id;
+    category;
+    subcategory
+    constructor(priceId) {
+        this.priceId = priceId;
+        this.id = Item.getBaseId(priceId);
         this.#setTier();
         this.#setEnchantment();
-        this.#setRecipes();
+        this.#setRecipesAndCategories();
     }
 
     #setTier() {
@@ -45,7 +91,7 @@ class Item {
         }
     }
 
-    #setRecipes() {
+    #setRecipesAndCategories() {
         let baseId = this.id;
         if (this.id.charAt(this.id.length-2) == "@") {
             baseId = baseId.slice(0,-2);
@@ -90,7 +136,7 @@ class Item {
         
         // Item id must end with @number
         if (itemInfo.hasOwnProperty("upgraderequirements")) {
-            let upgradeRequirements = itemInfo.upgraderequirements;
+            //let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
                 previousId = baseId;
@@ -101,6 +147,10 @@ class Item {
             initialRecipe.resources.push([previousId,1]);
             this.recipes.push(initialRecipe);
         }
+        this.category = itemInfo["@shopcategory"];
+        console.log(this.id + " data "+ JSON.stringify(itemInfo));
+
+        this.subcategory = itemInfo["@shopsubcategory1"];
     }
 
     toString() {
@@ -116,7 +166,7 @@ class Item {
         //let newPriceData = mapStringify(this.priceInfos.get(DateEnum.NEW).price);
         let oldPriceData = Array.from(this.priceInfos.get(DateEnum.OLD).price);
         let newPriceData = Array.from(this.priceInfos.get(DateEnum.NEW).price);
-        return `id: ${this.id}, tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${oldPriceData}, new price: ${newPriceData}`;
+        return `name: ${idToName[Item.getPriceId(this.id)]}, id: ${this.id}, category: ${this.category}, subcategory: ${this.subcategory} tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${oldPriceData}, new price: ${newPriceData}`;
     }
 
     static getPriceId(s) {
@@ -231,15 +281,11 @@ class Recipe {
         this.silver = parseFloat(silver);
         this.time = parseFloat(time);
         for (const resource of resources) {
-            this.resources.push([resource["@uniquename"],parseFloat(resource["@count"])]);
+            this.resources.push([Item.getPriceId(resource["@uniquename"]),parseFloat(resource["@count"])]);
         }
     }
 }
 
-class DateEnum {
-    static OLD = Symbol("Old Prices");
-    static NEW = Symbol("New Prices");
-}
 
 async function getProfits() {
     const input = $("#item-name").val();
@@ -247,26 +293,27 @@ async function getProfits() {
     // If input value is contained in nameToID
     if (nameToID.hasOwnProperty(input)) {
         let ids = getItemIds(input);
+        console.log(ids);
         // Set containing all strings for which prices need to be determined
         let uncheckedItems = new Map();
         // Stack containing items that still need to be determined whether a price check is needed
         let itemStack = [];
         // Set up stack with all items in ids array
-        for (const id of ids) {
-            itemStack.push(new Item(id));
+        for (const priceId of ids) {
+            itemStack.push(new Item(priceId));
         }
         while (itemStack.length > 0) {
             const currentItem = itemStack.pop();
             // console.log(`current item: ${currentItem}`);
             // If current item is not in checked or unchecked items
-            if (!uncheckedItems.has(currentItem.id) && !checkedItems.has(currentItem.id)) {
+            if (!uncheckedItems.has(currentItem.priceId) && !checkedItems.has(currentItem.priceId)) {
                 //console.log(`currentItem: ${typeof currentItem}`);
                 for (const recipe of currentItem.recipes) {
                     for (const resource of recipe.resources) {
                         itemStack.push(new Item(resource[0]));
                     }
                 }
-                uncheckedItems.set(currentItem.id,currentItem);
+                uncheckedItems.set(currentItem.priceId,currentItem);
             }
         }
         //console.log(uncheckedItems)
@@ -349,7 +396,7 @@ async function setPrices(uncheckedItems) {
     let currentItemString = "";
     uncheckedItems.forEach(async currentItem => {
         // Check if more prices can fit into current URL
-        let currentPriceId = Item.getPriceId(currentItem.id)
+        let currentPriceId = currentItem.priceId;
         if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
             if (currentItemString.length == 0) {
                 currentItemString = currentPriceId;
@@ -359,7 +406,7 @@ async function setPrices(uncheckedItems) {
         } else {
             await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
             await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_NEW,DateEnum.NEW);
-            currentItemString = currentItem.Id;
+            currentItemString = currentItem.id;
         }
     });
     await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
@@ -379,13 +426,13 @@ async function getPrices(priceURL,timeSpan) {
         let priceContentsJSON = await priceContents.json();
         // Check timescale and update prices if timescale is higher
         for (const currentItem of priceContentsJSON) {
-            const currentId = Item.getBaseId(currentItem.item_id);
+            const currentPriceId = currentItem.item_id;
             let targetItem; 
-            if (!checkedItems.has(currentId)) {
-                targetItem = new Item(currentId);
-                checkedItems.set(currentId,targetItem);
+            if (!checkedItems.has(currentPriceId)) {
+                targetItem = new Item(currentPriceId);
+                checkedItems.set(currentPriceId,targetItem);
             } else {
-                targetItem = checkedItems.get(currentId);
+                targetItem = checkedItems.get(currentPriceId);
             }
             // Get prices; set to appropriate location
             const location = fixLocation(currentItem["location"]);
@@ -443,4 +490,3 @@ $( "#item-name" ).autocomplete({
 $("#title").on("change",()=>{
     console.log($("#title").val());
 });
-//price link https://west.albion-online-data.com/api/v2/stats/history/T4_BAG?date=4-4-2024&end_date=4-7-2024&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=6

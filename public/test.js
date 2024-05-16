@@ -14,8 +14,10 @@ const nameToIDDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/Name
 const nameToID = nameToIDDoc.data();
 const idToNameDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"));
 const idToName = idToNameDoc.data();
-const recipeDoc = await getDoc(doc(db,"General/Item Data/Recipes/Recipes"));
-const recipes = recipeDoc.data();
+const recipeDocWithT = await getDoc(doc(db,"General/Item Data/Items/PathsWithT"));
+const recipesWithT = recipeDocWithT.data();
+const recipeDocWithoutT = await getDoc(doc(db,"General/Item Data/Items/PathsWithoutT"));
+const recipesWithoutT = recipeDocWithoutT.data();
 const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json");
 const itemsJSON = await itemsList.json();
 const names = Object.keys(nameToIDDoc.data());
@@ -92,13 +94,14 @@ class Item {
     }
 
     #setRecipesAndCategories() {
-        let baseId = this.id;
-        if (this.id.charAt(this.id.length-2) == "@") {
-            baseId = baseId.slice(0,-2);
+        let path;
+        if (this.id.charAt(0)=="T") {
+            path = recipesWithT[this.id];
+        } else {
+            path = recipesWithoutT[this.id];
         }
-        const path = recipes[baseId];
         if (path == null) {
-            console.log(`No path found for id ${baseId}`);
+            console.log(`No path found for id ${this.id}`);
             return;
         }
         let itemInfo = itemsJSON;
@@ -108,6 +111,10 @@ class Item {
         //console.log(itemInfo);
         if (itemInfo.hasOwnProperty("enchantments") && this.enchantment > 0) {
             itemInfo = itemInfo.enchantments.enchantment[this.enchantment-1];
+        }
+        if (!itemInfo.hasOwnProperty("craftingrequirements")) {
+            console.log(`ID ${this.id} cannot be crafted`);
+            return;
         }
         let craftingRequirements = itemInfo.craftingrequirements;
         // Add a recipe based on the contents of craftingrequirements
@@ -139,7 +146,7 @@ class Item {
             //let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
-                previousId = baseId;
+                previousId = this.id;
             } else {
                 previousId = this.id.slice(0,-1)+(this.enchantment-1);
             }
@@ -148,7 +155,7 @@ class Item {
             this.recipes.push(initialRecipe);
         }
         this.category = itemInfo["@shopcategory"];
-        console.log(this.id + " data "+ JSON.stringify(itemInfo));
+        //console.log(this.id + " data "+ JSON.stringify(itemInfo));
 
         this.subcategory = itemInfo["@shopsubcategory1"];
     }
@@ -341,6 +348,7 @@ async function previousDateString() {
     const patchDateString = await patchDateDate.getUTCFullYear()+"-"+
         (patchDateDate.getUTCMonth()+1)+"-"+
         (patchDateDate.getUTCDate());
+    console.log("Date string: "+previousPatchDateString+","+patchDateString)
     return dateString(previousPatchDateString,patchDateString);
 }
 
@@ -420,6 +428,7 @@ async function setPrices(uncheckedItems) {
  * @param {DateEnum} timeSpan OLD or NEW, representing previous patch or current patch, respectively
  */
 async function getPrices(priceURL,timeSpan) {
+    console.log("Price url: "+priceURL);
     const timescales = [1,6,24]
     for (const timescale of timescales) {
         let priceContents = await fetch(priceURL+timescale);
@@ -437,7 +446,7 @@ async function getPrices(priceURL,timeSpan) {
             // Get prices; set to appropriate location
             const location = fixLocation(currentItem["location"]);
             const quality = currentItem["quality"];
-            console.log("target item: "+targetItem);
+            //console.log("target item: "+targetItem);
             const priceInfo = targetItem.priceInfos.get(timeSpan);
             if (quality <= 2) {
                 if (!priceInfo.priceQualities.has(location) || quality >= priceInfo.priceQualities.get(location)) {
@@ -454,7 +463,7 @@ async function getPrices(priceURL,timeSpan) {
                             total += timestampData["avg_price"];
                         }
                         const average = total/data.length;
-                        console.log("average: "+average);
+                        //console.log("average: "+average);
                         priceInfo.price.set(location,average);
                         //console.log("Updating with new prices")
                     }

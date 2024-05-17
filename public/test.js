@@ -82,13 +82,13 @@ class Item {
         if (this.id.charAt(0) === "T" && secondValue != NaN) {
             this.tier = secondValue;
         } else {
-            console.log(`Id ${this.id} has no tier found`);
+            console.log(`Id ${this.priceId} has no tier found`);
         }
     }
 
     #setEnchantment() {
-        const lastVal = parseInt(this.id.charAt(this.id.length-1));
-        if (!isNaN(lastVal) && this.id.charAt(this.id.length-2) != "_") {
+        const lastVal = parseInt(this.priceId.charAt(this.priceId.length-1));
+        if (!isNaN(lastVal) && this.priceId.charAt(this.priceId.length-2) == "@") {
             this.enchantment = lastVal;
         }
     }
@@ -109,6 +109,10 @@ class Item {
             itemInfo = itemInfo[pathElement];
         }
         //console.log(itemInfo);
+        
+        this.category = itemInfo["@shopcategory"];
+
+        this.subcategory = itemInfo["@shopsubcategory1"];
         if (itemInfo.hasOwnProperty("enchantments") && this.enchantment > 0) {
             itemInfo = itemInfo.enchantments.enchantment[this.enchantment-1];
         }
@@ -146,18 +150,14 @@ class Item {
             //let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
-                previousId = this.id;
+                previousId = this.priceId;
             } else {
-                previousId = this.id.slice(0,-1)+(this.enchantment-1);
+                previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
             }
             let initialRecipe = new Recipe(0,0,0,[itemInfo.upgraderequirements.upgraderesource]);
             initialRecipe.resources.push([previousId,1]);
             this.recipes.push(initialRecipe);
         }
-        this.category = itemInfo["@shopcategory"];
-        //console.log(this.id + " data "+ JSON.stringify(itemInfo));
-
-        this.subcategory = itemInfo["@shopsubcategory1"];
     }
 
     toString() {
@@ -260,9 +260,6 @@ class PriceInfo {
     priceTimescale = new Map();
     // Price qualities so that items with variable quality are saved as quality 2 if possible
     priceQualities = new Map();
-    constructor() {
-
-    }
 }
 
 class Recipe {
@@ -330,7 +327,9 @@ async function getProfits() {
         checkedItems.forEach((value,key)=> {
             console.log(`key: ${key}, value: ${value}`);
         });
-        
+        if ($("#title").val() != null) {
+            displayRecipes(ids)
+        }
        //getAveragePrices();
     } else {
         console.log(`input string ${input} not found`);
@@ -348,7 +347,6 @@ async function previousDateString() {
     const patchDateString = await patchDateDate.getUTCFullYear()+"-"+
         (patchDateDate.getUTCMonth()+1)+"-"+
         (patchDateDate.getUTCDate());
-    console.log("Date string: "+previousPatchDateString+","+patchDateString)
     return dateString(previousPatchDateString,patchDateString);
 }
 
@@ -370,6 +368,11 @@ function dateString(startDate,endDate) {
     return "?date="+startDate+"&end_date="+endDate;
 }
 
+/**
+ * 
+ * @param {*} itemId 
+ * @returns An array containing item ids of all weapons that share the name in the tree
+ */
 function getItemIds(itemId) {
     const MIN_TIER = 4;
     const MAX_TIER = 8;
@@ -474,6 +477,12 @@ async function getPrices(priceURL,timeSpan) {
             
         }
         console.log("Done with timescale "+ timescale);
+    }
+}
+
+function displayRecipes(ids) {
+    for (const currentId of ids) {
+        
     }
 }
 

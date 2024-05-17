@@ -150,7 +150,7 @@ class Item {
             //let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
-                previousId = this.priceId;
+                previousId = this.priceId.slice(0,-1);
             } else {
                 previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
             }
@@ -325,12 +325,12 @@ async function getProfits() {
         console.log("setting prices");
         await setPrices(uncheckedItems);
         
+        /*
         checkedItems.forEach((value,key)=> {
             console.log(`key: ${key}, value: ${value}`);
         });
-        if ($("#title").val() != null) {
-            displayRecipes(ids)
-        }
+        */
+        displayRecipes(ids)
        //getAveragePrices();
     } else {
         console.log(`input string ${input} not found`);
@@ -487,9 +487,22 @@ async function getPrices(priceURL,timeSpan) {
 }
 
 function displayRecipes(ids) {
+    function recipeHelper(id) {
+        let returnString = `name: ${idToName[id]} `;
+        if (checkedItems.get(id).recipes.length == 0) {
+            return returnString;
+        }
+        returnString += "recipe(s): ("
+        for (const recipe of checkedItems.get(id).recipes) {
+            for (const resource of recipe.resources) {
+                returnString += recipeHelper(resource[0]) + "amount: " + resource[1]+" ";
+            }
+            returnString += " ; ";
+        }
+        return returnString + ")";
+    }
     for (const currentPriceId of ids) {
-        console.log(currentPriceId);
-        console.log(checkedItems.get(currentPriceId));
+        console.log(recipeHelper(currentPriceId));
     }
 }
 

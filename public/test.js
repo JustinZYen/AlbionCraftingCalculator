@@ -318,6 +318,7 @@ async function getProfits() {
                     }
                 }
                 uncheckedItems.set(currentItem.priceId,currentItem);
+                checkedItems.set(currentItem.priceId,currentItem);
             }
         }
         //console.log(uncheckedItems)
@@ -420,6 +421,10 @@ async function setPrices(uncheckedItems) {
             currentItemString = currentItem.id;
         }
     });
+    if (currentItemString === "") {
+        console.log("No more new prices to collect.");
+        return;
+    }
     await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
     await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_NEW,DateEnum.NEW);
     uncheckedItems.clear();
@@ -441,6 +446,7 @@ async function getPrices(priceURL,timeSpan) {
             const currentPriceId = currentItem.item_id;
             let targetItem; 
             if (!checkedItems.has(currentPriceId)) {
+                console.log("priceId "+currentPriceId+" was not added to checkedItems");
                 targetItem = new Item(currentPriceId);
                 checkedItems.set(currentPriceId,targetItem);
             } else {
@@ -481,8 +487,9 @@ async function getPrices(priceURL,timeSpan) {
 }
 
 function displayRecipes(ids) {
-    for (const currentId of ids) {
-        
+    for (const currentPriceId of ids) {
+        console.log(currentPriceId);
+        console.log(checkedItems.get(currentPriceId));
     }
 }
 

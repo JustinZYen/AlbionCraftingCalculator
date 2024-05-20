@@ -1,4 +1,5 @@
 "use strict";
+//test
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 import {db} from "./firebaseScripts.js";
 class DateEnum {
@@ -324,7 +325,6 @@ async function getProfits() {
         //console.log(uncheckedItems)
         console.log("setting prices");
         await setPrices(uncheckedItems);
-        
         /*
         checkedItems.forEach((value,key)=> {
             console.log(`key: ${key}, value: ${value}`);

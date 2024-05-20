@@ -1,5 +1,4 @@
 "use strict";
-//test
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 import {db} from "./firebaseScripts.js";
 class DateEnum {

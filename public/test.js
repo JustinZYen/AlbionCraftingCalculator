@@ -1,4 +1,5 @@
 "use strict";
+//test
 import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
 import {db} from "./firebaseScripts.js";
 class DateEnum {
@@ -150,7 +151,7 @@ class Item {
             //let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
-                previousId = this.priceId;
+                previousId = this.priceId.slice(0,-1);
             } else {
                 previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
             }
@@ -318,18 +319,18 @@ async function getProfits() {
                     }
                 }
                 uncheckedItems.set(currentItem.priceId,currentItem);
+                checkedItems.set(currentItem.priceId,currentItem);
             }
         }
         //console.log(uncheckedItems)
         console.log("setting prices");
         await setPrices(uncheckedItems);
-        
+        /*
         checkedItems.forEach((value,key)=> {
             console.log(`key: ${key}, value: ${value}`);
         });
-        if ($("#title").val() != null) {
-            displayRecipes(ids)
-        }
+        */
+        displayRecipes(ids)
        //getAveragePrices();
     } else {
         console.log(`input string ${input} not found`);
@@ -420,6 +421,10 @@ async function setPrices(uncheckedItems) {
             currentItemString = currentItem.id;
         }
     });
+    if (currentItemString === "") {
+        console.log("No more new prices to collect.");
+        return;
+    }
     await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_OLD,DateEnum.OLD);
     await getPrices(PRICE_URL_START+currentItemString+PRICE_URL_END_NEW,DateEnum.NEW);
     uncheckedItems.clear();
@@ -441,6 +446,7 @@ async function getPrices(priceURL,timeSpan) {
             const currentPriceId = currentItem.item_id;
             let targetItem; 
             if (!checkedItems.has(currentPriceId)) {
+                console.log("priceId "+currentPriceId+" was not added to checkedItems");
                 targetItem = new Item(currentPriceId);
                 checkedItems.set(currentPriceId,targetItem);
             } else {
@@ -481,8 +487,22 @@ async function getPrices(priceURL,timeSpan) {
 }
 
 function displayRecipes(ids) {
-    for (const currentId of ids) {
-        
+    function recipeHelper(id) {
+        let returnString = `name: ${idToName[id]} `;
+        if (checkedItems.get(id).recipes.length == 0) {
+            return returnString;
+        }
+        returnString += "recipe(s): ("
+        for (const recipe of checkedItems.get(id).recipes) {
+            for (const resource of recipe.resources) {
+                returnString += recipeHelper(resource[0]) + "amount: " + resource[1]+" ";
+            }
+            returnString += " ; ";
+        }
+        return returnString + ")";
+    }
+    for (const currentPriceId of ids) {
+        console.log(recipeHelper(currentPriceId));
     }
 }
 

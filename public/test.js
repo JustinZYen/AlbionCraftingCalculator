@@ -501,8 +501,29 @@ function displayRecipes(ids) {
         }
         return returnString + ")";
     }
+
+    function getDepth(priceId) {
+        if (checkedItems.get(priceId).recipes.length == 0) return 1;
+        let max = 0;
+        for (const recipe of checkedItems.get(priceId).recipes) {
+            for (const resource of recipe.resources) {
+                if (getDepth(resource[0]) > max) {
+                    max = getDepth(resource[0]);
+                }
+            }
+        }
+        return max+1;
+    }
+    let maxDepth = 0;
     for (const currentPriceId of ids) {
-        console.log(recipeHelper(currentPriceId));
+        const currentDepth = getDepth(currentPriceId);
+        if (currentDepth > maxDepth) {
+            maxDepth = currentDepth;
+        }
+    }
+    console.log("max depth: "+maxDepth);
+    for (const currentPriceId of ids) {
+        //console.log(recipeHelper(currentPriceId));
     }
 }
 

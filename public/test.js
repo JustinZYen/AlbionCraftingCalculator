@@ -551,9 +551,8 @@ $("#title").on("change",()=>{
 });
 
 var box = document.createElement('input'); // creates the element
-document.getElementById("test-div").style.position = 'absolute';
 box.style.position = 'absolute';  // position it
 box.style.left = '200px';
 box.style.top = '150px';  
 
-document.getElementById("test-div").appendChild(box);
+document.getElementById("recipes-area").appendChild(box);

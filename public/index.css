@@ -1,0 +1,9 @@
+* {
+    box-sizing:border-box;
+}
+#recipes-area{
+    position:absolute;
+    overflow:scroll;
+    height: 400px;
+    width: 500px;
+}

@@ -324,12 +324,6 @@ async function getProfits() {
         //console.log(uncheckedItems)
         console.log("setting prices");
         await setPrices(uncheckedItems);
-        
-        /*
-        checkedItems.forEach((value,key)=> {
-            console.log(`key: ${key}, value: ${value}`);
-        });
-        */
         displayRecipes(ids)
        //getAveragePrices();
     } else {
@@ -514,15 +508,33 @@ function displayRecipes(ids) {
         }
         return max+1;
     }
-    let maxDepth = 0;
-    for (const currentPriceId of ids) {
-        const currentDepth = getDepth(currentPriceId);
-        if (currentDepth > maxDepth) {
-            maxDepth = currentDepth;
+
+    function escape(s) {
+        let newString = "";
+        for (let i = 0; i < s.length; i++) {
+            if (s.charAt(i) === '@') {
+                newString += "\\";
+            }
+            newString += s.charAt(i);
         }
+        return newString;
     }
-    console.log("max depth: "+maxDepth);
+    let leftPos = 10;
     for (const currentPriceId of ids) {
+        const box = document.createElement('div'); // creates the element
+        box.style.left = leftPos+"px";
+        leftPos += 500;
+        box.style.top = '150px';  
+        box.style.borderStyle = "solid";
+        box.style.height = "100px";
+        document.getElementById("recipes-area").appendChild(box);
+        const inputBox = document.createElement('input');
+        inputBox.id = currentPriceId;
+        box.appendChild(inputBox);
+        console.log(currentPriceId);
+        $("#recipes-area").on("change",`div #${escape(currentPriceId)}`,()=>{
+            console.log(currentPriceId);
+        });
         //console.log(recipeHelper(currentPriceId));
     }
 }
@@ -541,18 +553,14 @@ function fixLocation(initialLocation) {
     }
 }
 
-$("#my-button").on("click", getProfits);
+$("#load-price-button").on("click", getProfits);
 
 $( "#item-name" ).autocomplete({
     source: names
 });
-$("#title").on("change",()=>{
-    console.log($("#title").val());
+
+$("#city-selector").on("change",()=>{
+    console.log($("#city-selector").val());
 });
 
-var box = document.createElement('input'); // creates the element
-box.style.position = 'absolute';  // position it
-box.style.left = '200px';
-box.style.top = '150px';  
 
-document.getElementById("recipes-area").appendChild(box);

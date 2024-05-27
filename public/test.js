@@ -509,16 +509,6 @@ function displayRecipes(ids) {
         return max+1;
     }
 
-    function escape(s) {
-        let newString = "";
-        for (let i = 0; i < s.length; i++) {
-            if (s.charAt(i) === '@') {
-                newString += "\\";
-            }
-            newString += s.charAt(i);
-        }
-        return newString;
-    }
     let leftPos = 10;
     for (const currentPriceId of ids) {
         const box = document.createElement('div'); // creates the element
@@ -532,7 +522,7 @@ function displayRecipes(ids) {
         inputBox.id = currentPriceId;
         box.appendChild(inputBox);
         console.log(currentPriceId);
-        $("#recipes-area").on("change",`div #${escape(currentPriceId)}`,()=>{
+        $("#recipes-area").on("change",`div #${$.escapeSelector(currentPriceId)}`,()=>{
             console.log(currentPriceId);
         });
         //console.log(recipeHelper(currentPriceId));

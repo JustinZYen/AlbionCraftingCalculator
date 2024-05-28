@@ -522,9 +522,7 @@ function displayRecipes(ids) {
         inputBox.id = currentPriceId;
         box.appendChild(inputBox);
         console.log(currentPriceId);
-        $("#recipes-area").on("change",`div #${$.escapeSelector(currentPriceId)}`,()=>{
-            console.log(currentPriceId);
-        });
+        
         //console.log(recipeHelper(currentPriceId));
     }
 }
@@ -554,3 +552,7 @@ $("#city-selector").on("change",()=>{
 });
 
 
+$("#recipes-area").on("change",`div input`,function(){
+    console.log($(this).attr("id"));
+    console.log($( this ).val());
+});

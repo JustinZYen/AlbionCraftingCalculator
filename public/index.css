@@ -1,6 +1,10 @@
 * {
     box-sizing:border-box;
 }
+
+h1 {
+    text-align: center;
+}
 #recipes-area{
     /*
     position:relative;
@@ -11,11 +15,25 @@
     */
 }
 
-#recipes-area div {
-    /*position:absolute;*/
+#recipes-area > div {
+    border:solid;
+    margin:0.5%;
+    border-radius:10px;
+}
+
+#recipes-area div div {
+    padding:10px;
+    border-radius:10px;
+}
+
+#recipes-area  div div:hover {
+    background-color:yellow;
 }
 
 #recipes-area div figure {
     position: relative;
     display: none;
+    border: solid;
+    min-height: 100px;
+    overflow: hidden;
 }

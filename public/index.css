@@ -16,5 +16,6 @@
 }
 
 #recipes-area div figure {
+    position: relative;
     display: none;
 }

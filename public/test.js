@@ -150,7 +150,7 @@ class Item {
             //let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
-                previousId = this.priceId.slice(0,-1);
+                previousId = this.priceId.slice(0,-2);
             } else {
                 previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
             }

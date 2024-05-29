@@ -298,7 +298,7 @@ async function getProfits() {
     // If input value is contained in nameToID
     if (nameToID.hasOwnProperty(input)) {
         let ids = getItemIds(input);
-        console.log(ids);
+        ids.sort();
         // Set containing all strings for which prices need to be determined
         let uncheckedItems = new Map();
         // Stack containing items that still need to be determined whether a price check is needed
@@ -513,17 +513,11 @@ function displayRecipes(ids) {
     let leftPos = 10;
     for (const currentPriceId of ids) {
         const currentBox = document.createElement('div'); // creates the element
-        /*
-        currentBox.style.left = leftPos+"px";
-        leftPos += 500;
-        currentBox.style.top = '150px';  
-        */
         currentBox.style.borderStyle = "solid";
-        //currentBox.style.height = "100px";
         document.getElementById("recipes-area").appendChild(currentBox);
-        currentBox.id = nameToID[currentPriceId];
+        currentBox.id = currentPriceId;
         const itemDescriptor = document.createElement("div");
-        itemDescriptor.innerHTML = currentPriceId;
+        itemDescriptor.innerHTML = idToName[currentPriceId];
         const inputBox = document.createElement('figure');
         //inputBox.class = currentPriceId;
         currentBox.appendChild(itemDescriptor);

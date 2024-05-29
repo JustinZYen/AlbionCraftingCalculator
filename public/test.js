@@ -292,6 +292,7 @@ class Recipe {
 
 
 async function getProfits() {
+    document.getElementById("recipes-area").innerHTML = "";
     const input = $("#item-name").val();
     console.log("Input value: "+input);
     // If input value is contained in nameToID
@@ -511,17 +512,23 @@ function displayRecipes(ids) {
 
     let leftPos = 10;
     for (const currentPriceId of ids) {
-        const box = document.createElement('div'); // creates the element
-        box.style.left = leftPos+"px";
+        const currentBox = document.createElement('div'); // creates the element
+        /*
+        currentBox.style.left = leftPos+"px";
         leftPos += 500;
-        box.style.top = '150px';  
-        box.style.borderStyle = "solid";
-        box.style.height = "100px";
-        document.getElementById("recipes-area").appendChild(box);
-        const inputBox = document.createElement('input');
-        inputBox.id = currentPriceId;
-        box.appendChild(inputBox);
-        console.log(currentPriceId);
+        currentBox.style.top = '150px';  
+        */
+        currentBox.style.borderStyle = "solid";
+        //currentBox.style.height = "100px";
+        document.getElementById("recipes-area").appendChild(currentBox);
+        currentBox.id = nameToID[currentPriceId];
+        const itemDescriptor = document.createElement("div");
+        itemDescriptor.innerHTML = currentPriceId;
+        const inputBox = document.createElement('figure');
+        //inputBox.class = currentPriceId;
+        currentBox.appendChild(itemDescriptor);
+        currentBox.appendChild(inputBox);
+        //console.log(currentPriceId);
         
         //console.log(recipeHelper(currentPriceId));
     }
@@ -552,7 +559,8 @@ $("#city-selector").on("change",()=>{
 });
 
 
-$("#recipes-area").on("change",`div input`,function(){
-    console.log($(this).attr("id"));
-    console.log($( this ).val());
+$("#recipes-area").on("click",`div`,function(){
+    //const currentClass = $(this).attr("id");
+    $(this).find("figure").slideToggle("slow");
 });
+

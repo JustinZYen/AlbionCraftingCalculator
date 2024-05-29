@@ -2,13 +2,19 @@
     box-sizing:border-box;
 }
 #recipes-area{
+    /*
     position:relative;
     overflow:scroll;
     height: 400px;
     width: 100%;
     padding:20px;
+    */
 }
 
 #recipes-area div {
-    position:absolute;
+    /*position:absolute;*/
+}
+
+#recipes-area div figure {
+    display: none;
 }

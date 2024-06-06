@@ -24,6 +24,8 @@ const names = Object.keys(nameToIDDoc.data());
 // HashMap of all Items so far (for saving prices)
 // Uses priceIds as keys
 const checkedItems = new Map(); 
+// HashMap of all the ItemBoxes that correspond to a certain item
+const itemBoxes = new Map();
 
 // Hardcoding city crafting bonuses
 const cityBonuses = new Map([
@@ -61,6 +63,7 @@ class Item {
         [DateEnum.OLD,new PriceInfo()],
         [DateEnum.NEW,new PriceInfo()]
     ]);
+    overridePrice = -1;
     tier = NaN;
     enchantment = 0;
     id;
@@ -290,6 +293,27 @@ class Recipe {
     }
 }
 
+class RecipeBox {
+    craftedItem; // The item that this recipe is used to craft
+    currentBox; // The box corresponding to this recipe
+    boundedItems = [];
+    constructor(craftedItem,currentBox) {
+        this.craftedItem = craftedItem;
+        this.currentBox = currentBox;
+    }
+}
+
+class ItemBox {
+    boundingRecipe; // The box that contains this item
+    currentBox; // The box corresponding to this time
+    item; // Item object
+    craftingRecipes = [];
+    constructor(boundingRecipe, currentBox, item) {
+        this.boundingRecipe = boundingRecipe;
+        this.currentBox = currentBox;
+        this.item = item;
+    }
+}
 
 async function getProfits() {
     document.getElementById("recipes-area").innerHTML = "";
@@ -510,20 +534,22 @@ function displayRecipes(ids) {
         return max+1;
     }
 
-    let leftPos = 10;
     for (const currentPriceId of ids) {
+        const currentItem = checkedItems.get(currentPriceId);
         const currentBox = document.createElement('div'); // creates the element
-        currentBox.style.borderStyle = "solid";
         document.getElementById("recipes-area").appendChild(currentBox);
         currentBox.id = currentPriceId;
         const itemDescriptor = document.createElement("div");
         itemDescriptor.innerHTML = idToName[currentPriceId];
+        itemDescriptor.innerHTML += ` (${currentItem.tier}.${currentItem.enchantment})`;
         const inputBox = document.createElement('figure');
         //inputBox.class = currentPriceId;
         currentBox.appendChild(itemDescriptor);
         currentBox.appendChild(inputBox);
         //console.log(currentPriceId);
-        
+        const depth = getDepth(currentPriceId);
+
+        itemBoxes.set(currentPriceId,new ItemBox(null,checkedItems.get(currentPriceId)));
         //console.log(recipeHelper(currentPriceId));
     }
 }

@@ -21,6 +21,7 @@ h1 {
     border-radius:10px;
 }
 
+/**/
 #recipes-area div div {
     padding:10px;
     border-radius:10px;
@@ -30,10 +31,15 @@ h1 {
     background-color:yellow;
 }
 
+#recipes-area div figure svg {
+    position: relative;
+    display: none;
+    border: solid;
+}
+
 #recipes-area div figure {
     position: relative;
     display: none;
     border: solid;
-    min-height: 100px;
-    overflow: hidden;
+    overflow: scroll;
 }

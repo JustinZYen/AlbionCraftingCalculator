@@ -542,10 +542,16 @@ function displayRecipes(ids) {
         const itemDescriptor = document.createElement("div");
         itemDescriptor.innerHTML = idToName[currentPriceId];
         itemDescriptor.innerHTML += ` (${currentItem.tier}.${currentItem.enchantment})`;
-        const inputBox = document.createElement('figure');
+        const inputBox = document.createElement("figure");
+        const boxLines = document.createElementNS("http://www.w3.org/2000/svg",'svg');
+        boxLines.setAttribute("height",100);
+        boxLines.setAttribute("width",100);
+
         //inputBox.class = currentPriceId;
         currentBox.appendChild(itemDescriptor);
+        inputBox.appendChild(boxLines);
         currentBox.appendChild(inputBox);
+        
         //console.log(currentPriceId);
         const depth = getDepth(currentPriceId);
 
@@ -582,5 +588,5 @@ $("#city-selector").on("change",()=>{
 $("#recipes-area").on("click",`div`,function(){
     //const currentClass = $(this).attr("id");
     $(this).find("figure").slideToggle("slow");
+    $(this).find("svg").slideToggle("slow");
 });
-

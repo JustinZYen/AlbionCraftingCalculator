@@ -32,7 +32,7 @@ h1 {
 }
 
 #recipes-area div figure svg {
-    position: relative;
+    position: absolute;
     display: none;
     border: solid;
 }
@@ -41,5 +41,12 @@ h1 {
     position: relative;
     display: none;
     border: solid;
-    overflow: scroll;
+    overflow: auto;
+    min-height: 400px;
+}
+
+#recipes-area div figure div {
+    position:absolute;
+    border:solid;
+    background-color: green;
 }

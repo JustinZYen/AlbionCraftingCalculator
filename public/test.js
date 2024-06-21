@@ -25,6 +25,7 @@ const names = Object.keys(nameToIDDoc.data());
 // Uses priceIds as keys
 const checkedItems = new Map(); 
 // HashMap of all the ItemBoxes that correspond to a certain item
+// Uses priceIds as keys and an ItemBox array as value
 const itemBoxes = new Map();
 
 // Hardcoding city crafting bonuses
@@ -294,7 +295,7 @@ class Recipe {
 }
 
 class RecipeBox {
-    craftedItem; // The item that this recipe is used to craft
+    craftedItem; // The item that this recipe is used to craft (ItemBox)
     currentBox; // The box corresponding to this recipe
     boundedItems = [];
     constructor(craftedItem,currentBox) {
@@ -304,14 +305,17 @@ class RecipeBox {
 }
 
 class ItemBox {
-    boundingRecipe; // The box that contains this item
-    currentBox; // The box corresponding to this time
+    boundingRecipe; // The box that contains this item (RecipeBox)
+    currentBox; // The box corresponding to this item
     item; // Item object
     craftingRecipes = [];
-    constructor(boundingRecipe, currentBox, item) {
+    offset;
+    static BOX_WIDTH = 40;
+    constructor(boundingRecipe, currentBox, item, offset) {
         this.boundingRecipe = boundingRecipe;
         this.currentBox = currentBox;
         this.item = item;
+        this.offset = offset;
     }
 }
 
@@ -364,7 +368,7 @@ async function previousDateString() {
         (previousPatchDateDate.getUTCMonth()+1)+"-"+
         (previousPatchDateDate.getUTCDate());
     const patchDateDate = new Date(patchDates.Date);
-    const patchDateString = await patchDateDate.getUTCFullYear()+"-"+
+    const patchDateString = patchDateDate.getUTCFullYear()+"-"+
         (patchDateDate.getUTCMonth()+1)+"-"+
         (patchDateDate.getUTCDate());
     return dateString(previousPatchDateString,patchDateString);
@@ -506,56 +510,72 @@ async function getPrices(priceURL,timeSpan) {
 }
 
 function displayRecipes(ids) {
-    function recipeHelper(id) {
-        let returnString = `name: ${idToName[id]} `;
-        if (checkedItems.get(id).recipes.length == 0) {
-            return returnString;
-        }
-        returnString += "recipe(s): ("
-        for (const recipe of checkedItems.get(id).recipes) {
-            for (const resource of recipe.resources) {
-                returnString += recipeHelper(resource[0]) + "amount: " + resource[1]+" ";
-            }
-            returnString += " ; ";
-        }
-        return returnString + ")";
-    }
-
-    function getDepth(priceId) {
-        if (checkedItems.get(priceId).recipes.length == 0) return 1;
-        let max = 0;
-        for (const recipe of checkedItems.get(priceId).recipes) {
-            for (const resource of recipe.resources) {
-                if (getDepth(resource[0]) > max) {
-                    max = getDepth(resource[0]);
-                }
-            }
-        }
-        return max+1;
-    }
-
     for (const currentPriceId of ids) {
         const currentItem = checkedItems.get(currentPriceId);
+
+        // Set up div to contain the current recipe box
         const currentBox = document.createElement('div'); // creates the element
-        document.getElementById("recipes-area").appendChild(currentBox);
         currentBox.id = currentPriceId;
+        document.getElementById("recipes-area").appendChild(currentBox);
+
+        // Item description bar (shows up before slide toggling)
         const itemDescriptor = document.createElement("div");
-        itemDescriptor.innerHTML = idToName[currentPriceId];
-        itemDescriptor.innerHTML += ` (${currentItem.tier}.${currentItem.enchantment})`;
-        const inputBox = document.createElement("figure");
-        const boxLines = document.createElementNS("http://www.w3.org/2000/svg",'svg');
-        boxLines.setAttribute("height",100);
-        boxLines.setAttribute("width",100);
-
-        //inputBox.class = currentPriceId;
+        itemDescriptor.innerText = idToName[currentPriceId];
+        itemDescriptor.innerText += ` (${currentItem.tier}.${currentItem.enchantment})`;
         currentBox.appendChild(itemDescriptor);
-        inputBox.appendChild(boxLines);
-        currentBox.appendChild(inputBox);
-        
-        //console.log(currentPriceId);
-        const depth = getDepth(currentPriceId);
 
-        itemBoxes.set(currentPriceId,new ItemBox(null,checkedItems.get(currentPriceId)));
+        // Display area for items
+        const displayBox = document.createElement("figure");
+        // Svg to display associated lines
+        const boxLines = document.createElementNS("http://www.w3.org/2000/svg",'svg');
+        boxLines.setAttribute("height",200);
+        boxLines.setAttribute("width",100);
+        displayBox.appendChild(boxLines);
+        currentBox.appendChild(displayBox);
+
+        // START CREATING BOXES TO DISPLAY INSIDE DISPLAY BOX
+        // Set up nodes and links to connect using d3
+        const nodes = []; // Recipe boxes
+        const links = []; // Links between recipe boxes that also contain information for which item is actually linked
+
+
+        // Set of item IDs that have been visited already (do not need to create associated recipes again)
+        const visitedItems = new Set();
+
+        // Stack of pairs of ItemBoxes and node indexes whose recipes still need processing (uses their item ids for easier comparison)
+        const itemIdStack = [];
+
+        // Create the head box
+        const headBox = new RecipeBox(null,document.createElement("div"));
+        const itemBox = new ItemBox(headBox,document.createElement("div"),currentItem,0);
+        headBox.currentBox.appendChild(itemBox.currentBox);
+        nodes.push(headBox);
+        itemIdStack.push({"itemBox":itemBox, "index":0});
+        displayBox.appendChild(headBox.currentBox);
+
+        
+        const getOffset = (index,numElements) => {
+            const SPACING = 10;
+            return SPACING*(index-(numElements-1)/2);
+        };
+
+        // Iterate through all recipes, adding to nodes and links
+        while (itemIdStack.length > 0) {
+            const activeItemData = itemIdStack.pop();
+            for (const recipe of activeItemData.itemBox.item.recipes) {
+                // Create recipe box for item
+                const recipeBox = new RecipeBox(null,document.createElement("div"));
+                const resourceCount = recipe.length;
+                for (let i = 0; i < resourceCount; i++) {
+                    const offset = getOffset(i,resourceCount);
+                    const newItemId = recipe[i][0];
+                    if (!visitedItems.has(newItemId)) {
+                        itemIdStack.push()
+                    }
+                }
+            }
+            break;
+        }
         //console.log(recipeHelper(currentPriceId));
     }
 }

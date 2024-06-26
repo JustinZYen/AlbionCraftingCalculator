@@ -610,7 +610,7 @@ function displayRecipes(ids) {
                         console.log(`${i}th resource: ${recipe.resources[i]}`);
                         const newItemId = recipe.resources[i].priceId;
                         const currentItemBox = new ItemBox(recipeBox,document.createElement("div"),checkedItems.get(newItemId),offset);
-                        recipeBox.currentBox.appendChild(currentItemBox.recipeBox);
+                        recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                         itemBoxStack.push(currentItemBox);
                     }
                 }

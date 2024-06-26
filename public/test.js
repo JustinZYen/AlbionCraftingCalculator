@@ -159,7 +159,8 @@ class Item {
                 previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
             }
             let initialRecipe = new Recipe(0,0,0,[itemInfo.upgraderequirements.upgraderesource]);
-            initialRecipe.resources.push([previousId,1]);
+            
+            initialRecipe.addResource(previousId,1);
             this.recipes.push(initialRecipe);
         }
     }
@@ -282,25 +283,31 @@ class Recipe {
      * @param {number} focus 
      * @param {number} silver 
      * @param {number} time 
-     * @param {array} resources 
+     * @param {array} resources Resources, as obtained from the item json
      */
     constructor (focus,silver,time,resources) {
         this.focus = parseFloat(focus);
         this.silver = parseFloat(silver);
         this.time = parseFloat(time);
         for (const resource of resources) {
-            this.resources.push([Item.getPriceId(resource["@uniquename"]),parseFloat(resource["@count"])]);
+            this.addResource(Item.getPriceId(resource["@uniquename"]),parseFloat(resource["@count"]));
         }
+    }
+
+    addResource(priceId,count) {
+        this.resources.push({"priceId":priceId,"count":count});
     }
 }
 
 class RecipeBox {
-    craftedItem; // The item that this recipe is used to craft (ItemBox)
+    craftedItems = []; // The item array that this recipe is used to craft (ItemBox)
     currentBox; // The box corresponding to this recipe
-    boundedItems = [];
+    boundedItems = []; // Might not be needed
+    index; // Index of recipe box to allow for quicker referencing in nodes list
     constructor(craftedItem,currentBox) {
-        this.craftedItem = craftedItem;
+        this.craftedItems.push(craftedItem);
         this.currentBox = currentBox;
+        this.index = -1;
     }
 }
 
@@ -316,6 +323,10 @@ class ItemBox {
         this.currentBox = currentBox;
         this.item = item;
         this.offset = offset;
+    }
+
+    toString() {
+        return "Item box for "+item;
     }
 }
 
@@ -343,7 +354,7 @@ async function getProfits() {
                 //console.log(`currentItem: ${typeof currentItem}`);
                 for (const recipe of currentItem.recipes) {
                     for (const resource of recipe.resources) {
-                        itemStack.push(new Item(resource[0]));
+                        itemStack.push(new Item(resource.priceId));
                     }
                 }
                 uncheckedItems.set(currentItem.priceId,currentItem);
@@ -539,18 +550,19 @@ function displayRecipes(ids) {
         const links = []; // Links between recipe boxes that also contain information for which item is actually linked
 
 
-        // Set of item IDs that have been visited already (do not need to create associated recipes again)
-        const visitedItems = new Set();
+        // Set of item IDs that have been visited already mapped to an array of recipe link indexes (do not need to create associated recipes again)
+        const visitedItems = new Map();
 
-        // Stack of pairs of ItemBoxes and node indexes whose recipes still need processing (uses their item ids for easier comparison)
-        const itemIdStack = [];
+        // Stack of ItemBoxes whose recipes still need processing
+        const itemBoxStack = [];
 
         // Create the head box
         const headBox = new RecipeBox(null,document.createElement("div"));
+        headBox.index = 0;
         const itemBox = new ItemBox(headBox,document.createElement("div"),currentItem,0);
         headBox.currentBox.appendChild(itemBox.currentBox);
-        nodes.push(headBox);
-        itemIdStack.push({"itemBox":itemBox, "index":0});
+        nodes.push({"box":headBox});
+        itemBoxStack.push(itemBox);
         displayBox.appendChild(headBox.currentBox);
 
         
@@ -560,22 +572,53 @@ function displayRecipes(ids) {
         };
 
         // Iterate through all recipes, adding to nodes and links
-        while (itemIdStack.length > 0) {
-            const activeItemData = itemIdStack.pop();
-            for (const recipe of activeItemData.itemBox.item.recipes) {
-                // Create recipe box for item
-                const recipeBox = new RecipeBox(null,document.createElement("div"));
-                const resourceCount = recipe.length;
-                for (let i = 0; i < resourceCount; i++) {
-                    const offset = getOffset(i,resourceCount);
-                    const newItemId = recipe[i][0];
-                    if (!visitedItems.has(newItemId)) {
-                        itemIdStack.push()
+        while (itemBoxStack.length > 0) {
+            const activeItemBox = itemBoxStack.pop();
+            const activeItem = activeItemBox.item;
+            // Check to see if this area has already been traversed (just relink)
+            if (visitedItems.has(activeItem.priceId)) {
+                for (const sourceIndex of visitedItems.get(activeItem.priceId)) {
+                    // Add current item box to the array of items that the current recipe is used to craft
+                    nodes[sourceIndex].box.craftedItems.push(activeItemBox);
+                    links.push({
+                        "source":sourceIndex,
+                        "target":activeItemBox.boundingRecipe.index,
+                        "itemBox":activeItemBox
+                    });
+                }
+            } else {
+                const sourceIndexes = [];
+                //console.log("recipe count: "+activeItem.recipes.length);
+                for (const recipe of activeItem.recipes) {
+                    // Create recipe box for item
+                    //console.log("recipe: "+recipe.resources[0]);
+                    const recipeBox = new RecipeBox(activeItemBox,document.createElement("div"));
+                    recipeBox.index = nodes.length;
+                    // add recipe box to nodes
+                    nodes.push({"box":recipeBox});
+                    const resourceCount = recipe.resources.length;
+                    // Create a link from recipe box to the bounding box, with the active item box as additional information
+                    links.push({
+                        "source":recipeBox.index,
+                        "target":activeItemBox.boundingRecipe.index,
+                        "itemBox":activeItemBox
+                    });
+                    sourceIndexes.push(recipeBox.index);
+                    for (let i = 0; i < resourceCount; i++) {
+                        const offset = getOffset(i,resourceCount);
+                        console.log(`${i}th resource: ${recipe.resources[i]}`);
+                        const newItemId = recipe.resources[i].priceId;
+                        const currentItemBox = new ItemBox(recipeBox,document.createElement("div"),checkedItems.get(newItemId),offset);
+                        itemBoxStack.push(currentItemBox);
                     }
                 }
+                console.log("source idnexes: "+sourceIndexes);
+                visitedItems.set(activeItem.priceId,sourceIndexes);
             }
-            break;
+            
         }
+        console.log(nodes);
+        console.log(links);
         //console.log(recipeHelper(currentPriceId));
     }
 }

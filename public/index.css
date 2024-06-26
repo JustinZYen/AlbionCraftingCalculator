@@ -31,12 +31,7 @@ h1 {
     background-color:yellow;
 }
 
-#recipes-area div figure svg {
-    position: absolute;
-    display: none;
-    border: solid;
-}
-
+/*Figure containing all the recipe boxes*/
 #recipes-area div figure {
     position: relative;
     display: none;
@@ -45,6 +40,15 @@ h1 {
     min-height: 400px;
 }
 
+/*Svg to display connection lines*/
+#recipes-area div figure svg {
+    position: absolute;
+    display: none;
+    border: solid;
+}
+
+
+/* The individual recipe boxes */
 #recipes-area div figure div {
     position:absolute;
     border:solid;

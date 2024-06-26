@@ -539,7 +539,7 @@ function displayRecipes(ids) {
         const displayBox = document.createElement("figure");
         // Svg to display associated lines
         const boxLines = document.createElementNS("http://www.w3.org/2000/svg",'svg');
-        boxLines.setAttribute("height",200);
+        boxLines.setAttribute("height",2000);
         boxLines.setAttribute("width",100);
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
@@ -593,6 +593,7 @@ function displayRecipes(ids) {
                     // Create recipe box for item
                     //console.log("recipe: "+recipe.resources[0]);
                     const recipeBox = new RecipeBox(activeItemBox,document.createElement("div"));
+                    displayBox.appendChild(recipeBox.currentBox);
                     recipeBox.index = nodes.length;
                     // add recipe box to nodes
                     nodes.push({"box":recipeBox});
@@ -609,6 +610,7 @@ function displayRecipes(ids) {
                         console.log(`${i}th resource: ${recipe.resources[i]}`);
                         const newItemId = recipe.resources[i].priceId;
                         const currentItemBox = new ItemBox(recipeBox,document.createElement("div"),checkedItems.get(newItemId),offset);
+                        recipeBox.currentBox.appendChild(currentItemBox.recipeBox);
                         itemBoxStack.push(currentItemBox);
                     }
                 }

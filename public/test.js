@@ -610,6 +610,7 @@ function displayRecipes(ids) {
                         console.log(`${i}th resource: ${recipe.resources[i]}`);
                         const newItemId = recipe.resources[i].priceId;
                         const currentItemBox = new ItemBox(recipeBox,document.createElement("div"),checkedItems.get(newItemId),offset);
+                        currentItemBox.textContent = newItemId;
                         recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                         itemBoxStack.push(currentItemBox);
                     }
@@ -619,9 +620,44 @@ function displayRecipes(ids) {
             }
             
         }
+        // Create svg elements to correspond with lines
+        for (const link of links) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            link.line = line;
+            boxLines.appendChild(line);
+        }
+        
+        var simulation = d3
+            .forceSimulation(nodes)
+            .force('charge', d3.forceManyBody().strength(-2400))
+            .force('link',d3.forceLink(links))
+            //.force('x', d3.forceX(0).strength(0.4))
+            //.force('y', d3.forceY(0).strength(0.5))
+            .force('center', d3.forceCenter(0,0));
+        
         console.log(nodes);
         console.log(links);
-        //console.log(recipeHelper(currentPriceId));
+        simulation.on('tick', () => {
+            for (const node of nodes) {
+                node.box.currentBox.style.left = node.x+"px";
+                node.box.currentBox.style.top = node.y+"px";
+            }
+            for (const link of links) {
+                const line = link.line;
+                line.setAttribute("x1", link.target.x+20);
+                line.setAttribute("y1", link.target.y+20);
+                line.setAttribute("x2", link.source.x+20);
+                line.setAttribute("y2", link.source.y+20);
+            }
+            /*
+            nodeElements
+            .attr('cx', function (node) { return node.x })
+            .attr('cy', function (node) { return node.y })
+            textElements
+            .attr('x', function (node) { return node.x })
+            .attr('y', function (node) { return node.y })
+            */
+        })
     }
 }
 

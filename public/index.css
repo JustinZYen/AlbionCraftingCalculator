@@ -54,3 +54,8 @@ h1 {
     border:solid;
     background-color: green;
 }
+
+line {
+	stroke:red;
+	stroke-width:5;
+}

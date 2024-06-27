@@ -540,7 +540,7 @@ function displayRecipes(ids) {
         // Svg to display associated lines
         const boxLines = document.createElementNS("http://www.w3.org/2000/svg",'svg');
         boxLines.setAttribute("height",2000);
-        boxLines.setAttribute("width",100);
+        boxLines.setAttribute("width",4000);
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
 
@@ -564,7 +564,7 @@ function displayRecipes(ids) {
         nodes.push({"box":headBox});
         itemBoxStack.push(itemBox);
         displayBox.appendChild(headBox.currentBox);
-
+        itemBox.currentBox.innerText = currentPriceId;
         
         const getOffset = (index,numElements) => {
             const SPACING = 10;
@@ -610,7 +610,7 @@ function displayRecipes(ids) {
                         console.log(`${i}th resource: ${recipe.resources[i]}`);
                         const newItemId = recipe.resources[i].priceId;
                         const currentItemBox = new ItemBox(recipeBox,document.createElement("div"),checkedItems.get(newItemId),offset);
-                        currentItemBox.textContent = newItemId;
+                        currentItemBox.currentBox.textContent = newItemId;
                         recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                         itemBoxStack.push(currentItemBox);
                     }

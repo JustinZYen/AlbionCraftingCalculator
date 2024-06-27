@@ -631,8 +631,8 @@ function displayRecipes(ids) {
             .forceSimulation(nodes)
             .force('charge', d3.forceManyBody().strength(-2400))
             .force('link',d3.forceLink(links))
-            //.force('x', d3.forceX(0).strength(0.4))
-            //.force('y', d3.forceY(0).strength(0.5))
+            .force('x', d3.forceX(0).strength(0.4))
+            .force('y', d3.forceY(0).strength(0.5))
             .force('center', d3.forceCenter(0,0));
         
         console.log(nodes);

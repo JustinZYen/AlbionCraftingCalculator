@@ -638,25 +638,28 @@ function displayRecipes(ids) {
         console.log(nodes);
         console.log(links);
         simulation.on('tick', () => {
+            // Find the minimum node x and y values in order to shift all nodes by that amount
+            let minX = Number.MAX_SAFE_INTEGER;
+            let minY = Number.MAX_SAFE_INTEGER;
             for (const node of nodes) {
-                node.box.currentBox.style.left = node.x+"px";
-                node.box.currentBox.style.top = node.y+"px";
+                if (node.x < minX) {
+                    minX = node.x;
+                }
+                if (node.y < minY) {
+                    minY = node.y;
+                }
+            }
+            for (const node of nodes) {
+                node.box.currentBox.style.left = (node.x-minX)+"px";
+                node.box.currentBox.style.top = (node.y-minY)+"px";
             }
             for (const link of links) {
                 const line = link.line;
-                line.setAttribute("x1", link.target.x+20);
-                line.setAttribute("y1", link.target.y+20);
-                line.setAttribute("x2", link.source.x+20);
-                line.setAttribute("y2", link.source.y+20);
+                line.setAttribute("x1", link.target.x-minX);
+                line.setAttribute("y1", link.target.y-minY);
+                line.setAttribute("x2", link.source.x-minX);
+                line.setAttribute("y2", link.source.y-minY);
             }
-            /*
-            nodeElements
-            .attr('cx', function (node) { return node.x })
-            .attr('cy', function (node) { return node.y })
-            textElements
-            .attr('x', function (node) { return node.x })
-            .attr('y', function (node) { return node.y })
-            */
         })
     }
 }

@@ -654,14 +654,16 @@ function displayRecipes(ids) {
             // Find the minimum node x and y values in order to shift all nodes by that amount
             let minX = Number.MAX_SAFE_INTEGER;
             let minY = Number.MAX_SAFE_INTEGER;
+            let maxX = 0;
+            let maxY = 0;
             for (const node of nodes) {
-                if (node.x < minX) {
-                    minX = node.x;
-                }
-                if (node.y < minY) {
-                    minY = node.y;
-                }
+                minX = Math.min(minX,node.x);
+                minY = Math.min(minY,node.y);
+                maxX = Math.max(maxX,node.x+parseInt(node.box.currentBox.style.width));
+                maxY = Math.max(maxY,node.y+parseInt(node.box.currentBox.style.height));
             }
+            boxLines.setAttribute("height",maxY-minY);
+            boxLines.setAttribute("width",maxX-minX);
             for (const node of nodes) {
                 node.box.currentBox.style.left = (node.x-minX)+"px";
                 node.box.currentBox.style.top = (node.y-minY)+"px";

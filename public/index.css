@@ -44,7 +44,7 @@ h1 {
 #recipes-area div figure svg {
     position: absolute;
     display: none;
-    border: solid;
+    border: none;
 }
 
 

@@ -313,7 +313,7 @@ class RecipeBox {
     constructor(craftedItem) {
         this.craftedItems.push(craftedItem);
         this.currentBox = document.createElement("div");
-        this.currentBox.style.height = RecipeBox.BOX_HEIGHT+"px";
+        this.currentBox.style.height = (ItemBox.BOX_HEIGHT+4.8)+"px";
         this.index = -1;
     }
 }
@@ -325,6 +325,7 @@ class ItemBox {
     craftingRecipes = [];
     offset;
     static BOX_WIDTH = 100;
+    static BOX_HEIGHT = 100;
     /**
      * 
      * @param {RecipeBox} boundingRecipe 
@@ -336,6 +337,7 @@ class ItemBox {
         this.currentBox = document.createElement("div");
         this.currentBox.style.left = offset+"px";
         this.currentBox.style.width = ItemBox.BOX_WIDTH+"px";
+        this.currentBox.style.height = ItemBox.BOX_HEIGHT+"px";
         this.item = item;
         this.offset = offset;
     }

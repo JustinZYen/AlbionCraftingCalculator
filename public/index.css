@@ -58,7 +58,7 @@ h1 {
 }
 
 #recipes-area div figure div div {
-    overflow:auto;
+    overflow:scroll;
 }
 
 line {

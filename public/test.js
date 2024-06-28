@@ -304,9 +304,16 @@ class RecipeBox {
     currentBox; // The box corresponding to this recipe
     boundedItems = []; // Might not be needed
     index; // Index of recipe box to allow for quicker referencing in nodes list
-    constructor(craftedItem,currentBox) {
+    static BOX_WIDTH = 200;
+    static BOX_HEIGHT = 100;
+    /**
+     * 
+     * @param {Item} craftedItem 
+     */
+    constructor(craftedItem) {
         this.craftedItems.push(craftedItem);
-        this.currentBox = currentBox;
+        this.currentBox = document.createElement("div");
+        this.currentBox.style.height = RecipeBox.BOX_HEIGHT+"px";
         this.index = -1;
     }
 }
@@ -317,10 +324,18 @@ class ItemBox {
     item; // Item object
     craftingRecipes = [];
     offset;
-    static BOX_WIDTH = 40;
-    constructor(boundingRecipe, currentBox, item, offset) {
+    static BOX_WIDTH = 100;
+    /**
+     * 
+     * @param {RecipeBox} boundingRecipe 
+     * @param {Item} item 
+     * @param {Number} offset 
+     */
+    constructor(boundingRecipe, item, offset) {
         this.boundingRecipe = boundingRecipe;
-        this.currentBox = currentBox;
+        this.currentBox = document.createElement("div");
+        this.currentBox.style.left = offset+"px";
+        this.currentBox.style.width = ItemBox.BOX_WIDTH+"px";
         this.item = item;
         this.offset = offset;
     }
@@ -405,7 +420,7 @@ function dateString(startDate,endDate) {
 
 /**
  * 
- * @param {*} itemId 
+ * @param {String} itemId 
  * @returns An array containing item ids of all weapons that share the name in the tree
  */
 function getItemIds(itemId) {
@@ -557,19 +572,14 @@ function displayRecipes(ids) {
         const itemBoxStack = [];
 
         // Create the head box
-        const headBox = new RecipeBox(null,document.createElement("div"));
+        const headBox = new RecipeBox(null);
         headBox.index = 0;
-        const itemBox = new ItemBox(headBox,document.createElement("div"),currentItem,0);
+        const itemBox = new ItemBox(headBox,currentItem,0);
         headBox.currentBox.appendChild(itemBox.currentBox);
         nodes.push({"box":headBox});
         itemBoxStack.push(itemBox);
         displayBox.appendChild(headBox.currentBox);
         itemBox.currentBox.innerText = currentPriceId;
-        
-        const getOffset = (index,numElements) => {
-            const SPACING = 10;
-            return SPACING*(index-(numElements-1)/2);
-        };
 
         // Iterate through all recipes, adding to nodes and links
         while (itemBoxStack.length > 0) {
@@ -590,14 +600,15 @@ function displayRecipes(ids) {
                 const sourceIndexes = [];
                 //console.log("recipe count: "+activeItem.recipes.length);
                 for (const recipe of activeItem.recipes) {
+                    const resourceCount = recipe.resources.length;
                     // Create recipe box for item
                     //console.log("recipe: "+recipe.resources[0]);
-                    const recipeBox = new RecipeBox(activeItemBox,document.createElement("div"));
+                    const recipeBox = new RecipeBox(activeItemBox);
                     displayBox.appendChild(recipeBox.currentBox);
+                    recipeBox.currentBox.style.width = resourceCount*ItemBox.BOX_WIDTH+"px";
                     recipeBox.index = nodes.length;
                     // add recipe box to nodes
                     nodes.push({"box":recipeBox});
-                    const resourceCount = recipe.resources.length;
                     // Create a link from recipe box to the bounding box, with the active item box as additional information
                     links.push({
                         "source":recipeBox.index,
@@ -606,10 +617,10 @@ function displayRecipes(ids) {
                     });
                     sourceIndexes.push(recipeBox.index);
                     for (let i = 0; i < resourceCount; i++) {
-                        const offset = getOffset(i,resourceCount);
+                        const offset = ItemBox.BOX_WIDTH*i;
                         console.log(`${i}th resource: ${recipe.resources[i]}`);
                         const newItemId = recipe.resources[i].priceId;
-                        const currentItemBox = new ItemBox(recipeBox,document.createElement("div"),checkedItems.get(newItemId),offset);
+                        const currentItemBox = new ItemBox(recipeBox,checkedItems.get(newItemId),offset);
                         currentItemBox.currentBox.textContent = newItemId;
                         recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                         itemBoxStack.push(currentItemBox);
@@ -629,7 +640,7 @@ function displayRecipes(ids) {
         
         var simulation = d3
             .forceSimulation(nodes)
-            .force('charge', d3.forceManyBody().strength(-2400))
+            .force('charge', d3.forceManyBody().strength(-10000))
             .force('link',d3.forceLink(links))
             .force('x', d3.forceX(0).strength(0.4))
             .force('y', d3.forceY(0).strength(0.5))
@@ -655,7 +666,8 @@ function displayRecipes(ids) {
             }
             for (const link of links) {
                 const line = link.line;
-                line.setAttribute("x1", link.target.x-minX);
+                //console.log(link.itemBox.offset);
+                line.setAttribute("x1", link.target.x-minX+link.itemBox.offset);
                 line.setAttribute("y1", link.target.y-minY);
                 line.setAttribute("x2", link.source.x-minX);
                 line.setAttribute("y2", link.source.y-minY);

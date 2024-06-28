@@ -53,6 +53,12 @@ h1 {
     position:absolute;
     border:solid;
     background-color: green;
+    padding:0;
+    
+}
+
+#recipes-area div figure div div {
+    overflow:auto;
 }
 
 line {

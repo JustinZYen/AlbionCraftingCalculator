@@ -575,6 +575,8 @@ function displayRecipes(ids) {
         const headBox = new RecipeBox(null);
         headBox.index = 0;
         const itemBox = new ItemBox(headBox,currentItem,0);
+        headBox.currentBox.style.width = ItemBox.BOX_WIDTH+"px";
+        itemBox.currentBox.style["background-color"] = "gold";
         headBox.currentBox.appendChild(itemBox.currentBox);
         nodes.push({"box":headBox});
         itemBoxStack.push(itemBox);

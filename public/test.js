@@ -305,7 +305,7 @@ class RecipeBox {
     boundedItems = []; // Might not be needed
     index; // Index of recipe box to allow for quicker referencing in nodes list
     static BOX_WIDTH = 200;
-    static BOX_HEIGHT = 100;
+    static BOX_HEIGHT = 0;
     /**
      * 
      * @param {Item} craftedItem 
@@ -575,7 +575,7 @@ function displayRecipes(ids) {
         const headBox = new RecipeBox(null);
         headBox.index = 0;
         const itemBox = new ItemBox(headBox,currentItem,0);
-        headBox.currentBox.style.width = ItemBox.BOX_WIDTH+"px";
+        headBox.currentBox.style.width = ItemBox.BOX_WIDTH+4.8+"px"; //4.8 to account for border width
         itemBox.currentBox.style["background-color"] = "gold";
         headBox.currentBox.appendChild(itemBox.currentBox);
         nodes.push({"box":headBox});
@@ -607,7 +607,7 @@ function displayRecipes(ids) {
                     //console.log("recipe: "+recipe.resources[0]);
                     const recipeBox = new RecipeBox(activeItemBox);
                     displayBox.appendChild(recipeBox.currentBox);
-                    recipeBox.currentBox.style.width = resourceCount*ItemBox.BOX_WIDTH+"px";
+                    recipeBox.currentBox.style.width = resourceCount*ItemBox.BOX_WIDTH+4.8+"px"; // 4.8 to account for border width
                     recipeBox.index = nodes.length;
                     // add recipe box to nodes
                     nodes.push({"box":recipeBox});

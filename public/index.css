@@ -54,7 +54,7 @@ h1 {
     border:solid;
     background-color: green;
     padding:0;
-    
+    border-radius:0px;
 }
 
 #recipes-area div figure div div {

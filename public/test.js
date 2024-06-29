@@ -558,6 +558,20 @@ function displayRecipes(ids) {
         const boxLines = document.createElementNS("http://www.w3.org/2000/svg",'svg');
         boxLines.setAttribute("height",2000);
         boxLines.setAttribute("width",4000);
+        const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
+        const arrowhead = document.createElementNS("http://www.w3.org/2000/svg","marker");
+        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        path.setAttribute("d","M -5 0 L 5 5 L -5 10 Z");
+        path.setAttribute("fill","black");
+        arrowhead.appendChild(path);
+        arrowhead.setAttribute("id","arrow"); 
+        arrowhead.setAttribute("markerWidth","10");
+        arrowhead.setAttribute("markerHeight","10");
+        arrowhead.setAttribute("refX","5");
+        arrowhead.setAttribute("refY","5");
+        arrowhead.setAttribute("orient","auto");
+        defs.appendChild(arrowhead);
+        boxLines.appendChild(defs);
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
 
@@ -638,6 +652,7 @@ function displayRecipes(ids) {
         // Create svg elements to correspond with lines
         for (const link of links) {
             const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute("marker-end","url(#arrow)");
             link.line = line;
             boxLines.appendChild(line);
         }
@@ -673,10 +688,10 @@ function displayRecipes(ids) {
             for (const link of links) {
                 const line = link.line;
                 //console.log(link.itemBox.offset);
-                line.setAttribute("x1", link.target.x-minX+link.itemBox.offset);
-                line.setAttribute("y1", link.target.y-minY);
-                line.setAttribute("x2", link.source.x-minX);
-                line.setAttribute("y2", link.source.y-minY);
+                line.setAttribute("x1", link.source.x-minX+parseInt(link.source.box.currentBox.style.width)/2);
+                line.setAttribute("y1", link.source.y-minY+parseInt(link.source.box.currentBox.style.height)/2);
+                line.setAttribute("x2", link.target.x-minX+link.itemBox.offset+ItemBox.BOX_WIDTH/2);
+                line.setAttribute("y2", link.target.y-minY);
             }
         })
     }

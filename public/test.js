@@ -561,14 +561,16 @@ function displayRecipes(ids) {
         const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
         const arrowhead = document.createElementNS("http://www.w3.org/2000/svg","marker");
         const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-        path.setAttribute("d","M -5 0 L 5 5 L -5 10 Z");
+        path.setAttribute("d","M 0 0 L 10 5 L 0 10 Z");
         path.setAttribute("fill","black");
         arrowhead.appendChild(path);
         arrowhead.setAttribute("id","arrow"); 
         arrowhead.setAttribute("markerWidth","10");
         arrowhead.setAttribute("markerHeight","10");
+        
         arrowhead.setAttribute("refX","5");
         arrowhead.setAttribute("refY","5");
+        
         arrowhead.setAttribute("orient","auto");
         defs.appendChild(arrowhead);
         boxLines.appendChild(defs);
@@ -661,6 +663,7 @@ function displayRecipes(ids) {
             .forceSimulation(nodes)
             .force('charge', d3.forceManyBody().strength(-10000))
             .force('link',d3.forceLink(links))
+            .force("collide",d3.forceCollide().radius(node => parseInt(node.box.currentBox.style.width)))
             .force('x', d3.forceX(0).strength(0.4))
             .force('y', d3.forceY(0).strength(0.5))
             .force('center', d3.forceCenter(0,0));
@@ -691,7 +694,11 @@ function displayRecipes(ids) {
                 line.setAttribute("x1", link.source.x-minX+parseInt(link.source.box.currentBox.style.width)/2);
                 line.setAttribute("y1", link.source.y-minY+parseInt(link.source.box.currentBox.style.height)/2);
                 line.setAttribute("x2", link.target.x-minX+link.itemBox.offset+ItemBox.BOX_WIDTH/2);
-                line.setAttribute("y2", link.target.y-minY);
+                if (link.target.y > link.source.y) {
+                    line.setAttribute("y2", link.target.y-minY);
+                } else {
+                    line.setAttribute("y2", link.target.y+parseInt(link.target.box.currentBox.style.height)-minY);
+                }
             }
         })
     }

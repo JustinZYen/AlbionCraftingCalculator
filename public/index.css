@@ -58,7 +58,8 @@ h1 {
 }
 
 #recipes-area div figure div div {
-    overflow:scroll;
+    padding:1px;
+    overflow-wrap:break-word;
 }
 
 line {

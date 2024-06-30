@@ -561,15 +561,15 @@ function displayRecipes(ids) {
         const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
         const arrowhead = document.createElementNS("http://www.w3.org/2000/svg","marker");
         const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-        path.setAttribute("d","M 0 0 L 10 5 L 0 10 Z");
-        path.setAttribute("fill","black");
+        path.setAttribute("d","M 0 0 L 5 2.5 L 0 5 Z");
+        //path.setAttribute("fill","black");
         arrowhead.appendChild(path);
         arrowhead.setAttribute("id","arrow"); 
-        arrowhead.setAttribute("markerWidth","10");
-        arrowhead.setAttribute("markerHeight","10");
+        arrowhead.setAttribute("markerWidth","5");
+        arrowhead.setAttribute("markerHeight","5");
         
-        arrowhead.setAttribute("refX","5");
-        arrowhead.setAttribute("refY","5");
+        arrowhead.setAttribute("refX","2.5");
+        arrowhead.setAttribute("refY","2.5");
         
         arrowhead.setAttribute("orient","auto");
         defs.appendChild(arrowhead);
@@ -642,6 +642,9 @@ function displayRecipes(ids) {
                         const newItemId = recipe.resources[i].priceId;
                         const currentItemBox = new ItemBox(recipeBox,checkedItems.get(newItemId),offset);
                         currentItemBox.currentBox.textContent = newItemId;
+                        const inputBox = document.createElement("input");
+                        inputBox.type = "text";
+                        currentItemBox.currentBox.appendChild(inputBox);
                         recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                         itemBoxStack.push(currentItemBox);
                     }
@@ -661,7 +664,7 @@ function displayRecipes(ids) {
         
         var simulation = d3
             .forceSimulation(nodes)
-            .force('charge', d3.forceManyBody().strength(-10000))
+            .force('charge', d3.forceManyBody().strength(-6000))
             .force('link',d3.forceLink(links))
             .force("collide",d3.forceCollide().radius(node => parseInt(node.box.currentBox.style.width)))
             .force('x', d3.forceX(0).strength(0.4))
@@ -728,9 +731,16 @@ $("#city-selector").on("change",()=>{
     console.log($("#city-selector").val());
 });
 
+$("#recipes-area").on("click","div figure", function(event){
+    console.log("click");
+    event.stopPropagation();
+});
 
-$("#recipes-area").on("click",`div`,function(){
+$("#recipes-area").on("click","div",function(){
     //const currentClass = $(this).attr("id");
     $(this).find("figure").slideToggle("slow");
     $(this).find("svg").slideToggle("slow");
 });
+
+
+

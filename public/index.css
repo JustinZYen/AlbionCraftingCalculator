@@ -5,15 +5,6 @@
 h1 {
     text-align: center;
 }
-#recipes-area{
-    /*
-    position:relative;
-    overflow:scroll;
-    height: 400px;
-    width: 100%;
-    padding:20px;
-    */
-}
 
 #recipes-area > div {
     border:solid;
@@ -57,10 +48,20 @@ h1 {
     border-radius:0px;
 }
 
-#recipes-area div figure div div {
+.item-box {
     padding:1px;
     overflow-wrap:break-word;
 }
+
+.item-box p {
+    margin:0;
+}
+
+.item-box input {
+    width:75px;
+    margin-left:10px;
+}
+
 
 line {
 	stroke:red;

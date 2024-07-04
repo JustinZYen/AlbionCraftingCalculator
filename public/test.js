@@ -324,22 +324,57 @@ class ItemBox {
     item; // Item object
     craftingRecipes = [];
     offset;
-    static BOX_WIDTH = 100;
+    craftingCost;
+    craftingCostSpan;
+    static BOX_WIDTH = 200;
     static BOX_HEIGHT = 100;
     /**
      * 
      * @param {RecipeBox} boundingRecipe 
      * @param {Item} item 
      * @param {Number} offset 
+     * @param {Boolean} allowInput
      */
     constructor(boundingRecipe, item, offset) {
         this.boundingRecipe = boundingRecipe;
         this.currentBox = document.createElement("div");
+        this.currentBox.classList.add("item-box");
         this.currentBox.style.left = offset+"px";
         this.currentBox.style.width = ItemBox.BOX_WIDTH+"px";
         this.currentBox.style.height = ItemBox.BOX_HEIGHT+"px";
         this.item = item;
         this.offset = offset;
+
+        // Create box sections
+        const descriptor = document.createElement("p");
+        descriptor.innerText = `${idToName[this.item.priceId]} (${this.item.tier}.${this.item.enchantment})`;
+        this.currentBox.appendChild(descriptor);
+
+        const craftCost = document.createElement("p");
+        craftCost.innerText = "Crafting cost: ";
+        this.craftingCostSpan = document.createElement("span");
+        this.craftingCostSpan.innerText = "N/A";
+        craftCost.appendChild(this.craftingCostSpan);
+        this.currentBox.appendChild(craftCost);
+
+        const buyCost = document.createElement("p");
+        buyCost.innerText = "Market price: ";
+        const inputBox = document.createElement("input");
+        inputBox.type = "text";
+        let priceInfos = null;
+        if (!$("#date-selector").is(":checked")) {
+            priceInfos = item.priceInfos.get(DateEnum.OLD);
+        } else {
+            priceInfos = item.priceInfos.get(DateEnum.OLD);
+        }
+        inputBox.placeholder = priceInfos.price.get($("#city-selector").val());
+        buyCost.appendChild(inputBox)
+        this.currentBox.appendChild(buyCost);
+    }
+
+    setCraftingCost(newCost) {
+        this.craftingCost = newCost;
+        this.craftingCostSpan.innerText = newCost;
     }
 
     toString() {
@@ -599,7 +634,6 @@ function displayRecipes(ids) {
         nodes.push({"box":headBox});
         itemBoxStack.push(itemBox);
         displayBox.appendChild(headBox.currentBox);
-        itemBox.currentBox.innerText = currentPriceId;
 
         // Iterate through all recipes, adding to nodes and links
         while (itemBoxStack.length > 0) {
@@ -638,18 +672,12 @@ function displayRecipes(ids) {
                     sourceIndexes.push(recipeBox.index);
                     for (let i = 0; i < resourceCount; i++) {
                         const offset = ItemBox.BOX_WIDTH*i;
-                        console.log(`${i}th resource: ${recipe.resources[i]}`);
                         const newItemId = recipe.resources[i].priceId;
                         const currentItemBox = new ItemBox(recipeBox,checkedItems.get(newItemId),offset);
-                        currentItemBox.currentBox.textContent = newItemId;
-                        const inputBox = document.createElement("input");
-                        inputBox.type = "text";
-                        currentItemBox.currentBox.appendChild(inputBox);
                         recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                         itemBoxStack.push(currentItemBox);
                     }
                 }
-                console.log("source idnexes: "+sourceIndexes);
                 visitedItems.set(activeItem.priceId,sourceIndexes);
             }
             
@@ -666,8 +694,8 @@ function displayRecipes(ids) {
             .forceSimulation(nodes)
             .force('charge', d3.forceManyBody().strength(-6000))
             .force('link',d3.forceLink(links))
-            .force("collide",d3.forceCollide().radius(node => parseInt(node.box.currentBox.style.width)))
-            .force('x', d3.forceX(0).strength(0.4))
+            .force("collide",d3.forceCollide().radius(node => parseInt(node.box.currentBox.style.width)).strength(0.5))
+            .force('x', d3.forceX(0).strength(0.5))
             .force('y', d3.forceY(0).strength(0.5))
             .force('center', d3.forceCenter(0,0));
         
@@ -721,6 +749,7 @@ function fixLocation(initialLocation) {
     }
 }
 
+
 $("#load-price-button").on("click", getProfits);
 
 $( "#item-name" ).autocomplete({
@@ -728,7 +757,13 @@ $( "#item-name" ).autocomplete({
 });
 
 $("#city-selector").on("change",()=>{
+    getProfits();
     console.log($("#city-selector").val());
+});
+
+$("#date-selector").on("change",()=>{
+    getProfits();
+    console.log($("#date-selector").is(":checked"));
 });
 
 $("#recipes-area").on("click","div figure", function(event){

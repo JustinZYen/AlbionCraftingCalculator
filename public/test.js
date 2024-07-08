@@ -305,7 +305,6 @@ class RecipeBox {
     boundedItems = []; // Might not be needed
     index; // Index of recipe box to allow for quicker referencing in nodes list
     static BOX_WIDTH = 200;
-    static BOX_HEIGHT = 0;
     /**
      * 
      * @param {Item} craftedItem 
@@ -326,6 +325,8 @@ class ItemBox {
     offset;
     craftingCost;
     craftingCostSpan;
+    links = new Map(); 
+    count;
     static BOX_WIDTH = 200;
     static BOX_HEIGHT = 100;
     /**
@@ -335,8 +336,9 @@ class ItemBox {
      * @param {Number} offset 
      * @param {Boolean} allowInput
      */
-    constructor(boundingRecipe, item, offset) {
+    constructor(boundingRecipe, item, offset,count) {
         this.boundingRecipe = boundingRecipe;
+        this.boundingRecipe.boundedItems.push(this);
         this.currentBox = document.createElement("div");
         this.currentBox.classList.add("item-box");
         this.currentBox.style.left = offset+"px";
@@ -344,10 +346,10 @@ class ItemBox {
         this.currentBox.style.height = ItemBox.BOX_HEIGHT+"px";
         this.item = item;
         this.offset = offset;
-
+        this.count = count;
         // Create box sections
         const descriptor = document.createElement("p");
-        descriptor.innerText = `${idToName[this.item.priceId]} (${this.item.tier}.${this.item.enchantment})`;
+        descriptor.innerText = `${idToName[this.item.priceId]} (${this.item.tier}.${this.item.enchantment}) (x${count})`;
         this.currentBox.appendChild(descriptor);
 
         const craftCost = document.createElement("p");
@@ -522,6 +524,13 @@ async function setPrices(uncheckedItems) {
  * @param {DateEnum} timeSpan OLD or NEW, representing previous patch or current patch, respectively
  */
 async function getPrices(priceURL,timeSpan) {
+    function fixLocation(initialLocation) {
+        if (initialLocation == "5003") {
+            return "Brecilien";
+        } else {
+            return initialLocation;
+        }
+    }
     console.log("Price url: "+priceURL);
     const timescales = [1,6,24]
     for (const timescale of timescales) {
@@ -627,7 +636,7 @@ function displayRecipes(ids) {
         // Create the head box
         const headBox = new RecipeBox(null);
         headBox.index = 0;
-        const itemBox = new ItemBox(headBox,currentItem,0);
+        const itemBox = new ItemBox(headBox,currentItem,0,1);
         headBox.currentBox.style.width = ItemBox.BOX_WIDTH+4.8+"px"; //4.8 to account for border width
         itemBox.currentBox.style["background-color"] = "gold";
         headBox.currentBox.appendChild(itemBox.currentBox);
@@ -639,8 +648,9 @@ function displayRecipes(ids) {
         while (itemBoxStack.length > 0) {
             const activeItemBox = itemBoxStack.pop();
             const activeItem = activeItemBox.item;
-            // Check to see if this area has already been traversed (just relink)
+            // Check if active item has already been visited somewhere else
             if (visitedItems.has(activeItem.priceId)) {
+                // If so, just create connections to pre-existing recipe boxes
                 for (const sourceIndex of visitedItems.get(activeItem.priceId)) {
                     // Add current item box to the array of items that the current recipe is used to craft
                     nodes[sourceIndex].box.craftedItems.push(activeItemBox);
@@ -649,10 +659,11 @@ function displayRecipes(ids) {
                         "target":activeItemBox.boundingRecipe.index,
                         "itemBox":activeItemBox
                     });
+                    activeItemBox.links.set(nodes[sourceIndex].box,links[links.length-1]);
                 }
             } else {
+                // Otherwise, create new recipe boxes and add links to them
                 const sourceIndexes = [];
-                //console.log("recipe count: "+activeItem.recipes.length);
                 for (const recipe of activeItem.recipes) {
                     const resourceCount = recipe.resources.length;
                     // Create recipe box for item
@@ -669,19 +680,21 @@ function displayRecipes(ids) {
                         "target":activeItemBox.boundingRecipe.index,
                         "itemBox":activeItemBox
                     });
+                    activeItemBox.links.set(recipeBox,links[links.length-1]);
                     sourceIndexes.push(recipeBox.index);
                     for (let i = 0; i < resourceCount; i++) {
                         const offset = ItemBox.BOX_WIDTH*i;
                         const newItemId = recipe.resources[i].priceId;
-                        const currentItemBox = new ItemBox(recipeBox,checkedItems.get(newItemId),offset);
+                        const newItemCount = recipe.resources[i].count;
+                        const currentItemBox = new ItemBox(recipeBox,checkedItems.get(newItemId),offset,newItemCount);
                         recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                         itemBoxStack.push(currentItemBox);
                     }
                 }
                 visitedItems.set(activeItem.priceId,sourceIndexes);
             }
-            
         }
+        calculateCosts(itemBox);
         // Create svg elements to correspond with lines
         for (const link of links) {
             const line = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -695,8 +708,8 @@ function displayRecipes(ids) {
             .force('charge', d3.forceManyBody().strength(-6000))
             .force('link',d3.forceLink(links))
             .force("collide",d3.forceCollide().radius(node => parseInt(node.box.currentBox.style.width)).strength(0.5))
-            .force('x', d3.forceX(0).strength(0.5))
-            .force('y', d3.forceY(0).strength(0.5))
+            .force('x', d3.forceX(0).strength(3))
+            .force('y', d3.forceY(0).strength(3))
             .force('center', d3.forceCenter(0,0));
         
         console.log(nodes);
@@ -731,22 +744,23 @@ function displayRecipes(ids) {
                     line.setAttribute("y2", link.target.y+parseInt(link.target.box.currentBox.style.height)-minY);
                 }
             }
-        })
+        });
     }
 }
 
+/**
+ * 
+ * @param {ItemBox} currentItemBox 
+ * @return {Number}
+ */
+function calculateCosts(currentItemBox) {
+    console.log(currentItemBox.item.priceId);
+}
+ 
 function calculateProfit(itemID,tax) {
     const sellPrice = getAveragePrices(itemID);
     const craftPrice = getCraftingPrice(itemID);
     return (1-tax)*sellPrice-craftPrice;
-}
-
-function fixLocation(initialLocation) {
-    if (initialLocation == "5003") {
-        return "Brecilien";
-    } else {
-        return initialLocation;
-    }
 }
 
 
@@ -776,6 +790,3 @@ $("#recipes-area").on("click","div",function(){
     $(this).find("figure").slideToggle("slow");
     $(this).find("svg").slideToggle("slow");
 });
-
-
-

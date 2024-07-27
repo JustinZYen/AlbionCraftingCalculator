@@ -10,17 +10,12 @@ class CraftTypeEnum {
     static REFINING = Symbol("Refining");
     static CRAFTING = Symbol("Crafting")
 }
-const nameToIDDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID"));
-const nameToID = nameToIDDoc.data();
-const idToNameDoc = await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"));
-const idToName = idToNameDoc.data();
-const recipeDocWithT = await getDoc(doc(db,"General/Item Data/Items/PathsWithT"));
-const recipesWithT = recipeDocWithT.data();
-const recipeDocWithoutT = await getDoc(doc(db,"General/Item Data/Items/PathsWithoutT"));
-const recipesWithoutT = recipeDocWithoutT.data();
-const itemsList = await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json");
-const itemsJSON = await itemsList.json();
-const names = Object.keys(nameToIDDoc.data());
+const nameToID = (await getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID"))).data();
+const idToName = (await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"))).data();
+const recipesWithT = (await getDoc(doc(db,"General/Item Data/Items/PathsWithT"))).data();
+const recipesWithoutT = (await getDoc(doc(db,"General/Item Data/Items/PathsWithoutT"))).data();
+const itemsJSON = await (await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json")).json();
+const names = Object.keys(nameToID);
 // HashMap of all Items so far (for saving prices)
 // Uses priceIds as keys
 const checkedItems = new Map(); 
@@ -754,9 +749,22 @@ function displayRecipes(ids) {
  * @return {Number}
  */
 function calculateCosts(currentItemBox) {
+    // Figure out minimum crafting cost among links of the current item
+
+    // Determine minimum cost (compare to buying the item itself)
+    
+    // Display minimum crafting cost using craftingCost field 
     console.log(currentItemBox.item.priceId);
 }
- 
+
+/**
+ * 
+ * @param {RecipeBox} currentRecipeBox
+ * @return {Number} total crafting cost of current recipe box
+ */
+function calculateCraftingCost(currentRecipeBox) {
+
+}
 function calculateProfit(itemID,tax) {
     const sellPrice = getAveragePrices(itemID);
     const craftPrice = getCraftingPrice(itemID);

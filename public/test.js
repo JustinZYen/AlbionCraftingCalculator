@@ -12,6 +12,7 @@ class CraftTypeEnum {
 }
 const nameToID = (await getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID"))).data();
 const idToName = (await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"))).data();
+// Needs two objects because firebase cannot store all the recipe paths at the same directory with free tier
 const recipesWithT = (await getDoc(doc(db,"General/Item Data/Items/PathsWithT"))).data();
 const recipesWithoutT = (await getDoc(doc(db,"General/Item Data/Items/PathsWithoutT"))).data();
 const itemsJSON = await (await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json")).json();
@@ -299,7 +300,11 @@ class RecipeBox {
     currentBox; // The box corresponding to this recipe
     boundedItems = []; // Might not be needed
     index; // Index of recipe box to allow for quicker referencing in nodes list
-    static BOX_WIDTH = 200;
+    x = 0;
+    y = 0;
+    width;
+    height;
+    //static BOX_WIDTH = 200;
     /**
      * 
      * @param {Item} craftedItem 
@@ -307,8 +312,26 @@ class RecipeBox {
     constructor(craftedItem) {
         this.craftedItems.push(craftedItem);
         this.currentBox = document.createElement("div");
-        this.currentBox.style.height = (ItemBox.BOX_HEIGHT+4.8)+"px";
+        this.setHeight(ItemBox.BOX_HEIGHT+4.8);
         this.index = -1;
+    }
+
+    setX(x) {
+        this.x = x;
+        this.currentBox.style.left = x+"px";
+    }
+
+    setY(y) {
+        this.y = y;
+        this.currentBox.style.top = y+"px";
+    }
+    setWidth(width) {
+        this.width = width;
+        this.currentBox.style.width = width+"px";
+    }
+    setHeight(height) {
+        this.height = height;
+        this.currentBox.style.height = height+"px";
     }
 }
 
@@ -632,7 +655,7 @@ function displayRecipes(ids) {
         const headBox = new RecipeBox(null);
         headBox.index = 0;
         const itemBox = new ItemBox(headBox,currentItem,0,1);
-        headBox.currentBox.style.width = ItemBox.BOX_WIDTH+4.8+"px"; //4.8 to account for border width
+        headBox.setWidth(ItemBox.BOX_WIDTH+4.8); //4.8 to account for border width
         itemBox.currentBox.style["background-color"] = "gold";
         headBox.currentBox.appendChild(itemBox.currentBox);
         nodes.push({"box":headBox});
@@ -665,7 +688,7 @@ function displayRecipes(ids) {
                     //console.log("recipe: "+recipe.resources[0]);
                     const recipeBox = new RecipeBox(activeItemBox);
                     displayBox.appendChild(recipeBox.currentBox);
-                    recipeBox.currentBox.style.width = resourceCount*ItemBox.BOX_WIDTH+4.8+"px"; // 4.8 to account for border width
+                    recipeBox.setWidth(resourceCount*ItemBox.BOX_WIDTH+4.8); // 4.8 to account for border width
                     recipeBox.index = nodes.length;
                     // add recipe box to nodes
                     nodes.push({"box":recipeBox});
@@ -700,12 +723,12 @@ function displayRecipes(ids) {
         
         var simulation = d3
             .forceSimulation(nodes)
-            .force('charge', d3.forceManyBody().strength(-6000))
+            //.force('charge', d3.forceManyBody().strength(-600))
             .force('link',d3.forceLink(links))
-            .force("collide",d3.forceCollide().radius(node => parseInt(node.box.currentBox.style.width)).strength(0.5))
-            .force('x', d3.forceX(0).strength(3))
-            .force('y', d3.forceY(0).strength(3))
-            .force('center', d3.forceCenter(0,0));
+            .force("collide",d3.forceCollide().radius(node => node.box.width/2).strength(0.5))
+            .force('x', d3.forceX(0).strength(0.5))
+            .force('y', d3.forceY(0).strength(0.5))
+            //.force('center', d3.forceCenter(0,0));
         
         console.log(nodes);
         console.log(links);
@@ -716,27 +739,29 @@ function displayRecipes(ids) {
             let maxX = 0;
             let maxY = 0;
             for (const node of nodes) {
-                minX = Math.min(minX,node.x);
-                minY = Math.min(minY,node.y);
-                maxX = Math.max(maxX,node.x+parseInt(node.box.currentBox.style.width));
-                maxY = Math.max(maxY,node.y+parseInt(node.box.currentBox.style.height));
+                minX = Math.min(minX,node.x-node.box.width/2);
+                minY = Math.min(minY,node.y-node.box.height/2);
+                maxX = Math.max(maxX,node.x+node.box.width/2);
+                maxY = Math.max(maxY,node.y+node.box.height/2);
             }
             boxLines.setAttribute("height",maxY-minY);
             boxLines.setAttribute("width",maxX-minX);
             for (const node of nodes) {
-                node.box.currentBox.style.left = (node.x-minX)+"px";
-                node.box.currentBox.style.top = (node.y-minY)+"px";
+                node.box.setX(node.x-minX-node.box.width/2);
+                node.box.setY(node.y-minY-node.box.height/2);
             }
             for (const link of links) {
                 const line = link.line;
-                //console.log(link.itemBox.offset);
-                line.setAttribute("x1", link.source.x-minX+parseInt(link.source.box.currentBox.style.width)/2);
-                line.setAttribute("y1", link.source.y-minY+parseInt(link.source.box.currentBox.style.height)/2);
-                line.setAttribute("x2", link.target.x-minX+link.itemBox.offset+ItemBox.BOX_WIDTH/2);
+                // Source of line position (the items being used to craft)
+                line.setAttribute("x1", link.source.x-minX);
+                line.setAttribute("y1", link.source.y-minY);
+
+                // Destination of line position (the item being crafted)
+                line.setAttribute("x2", link.target.x-minX-link.target.box.width/2+link.itemBox.offset+ItemBox.BOX_WIDTH/2);
                 if (link.target.y > link.source.y) {
-                    line.setAttribute("y2", link.target.y-minY);
+                    line.setAttribute("y2", link.target.y-minY-link.target.box.height/2);
                 } else {
-                    line.setAttribute("y2", link.target.y+parseInt(link.target.box.currentBox.style.height)-minY);
+                    line.setAttribute("y2", link.target.y-minY+link.target.box.height/2);
                 }
             }
         });

@@ -10,7 +10,7 @@ To use, enter your target item name and select the associated menu options.
 5. Fetches JSON of prices from Albion Online Data
 6. Displays all the items and their relations to each other using a force-directed graph from d3.js  
 ## Features in use
-* Firebase
+* Firebase (hosts the webpage)
 * Firebase Storage
 * jQuery
 * [d3.js](https://d3js.org/) for displaying items in a graphically organized way

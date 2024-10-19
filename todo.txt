@@ -1,0 +1,8 @@
+Priority Features
+- Add calculation for crafted costs (as opposed to direct market costs)
+- Allow user override of crafting costs
+
+Other Features
+- Rectangular collision to recipe boxes
+- Faster item name autocomplete
+- Draggable recipe boxes

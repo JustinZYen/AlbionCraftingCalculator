@@ -1,4 +1,4 @@
-import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "./external-data";
+import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "./external-data.js";
 
 class DateEnum {
     static OLD = Symbol("Old Prices");

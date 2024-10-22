@@ -226,19 +226,16 @@ function calculateProfit(itemID:string,tax:number) {
 }
 */
 const itemData = new ItemData();
-document.getElementById("load-price-button")?.addEventListener("click", async () => {
-    await itemData.getProfits();
-    displayRecipes(itemData.checkedItems, itemData.ids);
-});
+document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
 $("#item-name").autocomplete({
     source: names
 });
-$("#city-selector").on("change", () => {
-    itemData.getProfits();
+$("#city-selector").on("change", async () => {
+    await loadPriceProcedure();
     console.log($("#city-selector").val());
 });
-$("#date-selector").on("change", () => {
-    itemData.getProfits();
+$("#date-selector").on("change", async () => {
+    await loadPriceProcedure();
     console.log($("#date-selector").is(":checked"));
 });
 $("#recipes-area").on("click", "div figure", function (event) {
@@ -250,3 +247,10 @@ $("#recipes-area").on("click", "div", function () {
     $(this).find("figure").slideToggle("slow");
     $(this).find("svg").slideToggle("slow");
 });
+async function loadPriceProcedure() {
+    document.getElementById("recipes-area").innerHTML = "";
+    const input = ($("#item-name").val());
+    const itemIds = ItemData.getItemIds(input);
+    await itemData.getProfits(itemIds);
+    displayRecipes(itemData.checkedItems, itemIds);
+}

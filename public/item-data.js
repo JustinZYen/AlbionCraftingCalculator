@@ -6,46 +6,34 @@ class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
     checkedItems = new Map();
-    ids = [];
-    async getProfits() {
-        document.getElementById("recipes-area").innerHTML = "";
-        const input = ($("#item-name").val());
-        console.log("Input value: " + input);
-        // If input value is contained in nameToID
-        if (nameToID.hasOwnProperty(input)) {
-            this.ids = this.getItemIds(input);
-            this.ids.sort();
-            // Set containing all strings for which prices need to be determined
-            let uncheckedItems = new Map();
-            // Stack containing items that still need to be determined whether a price check is needed
-            let itemStack = [];
-            // Set up stack with all items in ids array
-            for (const priceId of this.ids) {
-                itemStack.push(new Item(priceId));
-            }
-            while (itemStack.length > 0) {
-                const currentItem = itemStack.pop();
-                // console.log(`current item: ${currentItem}`);
-                // If current item is not in checked or unchecked items
-                if (!uncheckedItems.has(currentItem.priceId) && !this.checkedItems.has(currentItem.priceId)) {
-                    //console.log(`currentItem: ${typeof currentItem}`);
-                    for (const recipe of currentItem.recipes) {
-                        for (const resource of recipe.resources) {
-                            itemStack.push(new Item(resource.priceId));
-                        }
+    async getProfits(ids) {
+        // Set containing all strings for which prices need to be determined
+        let uncheckedItems = new Map();
+        // Stack containing items that still need to be determined whether a price check is needed
+        let itemStack = [];
+        // Set up stack with all items in ids array
+        for (const priceId of ids) {
+            itemStack.push(new Item(priceId));
+        }
+        while (itemStack.length > 0) {
+            const currentItem = itemStack.pop();
+            // console.log(`current item: ${currentItem}`);
+            // If current item is not in checked or unchecked items
+            if (!uncheckedItems.has(currentItem.priceId) && !this.checkedItems.has(currentItem.priceId)) {
+                //console.log(`currentItem: ${typeof currentItem}`);
+                for (const recipe of currentItem.recipes) {
+                    for (const resource of recipe.resources) {
+                        itemStack.push(new Item(resource.priceId));
                     }
-                    uncheckedItems.set(currentItem.priceId, currentItem);
-                    this.checkedItems.set(currentItem.priceId, currentItem);
                 }
+                uncheckedItems.set(currentItem.priceId, currentItem);
+                this.checkedItems.set(currentItem.priceId, currentItem);
             }
-            //console.log(uncheckedItems)
-            console.log("setting prices");
-            await this.setPrices(uncheckedItems);
-            //getAveragePrices();
         }
-        else {
-            console.log(`input string ${input} not found`);
-        }
+        //console.log(uncheckedItems)
+        console.log("setting prices");
+        await this.setPrices(uncheckedItems);
+        //getAveragePrices();
     }
     /**
  *
@@ -111,35 +99,12 @@ class ItemData {
     }
     /**
      *
-     * @param {String} itemId
-     * @returns An array containing item ids of all weapons that share the name in the tree
-     */
-    getItemIds(itemId) {
-        const MIN_TIER = 4;
-        const MAX_TIER = 8;
-        let ids = structuredClone(nameToID[itemId]);
-        ids.forEach((element, _, array) => {
-            const secondValue = parseInt(element.charAt(1));
-            if (element.charAt(0) === "T" && !Number.isNaN(secondValue)) {
-                // Current item has different tiers since it is T-some number
-                const stringRemainder = element.slice(2);
-                for (let i = MIN_TIER; i <= MAX_TIER; i++) {
-                    if (i != secondValue) {
-                        array.push("T" + i + stringRemainder);
-                    }
-                }
-            }
-        });
-        return ids;
-    }
-    /**
-     *
      * @param {Set} uncheckedItems A set containing Items representing all items for which prices have not yet been calculated
      */
     async setPrices(uncheckedItems) {
         const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
-        const PRICE_URL_END_OLD = await this.previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-        const PRICE_URL_END_NEW = await this.currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+        const PRICE_URL_END_OLD = await this.#previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+        const PRICE_URL_END_NEW = await this.#currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
         const startStringLength = PRICE_URL_START.length;
         const endStringLength = Math.max(PRICE_URL_END_OLD.length, PRICE_URL_END_NEW.length);
         const MAX_URL_LENGTH = 4096;
@@ -170,7 +135,7 @@ class ItemData {
         await this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW);
         uncheckedItems.clear();
     }
-    async previousDateString() {
+    async #previousDateString() {
         const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
         const patchDates = await patchDateDoc.data();
         const previousPatchDateDate = new Date(patchDates["Previous Date"]);
@@ -181,9 +146,9 @@ class ItemData {
         const patchDateString = patchDateDate.getUTCFullYear() + "-" +
             (patchDateDate.getUTCMonth() + 1) + "-" +
             (patchDateDate.getUTCDate());
-        return this.dateString(previousPatchDateString, patchDateString);
+        return this.#dateString(previousPatchDateString, patchDateString);
     }
-    async currentDateString() {
+    async #currentDateString() {
         const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
         const patchDates = await patchDateDoc.data();
         const previousPatchDateDate = new Date(patchDates.Date);
@@ -194,10 +159,34 @@ class ItemData {
         const currentDateString = currentDateDate.getUTCFullYear() + "-" +
             (currentDateDate.getUTCMonth() + 1) + "-" +
             (currentDateDate.getUTCDate());
-        return this.dateString(previousPatchDateString, currentDateString);
+        return this.#dateString(previousPatchDateString, currentDateString);
     }
-    dateString(startDate, endDate) {
+    #dateString(startDate, endDate) {
         return "?date=" + startDate + "&end_date=" + endDate;
+    }
+    /**
+     *
+     * @param {String} itemId
+     * @returns An array containing item ids of all weapons that share the name in the tree
+     */
+    static getItemIds(itemId) {
+        const MIN_TIER = 4;
+        const MAX_TIER = 8;
+        let ids = structuredClone(nameToID[itemId]);
+        ids.forEach((element, _, array) => {
+            const secondValue = parseInt(element.charAt(1));
+            if (element.charAt(0) === "T" && !Number.isNaN(secondValue)) {
+                // Current item has different tiers since it is T-some number
+                const stringRemainder = element.slice(2);
+                for (let i = MIN_TIER; i <= MAX_TIER; i++) {
+                    if (i != secondValue) {
+                        array.push("T" + i + stringRemainder);
+                    }
+                }
+            }
+        });
+        ids.sort();
+        return ids;
     }
 }
 export { ItemData };

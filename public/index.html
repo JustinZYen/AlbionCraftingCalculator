@@ -1,37 +1,40 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Title (so cool)</title>
-        <link rel="icon" type="image/x-icon" href="./favicon.ico">
-        <link rel="stylesheet" href="index.css">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js" ></script>
-        <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-        <script type="module" src ="firebaseScripts.js" defer></script>
-        <script type="module" src="test.js" defer></script>
-    </head>
-    <body>
-        <h1>Item Crafting Cost Calculator</h1>
-        <div>
-            <input id = "item-name" type="text" placeholder="Item name here">
-            <select id="city-selector"> 
-                <option disabled selected>Select City</option> 
-                <option>Caerleon</option> 
-                <option>Bridgewatch</option> 
-                <option>Fort Sterling</option> 
-                <option>Lymhurst</option> 
-                <option>Martlock</option> 
-                <option>Thetford</option> 
-                <option>Brecilien</option> 
-            </select> 
-            <span>
-                Use new patch prices:
-                <input id="date-selector" type="checkbox">
-            </span>
-            <button id="load-price-button">Click to load prices</button>
-        </div>
-        <div id = "recipes-area">
-            
-        </div>
-    </body>
+
+<head>
+    <title>Albion Online Crafting Calculator</title>
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script type="module" src="firebaseScripts.js" defer></script>
+    <script type="module" src="main.js" defer></script>
+</head>
+
+<body>
+    <h1>Item Crafting Cost Calculator</h1>
+    <div>
+        <input id="item-name" type="text" placeholder="Item name here">
+        <select id="city-selector">
+            <option disabled selected>Select City</option>
+            <option>Caerleon</option>
+            <option>Bridgewatch</option>
+            <option>Fort Sterling</option>
+            <option>Lymhurst</option>
+            <option>Martlock</option>
+            <option>Thetford</option>
+            <option>Brecilien</option>
+        </select>
+        <span>
+            Use new patch prices:
+            <input id="date-selector" type="checkbox">
+        </span>
+        <button id="load-price-button">Click to load prices</button>
+    </div>
+    <div id="recipes-area">
+
+    </div>
+</body>
+
 </html>

@@ -50,17 +50,6 @@ const cityBonuses = new Map([
 ]);
 */
 
-
-
-
-
-
-
-
-
-
-
-
 /*
 function calculateProfit(itemID:string,tax:number) {
     const sellPrice = getAveragePrices(itemID);

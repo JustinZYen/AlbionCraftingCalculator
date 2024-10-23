@@ -2,10 +2,6 @@
 import { ItemData } from "./item-data.js";
 import { displayRecipes } from "./display.js";
 import {names} from "./external-data.js";
-class CraftTypeEnum {
-    static REFINING = Symbol("Refining");
-    static CRAFTING = Symbol("Crafting")
-}
 
 
 const itemData = new ItemData();
@@ -118,7 +114,7 @@ for (const name of names) {
     itemNameTrie.insert(name);
 }
 
-document.getElementById("item-name")?.addEventListener("input",async (e:InputEvent)=>{
+document.getElementById("item-name")?.addEventListener("input",async ()=>{
     const enteredName = (<HTMLInputElement>document.getElementById("item-name"))?.value;
     document.getElementById("item-name-autocomplete")!.innerHTML = "";
     const matchingWords = itemNameTrie.wordsThatMatch(enteredName);

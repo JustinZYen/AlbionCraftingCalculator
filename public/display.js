@@ -169,11 +169,4 @@ function calculateCosts(currentItemBox) {
     // Display minimum crafting cost using craftingCost field 
     console.log(currentItemBox.item.priceId);
 }
-/**
- *
- * @param {RecipeBox} currentRecipeBox
- * @return {Number} total crafting cost of current recipe box
- */
-function calculateCraftingCost(currentRecipeBox) {
-}
 export { displayRecipes };

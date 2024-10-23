@@ -105,8 +105,6 @@ class ItemData {
         const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
         const PRICE_URL_END_OLD = await this.#previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
         const PRICE_URL_END_NEW = await this.#currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-        const startStringLength = PRICE_URL_START.length;
-        const endStringLength = Math.max(PRICE_URL_END_OLD.length, PRICE_URL_END_NEW.length);
         const MAX_URL_LENGTH = 4096;
         // Note: Missing time scale so that I can test out all 3 possible timescales
         let currentItemString = "";

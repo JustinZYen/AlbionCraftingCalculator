@@ -1,7 +1,7 @@
 import { nameToID } from "./external-data.js";
 import { db } from "./firebaseScripts.js";
 import { DateEnum, Item } from "./item.js";
-import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 class ItemData {
     // HashMap of all Items so far (for saving prices)
@@ -108,8 +108,6 @@ class ItemData {
         const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
         const PRICE_URL_END_OLD = await this.#previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
         const PRICE_URL_END_NEW = await this.#currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-        const startStringLength = PRICE_URL_START.length;
-        const endStringLength = Math.max(PRICE_URL_END_OLD.length, PRICE_URL_END_NEW.length);
         const MAX_URL_LENGTH = 4096;
         // Note: Missing time scale so that I can test out all 3 possible timescales
         let currentItemString = "";

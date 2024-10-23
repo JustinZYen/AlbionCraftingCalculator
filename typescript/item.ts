@@ -125,16 +125,6 @@ class Item {
     }
 
     toString() {
-        function mapStringify(map:Map<string,string>) {
-            let returnString = "";
-            map.forEach((value,key)=>{
-                console.log(key);
-                returnString+=`City: ${key}, Average price: ${value}`;
-            })
-            return returnString;
-        }
-        //let oldPriceData = mapStringify(this.priceInfos.get(DateEnum.OLD).price);
-        //let newPriceData = mapStringify(this.priceInfos.get(DateEnum.NEW).price);
         let oldPriceData = Array.from(this.priceInfos.get(DateEnum.OLD)!.price);
         let newPriceData = Array.from(this.priceInfos.get(DateEnum.NEW)!.price);
         return `name: ${idToName[Item.getPriceId(this.id)]}, id: ${this.id}, category: ${this.category}, subcategory: ${this.subcategory} tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${oldPriceData}, new price: ${newPriceData}`;

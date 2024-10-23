@@ -198,13 +198,6 @@ function calculateCosts(currentItemBox: ItemBox) {
     console.log(currentItemBox.item.priceId);
 }
 
-/**
- * 
- * @param {RecipeBox} currentRecipeBox
- * @return {Number} total crafting cost of current recipe box
- */
-function calculateCraftingCost(currentRecipeBox: RecipeBox) {
 
-}
 
 export {displayRecipes};

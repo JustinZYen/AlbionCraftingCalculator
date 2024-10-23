@@ -14,8 +14,11 @@
 
 <body>
     <h1>Item Crafting Cost Calculator</h1>
-    <div>
-        <input id="item-name" type="text" placeholder="Item name here">
+    <section id="user-inputs">
+        <div>
+            <input id="item-name" type="text" placeholder="Item name here">
+            <ul id="item-name-autocomplete"></ul>
+        </div>
         <select id="city-selector">
             <option disabled selected>Select City</option>
             <option>Caerleon</option>
@@ -31,7 +34,7 @@
             <input id="date-selector" type="checkbox" checked>
         </span>
         <button id="load-price-button">Click to load prices</button>
-    </div>
+    </section>
     <div id="recipes-area">
 
     </div>

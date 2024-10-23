@@ -6,6 +6,39 @@ h1 {
     text-align: center;
 }
 
+#user-inputs {
+    display:flex;
+    flex-direction: row;
+}
+
+#item-name-autocomplete:hover {
+    display: block !important; /* Couldn't figure out how to get this working without important */
+}
+
+#user-inputs #item-name:focus + #item-name-autocomplete{
+    display:block;
+}
+
+#user-inputs #item-name-autocomplete{
+    margin:0;
+    min-height:20px;
+    max-height:150px;
+    position:absolute;
+    overflow-y:scroll;
+    display:none;
+    list-style-type: none;
+    padding:2px ;
+    background-color:gainsboro;
+    z-index: 1;
+}
+
+
+#item-name-autocomplete li:hover {
+    background-color:gray;
+    cursor: default;
+}
+
+
 #recipes-area > div {
     border:solid;
     margin:0.5%;

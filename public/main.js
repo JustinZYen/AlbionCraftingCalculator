@@ -1,59 +1,12 @@
 "use strict";
-import { names } from "./external-data.js";
 import { ItemData } from "./item-data.js";
 import { displayRecipes } from "./display.js";
 class CraftTypeEnum {
     static REFINING = Symbol("Refining");
     static CRAFTING = Symbol("Crafting");
 }
-// HashMap of all the ItemBoxes that correspond to a certain item
-// Uses priceIds as keys and an ItemBox array as value
-const itemBoxes = new Map();
-// Hardcoding city crafting bonuses
-/*
-const cityBonuses = new Map([
-    ["Caerleon",new Map([
-        [CraftTypeEnum.REFINING,],
-        [CraftTypeEnum.CRAFTING,]
-    ])],
-    ["Bridgewatch",new Map([
-        [CraftTypeEnum.REFINING,],
-        [CraftTypeEnum.CRAFTING,]
-    ])],
-    ["Fort Sterling",new Map([
-        [CraftTypeEnum.REFINING,],
-        [CraftTypeEnum.CRAFTING,]
-    ])],
-    ["Lymhurst",new Map([
-        [CraftTypeEnum.REFINING,],
-        [CraftTypeEnum.CRAFTING,]
-    ])],
-    ["Martlock",new Map([
-        [CraftTypeEnum.REFINING,],
-        [CraftTypeEnum.CRAFTING,]
-    ])],
-    ["Thetford",new Map([
-        [CraftTypeEnum.REFINING,],
-        [CraftTypeEnum.CRAFTING,]
-    ])],
-    ["Brecilien",new Map([
-        [CraftTypeEnum.REFINING,],
-        [CraftTypeEnum.CRAFTING,]
-    ])],
-]);
-*/
-/*
-function calculateProfit(itemID:string,tax:number) {
-    const sellPrice = getAveragePrices(itemID);
-    const craftPrice = getCraftingPrice(itemID);
-    return (1-tax)*sellPrice-craftPrice;
-}
-*/
 const itemData = new ItemData();
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
-$("#item-name").autocomplete({
-    source: names
-});
 $("#city-selector").on("change", async () => {
     await loadPriceProcedure();
     console.log($("#city-selector").val());
@@ -78,3 +31,46 @@ async function loadPriceProcedure() {
     await itemData.getProfits(itemIds);
     displayRecipes(itemData.checkedItems, itemIds);
 }
+class ItemNameTrie {
+    root;
+    constructor() {
+        this.root = new TrieNode();
+    }
+    insert(fullName) {
+        for (const nameWord of fullName.split(" ")) {
+            this.#insertWord(nameWord, fullName);
+        }
+    }
+    #insertWord(nameWord, fullName) {
+    }
+    wordsThatMatch(fullInput) {
+        let matchingWords = new Set();
+        const inputWords = fullInput.split(" ");
+        let index = 0;
+        for (; index < inputWords.length; index++) {
+            if (inputWords[index].length > 0) {
+                matchingWords = this.#wordsThatMatchWord(inputWords[index]);
+                index++;
+                break;
+            }
+        }
+        for (; index < inputWords.length; index++) {
+            if (inputWords[index].length > 0) {
+                matchingWords = matchingWords.intersection(this.#wordsThatMatchWord(inputWords[index]));
+            }
+        }
+        return matchingWords;
+    }
+    #wordsThatMatchWord(nameWord) {
+        const matchingWords = new Set();
+        return matchingWords;
+    }
+}
+class TrieNode {
+    children;
+    words = new Set(); // Full name of item names that contain this node as the final letter in one of their words
+}
+document.getElementById("item-name")?.addEventListener("input", (e) => {
+    const enteredName = document.getElementById("item-name")?.value;
+    console.log(enteredName);
+});

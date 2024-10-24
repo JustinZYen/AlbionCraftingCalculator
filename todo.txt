@@ -4,5 +4,5 @@ Priority Features
 
 Other Features
 - Rectangular collision to recipe boxes
-- Faster item name autocomplete
 - Draggable recipe boxes
+- Reorganize code so that autocomplete starts working faster upon page load

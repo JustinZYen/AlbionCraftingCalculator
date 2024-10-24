@@ -6,3 +6,4 @@ Other Features
 - Rectangular collision to recipe boxes
 - Draggable recipe boxes
 - Reorganize code so that autocomplete starts working faster upon page load
+- Look into making all fetch calls at once instead of using await

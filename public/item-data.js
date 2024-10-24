@@ -2,6 +2,7 @@ import { nameToID } from "./external-data.js";
 import { db } from "./firebaseScripts.js";
 import { DateEnum, Item } from "./item.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { changeProgress } from "./main.js";
 class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
@@ -15,6 +16,7 @@ class ItemData {
         for (const priceId of ids) {
             itemStack.push(new Item(priceId));
         }
+        changeProgress(10, "Determining items to load");
         while (itemStack.length > 0) {
             const currentItem = itemStack.pop();
             // console.log(`current item: ${currentItem}`);
@@ -108,9 +110,10 @@ class ItemData {
         const MAX_URL_LENGTH = 4096;
         // Note: Missing time scale so that I can test out all 3 possible timescales
         let currentItemString = "";
-        uncheckedItems.forEach(async (currentItem) => {
+        let index = 0;
+        for (const [currentPriceId, currentItem] of uncheckedItems) {
             // Check if more prices can fit into current URL
-            let currentPriceId = currentItem.priceId;
+            changeProgress(10 + index / uncheckedItems.size * 80, "Processing item");
             if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
                 if (currentItemString.length == 0) {
                     currentItemString = currentPriceId;
@@ -124,7 +127,8 @@ class ItemData {
                 await this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW);
                 currentItemString = currentItem.id;
             }
-        });
+            index++;
+        }
         if (currentItemString === "") {
             console.log("No more new prices to collect.");
             return;

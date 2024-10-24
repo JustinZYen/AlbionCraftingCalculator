@@ -38,7 +38,6 @@ async function loadPriceProcedure() {
     document.getElementById("load-icon")!.style.display = "none";
 }
 
-
 class ItemNameTrie {
     root = new TrieNode();
 

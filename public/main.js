@@ -25,8 +25,10 @@ async function loadPriceProcedure() {
     document.getElementById("recipes-area").innerHTML = "";
     const input = ($("#item-name").val());
     const itemIds = ItemData.getItemIds(input);
+    document.getElementById("load-icon").style.display = "block";
     await itemData.getProfits(itemIds);
     displayRecipes(itemData.checkedItems, itemIds);
+    document.getElementById("load-icon").style.display = "none";
 }
 class ItemNameTrie {
     root = new TrieNode();
@@ -99,7 +101,8 @@ const itemNameTrie = new ItemNameTrie();
 for (const name of names) {
     itemNameTrie.insert(name);
 }
-document.getElementById("item-name")?.addEventListener("input", async () => {
+// Event listener for changes in the item name input field
+document.getElementById("item-name").addEventListener("input", async () => {
     const enteredName = document.getElementById("item-name")?.value;
     document.getElementById("item-name-autocomplete").innerHTML = "";
     const matchingWords = itemNameTrie.wordsThatMatch(enteredName);
@@ -109,7 +112,8 @@ document.getElementById("item-name")?.addEventListener("input", async () => {
         document.getElementById("item-name-autocomplete")?.appendChild(wordElement);
     }
 });
-document.getElementById("item-name-autocomplete")?.addEventListener("click", (e) => {
+// Event listener for clicks on the options in the autocomplete dropdown
+document.getElementById("item-name-autocomplete").addEventListener("click", (e) => {
     console.log("CLICK");
     console.log(e.target.innerText);
     document.getElementById("item-name").value = e.target.innerText;

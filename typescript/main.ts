@@ -28,6 +28,26 @@ $("#recipes-area").on("click", "div", function () {
     $(this).find("svg").slideToggle("slow");
 });
 
+// Event listener for changes in the item name input field
+document.getElementById("item-name")!.addEventListener("input",async ()=>{
+    const enteredName = (<HTMLInputElement>document.getElementById("item-name"))?.value;
+    document.getElementById("item-name-autocomplete")!.innerHTML = "";
+    const matchingWords = itemNameTrie.wordsThatMatch(enteredName);
+    for (const word of matchingWords) {
+        const wordElement = document.createElement("li");
+        wordElement.innerText = word;
+        document.getElementById("item-name-autocomplete")?.appendChild(wordElement);
+    }
+});
+
+// Event listener for clicks on the options in the autocomplete dropdown
+document.getElementById("item-name-autocomplete")!.addEventListener("click",(e)=>{
+    console.log("CLICK");
+    console.log((<HTMLElement>e.target).innerText);
+    (<HTMLInputElement>document.getElementById("item-name"))!.value = (<HTMLElement>e.target).innerText;
+})
+
+
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     const input: string = ($("#item-name").val()) as string;
@@ -134,22 +154,3 @@ const itemNameTrie = new ItemNameTrie();
 for (const name of names) {
     itemNameTrie.insert(name);
 }
-
-// Event listener for changes in the item name input field
-document.getElementById("item-name")!.addEventListener("input",async ()=>{
-    const enteredName = (<HTMLInputElement>document.getElementById("item-name"))?.value;
-    document.getElementById("item-name-autocomplete")!.innerHTML = "";
-    const matchingWords = itemNameTrie.wordsThatMatch(enteredName);
-    for (const word of matchingWords) {
-        const wordElement = document.createElement("li");
-        wordElement.innerText = word;
-        document.getElementById("item-name-autocomplete")?.appendChild(wordElement);
-    }
-});
-
-// Event listener for clicks on the options in the autocomplete dropdown
-document.getElementById("item-name-autocomplete")!.addEventListener("click",(e)=>{
-    console.log("CLICK");
-    console.log((<HTMLElement>e.target).innerText);
-    (<HTMLInputElement>document.getElementById("item-name"))!.value = (<HTMLElement>e.target).innerText;
-})

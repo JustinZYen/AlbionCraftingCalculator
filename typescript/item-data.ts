@@ -5,7 +5,7 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-
 class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
-    checkedItems = new Map();
+    checkedItems = new Map<string,Item>();
     async getProfits(ids: string[]) {
         // Set containing all strings for which prices need to be determined
         let uncheckedItems = new Map<string, Item>();
@@ -32,18 +32,56 @@ class ItemData {
         }
         //console.log(uncheckedItems)
         console.log("setting prices");
-        console.time("Price fetch start")
-        await this.setPrices(uncheckedItems);
-        console.timeEnd("Price fetch start")
+        await this.#setPrices(uncheckedItems);
         //getAveragePrices();
     }
 
     /**
- * 
- * @param {string} priceURL URL needed for api, not including timescale
- * @param {DateEnum} timeSpan OLD or NEW, representing previous patch or current patch, respectively
- */
-    getPrices(priceURL: string, timeSpan: DateEnum) {
+     * 
+     * @param uncheckedItems A Map containing price ids and Items for all items for which prices have not yet been calculated
+     * @returns 
+     */
+    async #setPrices(uncheckedItems: Map<string, Item>) {
+        const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
+        const PRICE_URL_END_OLD = await this.#previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+        const PRICE_URL_END_NEW = await this.#currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+        const MAX_URL_LENGTH = 4096;
+        // Note: Missing time scale so that I can test out all 3 possible timescales
+        let currentItemString = "";
+        let index = 0;
+        const promises: Promise<void>[] = [];
+        for (const [currentPriceId, currentItem] of uncheckedItems) {
+            // Check if more prices can fit into current URL
+            if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
+                if (currentItemString.length == 0) {
+                    currentItemString = currentPriceId;
+                } else {
+                    currentItemString += ("," + currentPriceId);
+                }
+            } else {
+                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.Old));
+                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.New));
+                currentItemString = currentItem.id;
+            }
+            index++;
+        }
+        if (currentItemString === "") {
+            console.log("No more new prices to collect.");
+            return;
+        }
+        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.Old));
+        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.New));
+        await Promise.all(promises);
+        uncheckedItems.clear();
+    }
+
+   /**
+    * 
+    * @param priceURL URL needed for api, not including timescale
+    * @param timeSpan OLD or NEW, representing previous patch or current patch, respectively
+    * @returns An array of Promises representing each currently active price fetch
+    */
+    #getPrices(priceURL: string, timeSpan: DateEnum) {
         function fixLocation(initialLocation: string) {
             if (initialLocation == "5003") {
                 return "Brecilien";
@@ -53,27 +91,27 @@ class ItemData {
         }
         console.log("Price url: " + priceURL);
         const timescales = [1, 6, 24]
-        const promises:Promise<any>[] = [];
+        const promises: Promise<void>[] = [];
         for (const timescale of timescales) {
-            const priceContents:Promise<void> = <Promise<any>>fetch(priceURL + timescale).then((response)=>{
+            const priceContents: Promise<void> = fetch(priceURL + timescale).then((response) => {
                 return response.json();
-            }).then((priceContentsJSON)=> {
+            }).then((priceContentsJSON) => {
                 // Check timescale and update prices if timescale is higher
                 for (const currentItem of priceContentsJSON) {
                     const currentPriceId = currentItem.item_id;
-                    let targetItem;
+                    let targetItem:Item;
                     if (!this.checkedItems.has(currentPriceId)) {
                         console.log("priceId " + currentPriceId + " was not added to checkedItems");
                         targetItem = new Item(currentPriceId);
                         this.checkedItems.set(currentPriceId, targetItem);
                     } else {
-                        targetItem = this.checkedItems.get(currentPriceId);
+                        targetItem = this.checkedItems.get(currentPriceId)!;
                     }
                     // Get prices; set to appropriate location
                     const location = fixLocation(currentItem["location"]);
                     const quality = currentItem["quality"];
                     //console.log("target item: "+targetItem);
-                    const priceInfo = targetItem.priceInfos.get(timeSpan);
+                    const priceInfo = targetItem.priceInfos.get(timeSpan)!;
                     if (quality <= 2) {
                         if (!priceInfo.priceQualities.has(location) || quality >= priceInfo.priceQualities.get(location)) {
                             // add price if timescale is better
@@ -93,62 +131,20 @@ class ItemData {
                                 priceInfo.price.set(location, average);
                                 //console.log("Updating with new prices")
                             }
-    
+
                             // Find timescale
                         }
                     }
                 }
             });
             promises.push(priceContents);
-            
+
             //console.log("Done with timescale " + timescale);
         }
         return promises;
     }
+
     
-    /**
-     * 
-     * @param {Set} uncheckedItems A set containing Items representing all items for which prices have not yet been calculated
-     */
-    async setPrices(uncheckedItems: Map<string, Item>) {
-        const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
-        const PRICE_URL_END_OLD = await this.#previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-        const PRICE_URL_END_NEW = await this.#currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-        const MAX_URL_LENGTH = 4096;
-        // Note: Missing time scale so that I can test out all 3 possible timescales
-        let currentItemString = "";
-        let index = 0;
-
-
-        // !!!!!!!!! CHANGE TO NOT ANY
-        const promises:Promise<any>[] = []; 
-
-
-
-        for (const [currentPriceId,currentItem] of uncheckedItems) {
-            // Check if more prices can fit into current URL
-            if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
-                if (currentItemString.length == 0) {
-                    currentItemString = currentPriceId;
-                } else {
-                    currentItemString += ("," + currentPriceId);
-                }
-            } else {
-                promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
-                promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
-                currentItemString = currentItem.id;
-            }
-            index++;
-        }
-        if (currentItemString === "") {
-            console.log("No more new prices to collect.");
-            return;
-        }
-        promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
-        promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
-        await Promise.all(promises);
-        uncheckedItems.clear();
-    }
     async #previousDateString() {
         const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
         const patchDates = await patchDateDoc.data();
@@ -156,7 +152,7 @@ class ItemData {
         const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
             (previousPatchDateDate.getUTCMonth() + 1) + "-" +
             (previousPatchDateDate.getUTCDate());
-        const patchDateDate = new Date(patchDates.Date);
+        const patchDateDate = new Date(patchDates["Date"]);
         const patchDateString = patchDateDate.getUTCFullYear() + "-" +
             (patchDateDate.getUTCMonth() + 1) + "-" +
             (patchDateDate.getUTCDate());
@@ -166,7 +162,7 @@ class ItemData {
     async #currentDateString() {
         const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
         const patchDates = await patchDateDoc.data();
-        const previousPatchDateDate = new Date(patchDates.Date);
+        const previousPatchDateDate = new Date(patchDates["Date"]);
         const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
             (previousPatchDateDate.getUTCMonth() + 1) + "-" +
             (previousPatchDateDate.getUTCDate());
@@ -177,7 +173,7 @@ class ItemData {
         return this.#dateString(previousPatchDateString, currentDateString);
 
     }
-    
+
     #dateString(startDate: string, endDate: string) {
         return "?date=" + startDate + "&end_date=" + endDate;
     }

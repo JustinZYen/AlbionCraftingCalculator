@@ -22,7 +22,6 @@ $("#recipes-area").on("click", "div", function () {
     $(this).find("svg").slideToggle("slow");
 });
 async function loadPriceProcedure() {
-    document.getElementById("recipes-area").innerHTML = "";
     const input = ($("#item-name").val());
     const itemIds = ItemData.getItemIds(input);
     document.getElementById("load-icon").style.display = "block";

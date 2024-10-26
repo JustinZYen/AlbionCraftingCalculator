@@ -85,10 +85,10 @@ class ItemBox {
         inputBox.type = "text";
         let priceInfos = null;
         if (!$("#date-selector").is(":checked")) {
-            priceInfos = item.priceInfos.get(DateEnum.OLD);
+            priceInfos = item.priceInfos.get(DateEnum.Old);
         }
         else {
-            priceInfos = item.priceInfos.get(DateEnum.NEW);
+            priceInfos = item.priceInfos.get(DateEnum.New);
         }
         inputBox.placeholder = priceInfos.price.get($("#city-selector").val());
         buyCost.appendChild(inputBox);

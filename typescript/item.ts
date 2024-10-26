@@ -1,8 +1,8 @@
 import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "./external-data.js";
 
-class DateEnum {
-    static OLD = Symbol("Old Prices");
-    static NEW = Symbol("New Prices");
+enum DateEnum {
+    Old,
+    New
 }
 
 type CraftingRequirement = {
@@ -19,8 +19,8 @@ type CraftResource = {
 }
 class Item {
     priceInfos = new Map([
-        [DateEnum.OLD,new PriceInfo()],
-        [DateEnum.NEW,new PriceInfo()]
+        [DateEnum.Old,new PriceInfo()],
+        [DateEnum.New,new PriceInfo()]
     ]);
     overridePrice = -1;
     tier = NaN;
@@ -125,8 +125,8 @@ class Item {
     }
 
     toString() {
-        let oldPriceData = Array.from(this.priceInfos.get(DateEnum.OLD)!.price);
-        let newPriceData = Array.from(this.priceInfos.get(DateEnum.NEW)!.price);
+        let oldPriceData = Array.from(this.priceInfos.get(DateEnum.Old)!.price);
+        let newPriceData = Array.from(this.priceInfos.get(DateEnum.New)!.price);
         return `name: ${idToName[Item.getPriceId(this.id)]}, id: ${this.id}, category: ${this.category}, subcategory: ${this.subcategory} tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${oldPriceData}, new price: ${newPriceData}`;
     }
 

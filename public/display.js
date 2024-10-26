@@ -1,6 +1,7 @@
 import { ItemBox, RecipeBox } from "./display-boxes.js";
 import { idToName } from "./external-data.js";
 function displayRecipes(checkedItems, ids) {
+    document.getElementById("recipes-area").innerHTML = "";
     for (const currentPriceId of ids) {
         const currentItem = checkedItems.get(currentPriceId);
         // Set up div to contain the current recipe box

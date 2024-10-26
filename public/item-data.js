@@ -32,17 +32,56 @@ class ItemData {
         }
         //console.log(uncheckedItems)
         console.log("setting prices");
-        console.time("Price fetch start");
-        await this.setPrices(uncheckedItems);
-        console.timeEnd("Price fetch start");
+        await this.#setPrices(uncheckedItems);
         //getAveragePrices();
     }
     /**
- *
- * @param {string} priceURL URL needed for api, not including timescale
- * @param {DateEnum} timeSpan OLD or NEW, representing previous patch or current patch, respectively
- */
-    getPrices(priceURL, timeSpan) {
+     *
+     * @param uncheckedItems A Map containing price ids and Items for all items for which prices have not yet been calculated
+     * @returns
+     */
+    async #setPrices(uncheckedItems) {
+        const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
+        const PRICE_URL_END_OLD = await this.#previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+        const PRICE_URL_END_NEW = await this.#currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
+        const MAX_URL_LENGTH = 4096;
+        // Note: Missing time scale so that I can test out all 3 possible timescales
+        let currentItemString = "";
+        let index = 0;
+        const promises = [];
+        for (const [currentPriceId, currentItem] of uncheckedItems) {
+            // Check if more prices can fit into current URL
+            if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
+                if (currentItemString.length == 0) {
+                    currentItemString = currentPriceId;
+                }
+                else {
+                    currentItemString += ("," + currentPriceId);
+                }
+            }
+            else {
+                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.Old));
+                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.New));
+                currentItemString = currentItem.id;
+            }
+            index++;
+        }
+        if (currentItemString === "") {
+            console.log("No more new prices to collect.");
+            return;
+        }
+        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.Old));
+        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.New));
+        await Promise.all(promises);
+        uncheckedItems.clear();
+    }
+    /**
+     *
+     * @param priceURL URL needed for api, not including timescale
+     * @param timeSpan OLD or NEW, representing previous patch or current patch, respectively
+     * @returns An array of Promises representing each currently active price fetch
+     */
+    #getPrices(priceURL, timeSpan) {
         function fixLocation(initialLocation) {
             if (initialLocation == "5003") {
                 return "Brecilien";
@@ -104,46 +143,6 @@ class ItemData {
         }
         return promises;
     }
-    /**
-     *
-     * @param {Set} uncheckedItems A set containing Items representing all items for which prices have not yet been calculated
-     */
-    async setPrices(uncheckedItems) {
-        const PRICE_URL_START = "https://west.albion-online-data.com/api/v2/stats/history/";
-        const PRICE_URL_END_OLD = await this.#previousDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-        const PRICE_URL_END_NEW = await this.#currentDateString() + "&locations=0007,1002,2004,3005,3008,4002,5003&time-scale=";
-        const MAX_URL_LENGTH = 4096;
-        // Note: Missing time scale so that I can test out all 3 possible timescales
-        let currentItemString = "";
-        let index = 0;
-        // !!!!!!!!! CHANGE TO NOT ANY
-        const promises = [];
-        for (const [currentPriceId, currentItem] of uncheckedItems) {
-            // Check if more prices can fit into current URL
-            if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
-                if (currentItemString.length == 0) {
-                    currentItemString = currentPriceId;
-                }
-                else {
-                    currentItemString += ("," + currentPriceId);
-                }
-            }
-            else {
-                promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
-                promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
-                currentItemString = currentItem.id;
-            }
-            index++;
-        }
-        if (currentItemString === "") {
-            console.log("No more new prices to collect.");
-            return;
-        }
-        promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
-        promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
-        await Promise.all(promises);
-        uncheckedItems.clear();
-    }
     async #previousDateString() {
         const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
         const patchDates = await patchDateDoc.data();
@@ -151,7 +150,7 @@ class ItemData {
         const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
             (previousPatchDateDate.getUTCMonth() + 1) + "-" +
             (previousPatchDateDate.getUTCDate());
-        const patchDateDate = new Date(patchDates.Date);
+        const patchDateDate = new Date(patchDates["Date"]);
         const patchDateString = patchDateDate.getUTCFullYear() + "-" +
             (patchDateDate.getUTCMonth() + 1) + "-" +
             (patchDateDate.getUTCDate());
@@ -160,7 +159,7 @@ class ItemData {
     async #currentDateString() {
         const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
         const patchDates = await patchDateDoc.data();
-        const previousPatchDateDate = new Date(patchDates.Date);
+        const previousPatchDateDate = new Date(patchDates["Date"]);
         const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
             (previousPatchDateDate.getUTCMonth() + 1) + "-" +
             (previousPatchDateDate.getUTCDate());

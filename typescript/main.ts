@@ -29,7 +29,6 @@ $("#recipes-area").on("click", "div", function () {
 });
 
 async function loadPriceProcedure() {
-    document.getElementById("recipes-area")!.innerHTML = "";
     const input: string = ($("#item-name").val()) as string;
     const itemIds = ItemData.getItemIds(input);
     document.getElementById("load-icon")!.style.display = "block";

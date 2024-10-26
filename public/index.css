@@ -42,20 +42,6 @@ h1 {
     padding:20px;
 }
 
-#load-icon #progress-bar {
-    margin:0;
-    background-color: gainsboro;
-    width:30%;
-    height: auto;
-}
-
-#load-icon #progress-amount {
-    background-color:aquamarine;
-    width:0%;
-    height:20px;
-
-}
-
 
 #recipes-area > div {
     border:solid;

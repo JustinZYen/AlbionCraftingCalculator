@@ -29,12 +29,33 @@ $("#recipes-area").on("click", "div", function () {
 });
 
 async function loadPriceProcedure() {
+    const loadingInterval = displayLoadIcon();
     const input: string = ($("#item-name").val()) as string;
     const itemIds = ItemData.getItemIds(input);
-    document.getElementById("load-icon")!.style.display = "block";
     await itemData.getProfits(itemIds);
     displayRecipes(itemData.checkedItems, itemIds);
-    document.getElementById("load-icon")!.style.display = "none";
+    hideLoadIcon(loadingInterval);
+}
+
+function displayLoadIcon() {
+    const loadIcon = document.getElementById("load-icon")!;
+    loadIcon.style.display = "block";
+    let numPeriods = 1;
+    return setInterval(()=>{
+        let loadMessage = "Loading";
+        for (let i = 0;i < numPeriods; i++) {
+            loadMessage += ".";
+        }
+        loadIcon.innerText = loadMessage;
+        numPeriods = numPeriods % 3 + 1;
+    },500);
+}
+
+function hideLoadIcon(loadingInterval: NodeJS.Timeout) {
+    const loadIcon = document.getElementById("load-icon")!;
+    loadIcon.style.display = "none";
+    loadIcon.innerText = "Loading";
+    clearInterval(loadingInterval);
 }
 
 class ItemNameTrie {

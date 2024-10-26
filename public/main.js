@@ -26,14 +26,9 @@ async function loadPriceProcedure() {
     const input = ($("#item-name").val());
     const itemIds = ItemData.getItemIds(input);
     document.getElementById("load-icon").style.display = "block";
-    changeProgress(0, "Now loading prices");
     await itemData.getProfits(itemIds);
     displayRecipes(itemData.checkedItems, itemIds);
     document.getElementById("load-icon").style.display = "none";
-}
-function changeProgress(percentage, description) {
-    document.getElementById("progress-amount").style.width = percentage + "%";
-    document.getElementById("progress-description").innerText = description + "...";
 }
 class ItemNameTrie {
     root = new TrieNode();
@@ -123,4 +118,3 @@ document.getElementById("item-name-autocomplete").addEventListener("click", (e) 
     console.log(e.target.innerText);
     document.getElementById("item-name").value = e.target.innerText;
 });
-export { changeProgress };

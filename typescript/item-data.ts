@@ -32,7 +32,9 @@ class ItemData {
         }
         //console.log(uncheckedItems)
         console.log("setting prices");
+        console.time("Price fetch start")
         await this.setPrices(uncheckedItems);
+        console.timeEnd("Price fetch start")
         //getAveragePrices();
     }
 
@@ -41,7 +43,7 @@ class ItemData {
  * @param {string} priceURL URL needed for api, not including timescale
  * @param {DateEnum} timeSpan OLD or NEW, representing previous patch or current patch, respectively
  */
-    async getPrices(priceURL: string, timeSpan: DateEnum) {
+    getPrices(priceURL: string, timeSpan: DateEnum) {
         function fixLocation(initialLocation: string) {
             if (initialLocation == "5003") {
                 return "Brecilien";
@@ -51,52 +53,57 @@ class ItemData {
         }
         console.log("Price url: " + priceURL);
         const timescales = [1, 6, 24]
+        const promises:Promise<any>[] = [];
         for (const timescale of timescales) {
-            let priceContents = await fetch(priceURL + timescale);
-            let priceContentsJSON = await priceContents.json();
-            // Check timescale and update prices if timescale is higher
-            for (const currentItem of priceContentsJSON) {
-                const currentPriceId = currentItem.item_id;
-                let targetItem;
-                if (!this.checkedItems.has(currentPriceId)) {
-                    console.log("priceId " + currentPriceId + " was not added to checkedItems");
-                    targetItem = new Item(currentPriceId);
-                    this.checkedItems.set(currentPriceId, targetItem);
-                } else {
-                    targetItem = this.checkedItems.get(currentPriceId);
-                }
-                // Get prices; set to appropriate location
-                const location = fixLocation(currentItem["location"]);
-                const quality = currentItem["quality"];
-                //console.log("target item: "+targetItem);
-                const priceInfo = targetItem.priceInfos.get(timeSpan);
-                if (quality <= 2) {
-                    if (!priceInfo.priceQualities.has(location) || quality >= priceInfo.priceQualities.get(location)) {
-                        // add price if timescale is better
-                        const data = currentItem["data"];
-                        // Find timescale difference
-                        const startDate = data[0]["timestamp"];
-                        const endDate = data[data.length - 1]["timestamp"];
-                        const timescale = (Date.parse(endDate) - Date.parse(startDate));
-                        // console.log(`start date: ${startDate}, end date: ${endDate}`);
-                        if (!priceInfo.priceTimescale.has(location) || timescale > priceInfo.priceTimescale.get(location)) {
-                            let total = 0;
-                            for (const timestampData of data) {
-                                total += timestampData["avg_price"];
+            const priceContents:Promise<void> = <Promise<any>>fetch(priceURL + timescale).then((response)=>{
+                return response.json();
+            }).then((priceContentsJSON)=> {
+                // Check timescale and update prices if timescale is higher
+                for (const currentItem of priceContentsJSON) {
+                    const currentPriceId = currentItem.item_id;
+                    let targetItem;
+                    if (!this.checkedItems.has(currentPriceId)) {
+                        console.log("priceId " + currentPriceId + " was not added to checkedItems");
+                        targetItem = new Item(currentPriceId);
+                        this.checkedItems.set(currentPriceId, targetItem);
+                    } else {
+                        targetItem = this.checkedItems.get(currentPriceId);
+                    }
+                    // Get prices; set to appropriate location
+                    const location = fixLocation(currentItem["location"]);
+                    const quality = currentItem["quality"];
+                    //console.log("target item: "+targetItem);
+                    const priceInfo = targetItem.priceInfos.get(timeSpan);
+                    if (quality <= 2) {
+                        if (!priceInfo.priceQualities.has(location) || quality >= priceInfo.priceQualities.get(location)) {
+                            // add price if timescale is better
+                            const data = currentItem["data"];
+                            // Find timescale difference
+                            const startDate = data[0]["timestamp"];
+                            const endDate = data[data.length - 1]["timestamp"];
+                            const timescale = (Date.parse(endDate) - Date.parse(startDate));
+                            // console.log(`start date: ${startDate}, end date: ${endDate}`);
+                            if (!priceInfo.priceTimescale.has(location) || timescale > priceInfo.priceTimescale.get(location)) {
+                                let total = 0;
+                                for (const timestampData of data) {
+                                    total += timestampData["avg_price"];
+                                }
+                                const average = total / data.length;
+                                //console.log("average: "+average);
+                                priceInfo.price.set(location, average);
+                                //console.log("Updating with new prices")
                             }
-                            const average = total / data.length;
-                            //console.log("average: "+average);
-                            priceInfo.price.set(location, average);
-                            //console.log("Updating with new prices")
+    
+                            // Find timescale
                         }
-
-                        // Find timescale
                     }
                 }
-
-            }
-            console.log("Done with timescale " + timescale);
+            });
+            promises.push(priceContents);
+            
+            //console.log("Done with timescale " + timescale);
         }
+        return promises;
     }
     
     /**
@@ -111,6 +118,13 @@ class ItemData {
         // Note: Missing time scale so that I can test out all 3 possible timescales
         let currentItemString = "";
         let index = 0;
+
+
+        // !!!!!!!!! CHANGE TO NOT ANY
+        const promises:Promise<any>[] = []; 
+
+
+
         for (const [currentPriceId,currentItem] of uncheckedItems) {
             // Check if more prices can fit into current URL
             if (currentItemString.length + currentPriceId.length < MAX_URL_LENGTH) {
@@ -120,8 +134,8 @@ class ItemData {
                     currentItemString += ("," + currentPriceId);
                 }
             } else {
-                await this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD);
-                await this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW);
+                promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
+                promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
                 currentItemString = currentItem.id;
             }
             index++;
@@ -130,8 +144,9 @@ class ItemData {
             console.log("No more new prices to collect.");
             return;
         }
-        await this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD);
-        await this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW);
+        promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
+        promises.push(...this.getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
+        await Promise.all(promises);
         uncheckedItems.clear();
     }
     async #previousDateString() {

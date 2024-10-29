@@ -27,6 +27,7 @@ function displayRecipes(checkedItems: Map<string, Item>, ids: string[]) {
         const boxLines = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
         boxLines.setAttribute("height", (2000).toString());
         boxLines.setAttribute("width", (4000).toString());
+        /*
         const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
         const arrowhead = document.createElementNS("http://www.w3.org/2000/svg", "marker");
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -43,10 +44,9 @@ function displayRecipes(checkedItems: Map<string, Item>, ids: string[]) {
         arrowhead.setAttribute("orient", "auto");
         defs.appendChild(arrowhead);
         boxLines.appendChild(defs);
+        */
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
-
-
         createAndLinkBoxes(currentItem,checkedItems,displayBox,boxLines);
     }
 }

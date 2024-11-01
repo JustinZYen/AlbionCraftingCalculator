@@ -22,7 +22,7 @@ class Item {
         [DateEnum.Old,new PriceInfo()],
         [DateEnum.New,new PriceInfo()]
     ]);
-    overridePrice = -1;
+    overridePrice = undefined;
     tier = NaN;
     enchantment = 0;
     id;
@@ -209,11 +209,10 @@ class Item {
 }
 
 class PriceInfo {
-    // Prices are stored as [city,price]
-    price = new Map();
-    priceTimescale = new Map();
+    price = new Map<string,number>(); // City name, price value
+    priceTimescale = new Map<string,number>(); // City name, timescale covered
     // Price qualities so that items with variable quality are saved as quality 2 if possible
-    priceQualities = new Map();
+    priceQualities = new Map<string,number>(); // City name, quality number
 }
 
 class Recipe {

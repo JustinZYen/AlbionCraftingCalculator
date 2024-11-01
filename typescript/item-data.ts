@@ -92,10 +92,20 @@ class ItemData {
         console.log("Price url: " + priceURL);
         const timescales = [1, 6, 24]
         const promises: Promise<void>[] = [];
+        type PriceContentsJSON = {
+            location:string,
+            item_id:string,
+            quality:number,
+            data:{
+                item_count:number
+                avg_price:number
+                timestamp:string // Ex. "2024-10-28T00:00:00"
+            }[]
+        }[];
         for (const timescale of timescales) {
             const priceContents: Promise<void> = fetch(priceURL + timescale).then((response) => {
                 return response.json();
-            }).then((priceContentsJSON) => {
+            }).then((priceContentsJSON:PriceContentsJSON) => {
                 // Check timescale and update prices if timescale is higher
                 for (const currentItem of priceContentsJSON) {
                     const currentPriceId = currentItem.item_id;
@@ -113,15 +123,15 @@ class ItemData {
                     //console.log("target item: "+targetItem);
                     const priceInfo = targetItem.priceInfos.get(timeSpan)!;
                     if (quality <= 2) {
-                        if (!priceInfo.priceQualities.has(location) || quality >= priceInfo.priceQualities.get(location)) {
+                        if (!priceInfo.priceQualities.has(location) || quality >= priceInfo.priceQualities.get(location)!) {
                             // add price if timescale is better
                             const data = currentItem["data"];
                             // Find timescale difference
-                            const startDate = data[0]["timestamp"];
-                            const endDate = data[data.length - 1]["timestamp"];
+                            const startDate = data[0]!["timestamp"];
+                            const endDate = data[data.length - 1]!["timestamp"];
                             const timescale = (Date.parse(endDate) - Date.parse(startDate));
                             // console.log(`start date: ${startDate}, end date: ${endDate}`);
-                            if (!priceInfo.priceTimescale.has(location) || timescale > priceInfo.priceTimescale.get(location)) {
+                            if (!priceInfo.priceTimescale.has(location) || timescale > priceInfo.priceTimescale.get(location)!) {
                                 let total = 0;
                                 for (const timestampData of data) {
                                     total += timestampData["avg_price"];

@@ -94,7 +94,12 @@ class ItemBox {
         } else {
             priceInfos = item.priceInfos.get(DateEnum.New)!;
         }
-        inputBox.placeholder = priceInfos.price.get($("#city-selector").val());
+        const cityPrice = priceInfos.price.get((<HTMLInputElement>document.getElementById("city-selector"))!.value);
+        if (cityPrice) {
+            inputBox.placeholder = cityPrice.toString();
+        } else {
+            inputBox.placeholder = "Undefined";
+        }
         buyCost.appendChild(inputBox)
         this.currentBox.appendChild(buyCost);
     }

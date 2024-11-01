@@ -42,8 +42,6 @@ document.getElementById("item-name")!.addEventListener("input",async ()=>{
 
 // Event listener for clicks on the options in the autocomplete dropdown
 document.getElementById("item-name-autocomplete")!.addEventListener("click",(e)=>{
-    console.log("CLICK");
-    console.log((<HTMLElement>e.target).innerText);
     (<HTMLInputElement>document.getElementById("item-name"))!.value = (<HTMLElement>e.target).innerText;
 })
 

@@ -1,4 +1,5 @@
 Priority Features
+- Add import map so that fetches can be done in a separate file from hardcoded values, then used as if they are all constants
 - Add calculation for crafted costs (as opposed to direct market costs)
 - Allow user override of crafting costs
 

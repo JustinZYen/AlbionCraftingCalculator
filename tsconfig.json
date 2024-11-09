@@ -21,7 +21,7 @@
       "noUnusedLocals": true, // Report errors on unused local variables.
       "noUnusedParameters": true // Report errors on unused parameters in functions
     },
-    "include": ["./typescript/*.ts"],
+    "include": ["./typescript/*.ts", "typescript/classes/trie.ts", "typescript/classes/item.ts", "typescript/classes/display-boxes.ts", "typescript/globals/preload.ts", "typescript/globals/constants.ts", "typescript/globals/firebaseScripts.ts"],
     "exclude": [
       "node_modules/**/*"
     ]

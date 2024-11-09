@@ -1,10 +1,11 @@
 * {
-    box-sizing:border-box;
+    box-sizing: border-box;
 }
 
 body {
-    display:flex;
+    display: flex;
     flex-direction: row;
+    margin:0;
 }
 
 h1 {
@@ -12,12 +13,12 @@ h1 {
 }
 
 #sidebars {
-    display:flex;
+    display: flex;
     flex-direction: row;
 }
 
 .sidebar {
-    height:100vh;
+    height: 100vh;
     width: 0;
     position: sticky;
     z-index: 1;
@@ -26,79 +27,86 @@ h1 {
     background-color: green;
     overflow-x: hidden;
     transition: width 0s;
-    padding:0;
+    padding: 0;
 }
 
 .sidebar.display {
-    height:100vh;
+    height: 100vh;
     width: 250px;
     transition: width 0.5s;
 }
 
 #sidebar-buttons {
-    height:100vh;
-    position:sticky;
-    top:0;
-    display:flex;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    display: flex;
     flex-direction: column;
+    width:min-content;
+
+}
+
+#sidebar-buttons button {
+    word-spacing: 999999rem;
 }
 
 #main {
     width: auto;
-    flex-grow:1;
+    flex-grow: 1;
 }
 
 #user-inputs {
-    display:flex;
+    display: flex;
     flex-direction: row;
 }
 
 #item-name-autocomplete:hover {
-    display: block !important; /* Couldn't figure out how to get this working without important */
+    display: block !important;
+    /* Couldn't figure out how to get this working without important */
 }
 
-#user-inputs #item-name:focus + #item-name-autocomplete{
-    display:block;
+#user-inputs #item-name:focus+#item-name-autocomplete {
+    display: block;
 }
 
-#user-inputs #item-name-autocomplete{
-    margin:0;
-    min-height:20px;
-    max-height:150px;
-    position:absolute;
-    overflow-y:scroll;
-    display:none;
+#user-inputs #item-name-autocomplete {
+    margin: 0;
+    min-height: 20px;
+    max-height: 150px;
+    position: absolute;
+    overflow-y: scroll;
+    display: none;
     list-style-type: none;
-    padding:2px ;
-    background-color:gainsboro;
+    padding: 2px;
+    background-color: gainsboro;
     z-index: 1;
 }
 
 
 #item-name-autocomplete li:hover {
-    background-color:gray;
+    background-color: gray;
     cursor: default;
 }
 
 #load-icon {
-    padding:20px;
+    padding: 20px;
 }
 
 
-#recipes-area > div {
-    border:solid;
-    margin:0.5%;
-    border-radius:10px;
+#recipes-area>div {
+    border: solid;
+    margin: 0.5%;
+    border-radius: 10px;
 }
 
 /**/
 #recipes-area div div {
-    padding:10px;
-    border-radius:10px;
+    padding: 10px;
+    border-radius: 10px;
 }
 
-#recipes-area  div div:hover {
-    background-color:yellow;
+#recipes-area div div:hover {
+    background-color: yellow;
 }
 
 /*Figure containing all the recipe boxes*/
@@ -120,29 +128,29 @@ h1 {
 
 /* The individual recipe boxes */
 #recipes-area div figure div {
-    position:absolute;
-    border:solid;
+    position: absolute;
+    border: solid;
     background-color: green;
-    padding:0;
-    border-radius:0px;
+    padding: 0;
+    border-radius: 0px;
 }
 
 .item-box {
-    padding:1px;
-    overflow-wrap:break-word;
+    padding: 1px;
+    overflow-wrap: break-word;
 }
 
 .item-box p {
-    margin:0;
+    margin: 0;
 }
 
 .item-box input {
-    width:75px;
-    margin-left:10px;
+    width: 75px;
+    margin-left: 10px;
 }
 
 
 line {
-	stroke:red;
-	stroke-width:5;
+    stroke: red;
+    stroke-width: 5;
 }

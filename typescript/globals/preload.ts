@@ -1,6 +1,6 @@
 import {stationNames} from "./constants.js"
-import {namesPromise} from "./external-data.js";
-import { ItemNameTrie } from "./trie.js";
+import {namesPromise} from "../external-data.js";
+import { ItemNameTrie } from "../classes/trie.js";
 /**
  * Maps item ids (in Albion binaries) to crafting station ids (in Albion binaries)
  */

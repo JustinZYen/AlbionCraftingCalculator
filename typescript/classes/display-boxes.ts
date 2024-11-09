@@ -1,4 +1,4 @@
-import { idToName } from "./external-data.js";
+import { idToName } from "../external-data.js";
 import { DateEnum, Item } from "./item.js";
 class RecipeBox {
     craftedItems:ItemBox[] = []; // The item array that this recipe is used to craft (ItemBox)

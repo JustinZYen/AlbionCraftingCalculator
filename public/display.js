@@ -1,4 +1,4 @@
-import { ItemBox, RecipeBox } from "./display-boxes.js";
+import { ItemBox, RecipeBox } from "./classes/display-boxes.js";
 import { idToName } from "./external-data.js";
 function displayRecipes(checkedItems, ids) {
     document.getElementById("recipes-area").innerHTML = "";

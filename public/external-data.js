@@ -1,5 +1,5 @@
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { db } from "./firebaseScripts.js";
+import { db } from "./globals/firebaseScripts.js";
 const nameToIDPromise = getDoc(doc(db, "General/Item Data/Name Conversions/Name To ID")).then((content) => {
     return content.data();
 });

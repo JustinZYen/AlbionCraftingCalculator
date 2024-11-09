@@ -1,6 +1,6 @@
-import { ItemBox, RecipeBox } from "./display-boxes.js";
+import { ItemBox, RecipeBox } from "./classes/display-boxes.js";
 import { idToName } from "./external-data.js";
-import { Item } from "./item.js";
+import { Item } from "./classes/item.js";
 
 function displayRecipes(checkedItems: Map<string, Item>, ids: string[]) {
     document.getElementById("recipes-area")!.innerHTML = "";

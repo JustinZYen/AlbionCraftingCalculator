@@ -1,57 +1,69 @@
-import { recipesWithT, recipesWithoutT, itemsJSON } from "./external-data.js";
-var DateEnum;
-(function (DateEnum) {
-    DateEnum[DateEnum["Old"] = 0] = "Old";
-    DateEnum[DateEnum["New"] = 1] = "New";
-})(DateEnum || (DateEnum = {}));
+import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "../external-data.js";
+
+enum DateEnum {
+    Old,
+    New
+}
+
+type CraftingRequirement = {
+    "@silver":string,
+    "@time":string,
+    "@craftingfocus":string,
+    "@amountcrafted":string,
+    craftresource: CraftResource[]|CraftResource
+}
+
+type CraftResource = {
+    "@uniquename":string,
+    "@count":string
+}
 class Item {
     priceInfos = new Map([
-        [DateEnum.Old, new ExtendedPriceInfo()],
-        [DateEnum.New, new ExtendedPriceInfo()]
+        [DateEnum.Old,new ExtendedPriceInfo()],
+        [DateEnum.New,new ExtendedPriceInfo()]
     ]);
     craftedPriceInfos = new Map([
-        [DateEnum.Old, new PriceInfo()],
-        [DateEnum.New, new PriceInfo()]
+        [DateEnum.Old,new PriceInfo()],
+        [DateEnum.New,new PriceInfo()]
     ]);
     priceCalculated = false;
     overridePrice = undefined;
-    tier = undefined;
+    tier:number|undefined = undefined;
     enchantment = 0;
     id;
     priceId;
     // Recipes will be array of Recipe objects
-    recipes = [];
-    category;
-    subcategory;
-    constructor(priceId) {
+    recipes:Recipe[] = [];
+    category:string;
+    subcategory:string;
+
+    constructor(priceId:string) {
         this.priceId = priceId;
         this.id = Item.getBaseId(priceId);
         this.#setTier();
         this.#setEnchantment();
         this.#setRecipesAndCategories();
     }
-    getMinCost(timespan, city) {
+
+    getMinCost(timespan:DateEnum,city:string) {
         if (this.overridePrice != undefined) {
             return this.overridePrice;
-        }
-        else {
-            const marketPrice = this.priceInfos.get(timespan).price.get(city);
-            const craftedPrice = this.craftedPriceInfos.get(timespan).price.get(city);
+        } else {
+            const marketPrice = this.priceInfos.get(timespan)!.price.get(city);
+            const craftedPrice = this.craftedPriceInfos.get(timespan)!.price.get(city);
             if (marketPrice == undefined && craftedPrice == undefined) {
                 return undefined;
-            }
-            else if (marketPrice != undefined && craftedPrice != undefined) {
-                return Math.min(marketPrice, craftedPrice);
-            }
-            else if (marketPrice != undefined) {
+            } else if (marketPrice != undefined && craftedPrice != undefined) {
+                return Math.min(marketPrice,craftedPrice);
+            } else if (marketPrice != undefined) {
                 return marketPrice;
-            }
-            else {
+            } else {
                 return craftedPrice;
             }
         }
     }
-    calculateCraftingCost(items) {
+
+    calculateCraftingCost(items:Map<string,Item>) {
         // Go through recipes and update crafting costs each time?
         // Or go through dates and cities and go through each recipe each time
         for (const recipe of this.recipes) {
@@ -59,27 +71,28 @@ class Item {
             //recipe.calculateCraftingCost(items,????);
         }
     }
+
     #setTier() {
         const secondValue = parseInt(this.id.charAt(1));
         if (this.id.charAt(0) === "T" && !Number.isNaN(secondValue)) {
             this.tier = secondValue;
-        }
-        else {
+        } else {
             console.log(`Id ${this.priceId} has no tier found`);
         }
     }
+
     #setEnchantment() {
-        const lastVal = parseInt(this.priceId.charAt(this.priceId.length - 1));
-        if (!isNaN(lastVal) && this.priceId.charAt(this.priceId.length - 2) == "@") {
+        const lastVal = parseInt(this.priceId.charAt(this.priceId.length-1));
+        if (!isNaN(lastVal) && this.priceId.charAt(this.priceId.length-2) == "@") {
             this.enchantment = lastVal;
         }
     }
+
     #setRecipesAndCategories() {
         let path;
-        if (this.id.charAt(0) == "T") {
+        if (this.id.charAt(0)=="T") {
             path = recipesWithT[this.id];
-        }
-        else {
+        } else {
             path = recipesWithoutT[this.id];
         }
         if (path == null) {
@@ -91,10 +104,12 @@ class Item {
             itemInfo = itemInfo[pathElement];
         }
         //console.log(itemInfo);
+        
         this.category = itemInfo["@shopcategory"];
+
         this.subcategory = itemInfo["@shopsubcategory1"];
         if (itemInfo.hasOwnProperty("enchantments") && this.enchantment > 0) {
-            itemInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
+            itemInfo = itemInfo.enchantments.enchantment[this.enchantment-1];
         }
         if (!itemInfo.hasOwnProperty("craftingrequirements")) {
             console.log(`ID ${this.id} cannot be crafted`);
@@ -102,7 +117,8 @@ class Item {
         }
         let craftingRequirements = itemInfo.craftingrequirements;
         // Add a recipe based on the contents of craftingrequirements
-        const addRecipe = (element) => {
+        
+        const addRecipe= (element:CraftingRequirement) => {
             //console.log(`id: ${this.id}, addRecipe element: ${JSON.stringify(element)}`);
             if (element.hasOwnProperty("craftresource")) {
                 let craftResource = element.craftresource;
@@ -110,66 +126,67 @@ class Item {
                     craftResource = [craftResource];
                 }
                 //console.log(`craftresource used to add to recipe: ${craftResource}`);
-                let currentRecipe = new Recipe(element["@craftingfocus"], element["@silver"], element["@time"], craftResource);
+                let currentRecipe = new Recipe(element["@craftingfocus"],element["@silver"],element["@time"],craftResource);
                 if (element.hasOwnProperty("@amountcrafted")) {
                     currentRecipe.amount = parseInt(element["@amountcrafted"]);
                 }
                 this.recipes.push(currentRecipe);
             }
-        };
+        }
         if (Array.isArray(craftingRequirements)) {
             for (const craftingRequirement of craftingRequirements) {
                 addRecipe(craftingRequirement);
             }
-        }
-        else {
+        } else {
             addRecipe(craftingRequirements);
         }
+        
         // Item id must end with @number
         if (itemInfo.hasOwnProperty("upgraderequirements")) {
             //let upgradeRequirements = itemInfo.upgraderequirements;
             let previousId;
             if (this.enchantment === 1) {
-                previousId = this.priceId.slice(0, -2);
+                previousId = this.priceId.slice(0,-2);
+            } else {
+                previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
             }
-            else {
-                previousId = this.priceId.slice(0, -1) + (this.enchantment - 1);
-            }
-            let initialRecipe = new Recipe((0).toString(), (0).toString(), (0).toString(), [itemInfo.upgraderequirements.upgraderesource]);
-            initialRecipe.addResource(previousId, 1);
+            let initialRecipe = new Recipe((0).toString(),(0).toString(),(0).toString(),[itemInfo.upgraderequirements.upgraderesource]);
+            
+            initialRecipe.addResource(previousId,1);
             this.recipes.push(initialRecipe);
         }
     }
+
     /*
     toString() {
         let oldPriceData = Array.from(this.priceInfos.get(DateEnum.Old)!.price);
         let newPriceData = Array.from(this.priceInfos.get(DateEnum.New)!.price);
-        return `name: ${idToName[Item.getPriceId(this.id)]},
-        id: ${this.id},
-        category: ${this.category},
-        subcategory: ${this.subcategory},
-        tier: ${this.tier},
-        enchantment: ${this.enchantment},
-        old price: ${oldPriceData},
+        return `name: ${idToName[Item.getPriceId(this.id)]}, 
+        id: ${this.id}, 
+        category: ${this.category}, 
+        subcategory: ${this.subcategory}, 
+        tier: ${this.tier}, 
+        enchantment: ${this.enchantment}, 
+        old price: ${oldPriceData}, 
         new price: ${newPriceData}`;
     }
     */
-    static getPriceId(s) {
-        if (s.endsWith("LEVEL", s.length - 1)) {
+    static getPriceId(s:string) {
+        if (s.endsWith("LEVEL",s.length-1)) {
             // Convert resources ending with LEVEL# (T4_PLANKS_LEVEL1) to LEVEL#@# (T4_PLANKS_LEVEL1@1)
             // Add exceptions for FISHSAUCE and ALCHEMY_EXTRACT
-            if (!s.startsWith("FISHSAUCE", 3) && !s.startsWith("ALCHEMY_EXTRACT", 3)) {
-                return s + "@" + s.charAt(s.length - 1);
+            if (!s.startsWith("FISHSAUCE",3) && !s.startsWith("ALCHEMY_EXTRACT",3)) {
+                return s+"@"+s.charAt(s.length-1);
             }
-        }
-        else if (s.startsWith("RANDOM_DUNGEON", 3)) {
-            const lastValue = parseInt(s.charAt(s.length - 1));
+        } 
+        else if (s.startsWith("RANDOM_DUNGEON",3)) {
+            const lastValue = parseInt(s.charAt(s.length-1));
             if (lastValue > 1) {
-                return s + "@" + (lastValue - 1);
+                return s+"@"+(lastValue-1);
             }
         }
         else if (s.startsWith("UNIQUE_LOOTCHEST_COMMUNITY") && s.endsWith("PREMIUM")) {
-            return s + "@1";
+            return s+"@1";
         }
         // Cover edge cases
         const enchantedMounts = [
@@ -180,8 +197,8 @@ class Item {
             "T8_MOUNT_ARMORED_HORSE_MORGANA",
             "T8_MOUNT_RABBIT_EASTER_DARK"
         ];
-        if (enchantedMounts.includes(s)) {
-            return s + "@1";
+        if(enchantedMounts.includes(s)) {
+            return s+"@1";
         }
         const enchantedDeco1 = [
             "UNIQUE_FURNITUREITEM_TELLAFRIEND_CHEST_A",
@@ -195,7 +212,7 @@ class Item {
             "UNIQUE_FURNITUREITEM_MORGANA_FIREBOWL_C"
         ];
         if (enchantedDeco1.includes(s)) {
-            return s + "@1";
+            return s+"@1";
         }
         const enchantedDeco2 = [
             "UNIQUE_FURNITUREITEM_MORGANA_CAMPFIRE_D",
@@ -203,7 +220,7 @@ class Item {
             "UNIQUE_FURNITUREITEM_MORGANA_WEAPONCRATE_A"
         ];
         if (enchantedDeco2.includes(s)) {
-            return s + "@2";
+            return s+"@2";
         }
         const enchantedDeco3 = [
             "UNIQUE_FURNITUREITEM_MORGANA_PENTAGRAM",
@@ -211,66 +228,73 @@ class Item {
             "UNIQUE_FURNITUREITEM_MORGANA_TENT_A"
         ];
         if (enchantedDeco3.includes(s)) {
-            return s + "@3";
+            return s+"@3";
         }
-        if (s.startsWith("JOURNAL", 3)) {
-            return s + "_EMPTY";
+        if (s.startsWith("JOURNAL",3)) {
+            return s+"_EMPTY";
         }
         return s;
     }
-    static getBaseId(s) {
-        if (s.charAt(s.length - 2) === "@") {
-            return s.slice(0, s.length - 2);
+    
+    static getBaseId(s:string) {
+        if (s.charAt(s.length-2)==="@") {
+            return s.slice(0,s.length-2)
         }
-        else if (s.startsWith("JOURNAL", 3) && (s.endsWith("EMPTY") || s.endsWith("FULL"))) {
+        else if (s.startsWith("JOURNAL",3) && (s.endsWith("EMPTY") || s.endsWith("FULL"))) {
             console.log(s);
-            console.log(s.slice(0, s.lastIndexOf("_")));
-            return s.slice(0, s.lastIndexOf("_"));
+            console.log(s.slice(0,s.lastIndexOf("_")));
+            return s.slice(0,s.lastIndexOf("_"));
         }
         return s;
     }
 }
+
 class PriceInfo {
-    price = new Map(); // City name, price value 
+    price = new Map<string,number>(); // City name, price value 
 }
+
 /**
  * This class used to store additional price info so that price fetch calculations can be more accurate
  */
-class ExtendedPriceInfo extends PriceInfo {
-    priceTimescale = new Map(); // City name, timescale covered
+class ExtendedPriceInfo extends PriceInfo{
+    priceTimescale = new Map<string,number>(); // City name, timescale covered
     // Price qualities so that items with variable quality are saved as quality 2 if possible
-    priceQualities = new Map(); // City name, quality number
+    priceQualities = new Map<string,number>(); // City name, quality number
 }
+
 class Recipe {
     // Might be issue with results being strings
     focus;
     silver;
     time;
     // formatted as item id followed by amount of resources
-    resources = [];
+    resources:{priceId:string,count:number}[] = [];
     // amount is amount crafted
     amount = 1;
     // Whether or not the recipe can return resources
     canReturn = true;
     /**
-     *
-     * @param {string} focus
-     * @param {string} silver
-     * @param {string} time
+     * 
+     * @param {string} focus 
+     * @param {string} silver 
+     * @param {string} time 
      * @param {CraftResource[]} resources Resources, as obtained from the item json
      */
-    constructor(focus, silver, time, resources) {
+    constructor (focus:string,silver:string,time:string,resources:CraftResource[]) {
         this.focus = parseFloat(focus);
         this.silver = parseFloat(silver);
         this.time = parseFloat(time);
         for (const resource of resources) {
-            this.addResource(Item.getPriceId(resource["@uniquename"]), parseInt(resource["@count"]));
+            this.addResource(Item.getPriceId(resource["@uniquename"]),parseInt(resource["@count"]));
         }
     }
-    addResource(priceId, count) {
-        this.resources.push({ "priceId": priceId, "count": count });
+
+    addResource(priceId:string,count:number) {
+        this.resources.push({"priceId":priceId,"count":count});
     }
-    calculateCraftingCost(items, timespan, city) {
+
+    calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:string) {
+
     }
 }
-export { DateEnum, Item };
+export {DateEnum,Item};

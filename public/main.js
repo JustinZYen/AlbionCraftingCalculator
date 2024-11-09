@@ -1,7 +1,7 @@
 "use strict";
 import { ItemData } from "./item-data.js";
 import { displayRecipes } from "./display.js";
-import { itemNameTrie } from "./preload.js";
+import { itemNameTrie } from "./globals/preload.js";
 const itemData = new ItemData();
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
 $("#city-selector").on("change", async () => {

@@ -1,6 +1,6 @@
 import { nameToIDPromise } from "./external-data.js";
-import { db } from "./firebaseScripts.js";
-import { DateEnum, Item } from "./item.js";
+import { db } from "./globals/firebaseScripts.js";
+import { DateEnum, Item } from "./classes/item.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 class ItemData {
     // HashMap of all Items so far (for saving prices)

@@ -9,27 +9,23 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <script type="module" src="preload.js" async></script>
-    <script type="module" src="firebaseScripts.js" defer></script>
+    <script type="module" src="globals/preload.js" async></script>
+    <script type="module" src="globals/firebaseScripts.js" defer></script>
     <script type="module" src="main.js" defer></script>
 </head>
 
 <body>
-    
     <div id="sidebars">
-        <div class="sidebar sidebar1">
-            <a href="#">About</a>
-            <a href="#">Services</a>
-            <a href="#">Clients</a>
-            <a href="#">Contact</a>
+        <div class="sidebar crafting-fees">
+            
         </div>
-        <div class="sidebar sidebar2">
+        <div class="sidebar legend">
             AAAAA
         </div>
     </div>
     <div id="sidebar-buttons">
-        <button id="openbtn" class="sidebar1">☰ Open Sidebar</button>
-        <button id="openbtn" class="sidebar2">☰ Open Sidebar2</button>
+        <button id="openbtn" class="crafting-fees">Set Crafting Fees</button>
+        <button id="openbtn" class="legend">Legend</button>
     </div>
 
     <div id="main">

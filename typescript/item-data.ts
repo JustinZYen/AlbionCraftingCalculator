@@ -1,4 +1,4 @@
-import { nameToID } from "./external-data.js";
+import { nameToIDPromise } from "./external-data.js";
 import { db } from "./firebaseScripts.js";
 import { DateEnum, Item } from "./item.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -193,7 +193,8 @@ class ItemData {
      * @param {String} itemId 
      * @returns An array containing item ids of all weapons that share the name in the tree
      */
-    static getItemIds(itemId: string) {
+    static async getItemIds(itemId: string) {
+        const nameToID = await nameToIDPromise;
         const MIN_TIER = 4;
         const MAX_TIER = 8;
         let ids: string[] = structuredClone(nameToID[itemId]);

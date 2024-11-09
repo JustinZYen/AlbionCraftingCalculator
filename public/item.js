@@ -1,4 +1,4 @@
-import { recipesWithT, recipesWithoutT, itemsJSON, idToName } from "./external-data.js";
+import { recipesWithT, recipesWithoutT, itemsJSON } from "./external-data.js";
 var DateEnum;
 (function (DateEnum) {
     DateEnum[DateEnum["Old"] = 0] = "Old";
@@ -6,11 +6,16 @@ var DateEnum;
 })(DateEnum || (DateEnum = {}));
 class Item {
     priceInfos = new Map([
+        [DateEnum.Old, new ExtendedPriceInfo()],
+        [DateEnum.New, new ExtendedPriceInfo()]
+    ]);
+    craftedPriceInfos = new Map([
         [DateEnum.Old, new PriceInfo()],
         [DateEnum.New, new PriceInfo()]
     ]);
+    priceCalculated = false;
     overridePrice = undefined;
-    tier = NaN;
+    tier = undefined;
     enchantment = 0;
     id;
     priceId;
@@ -24,6 +29,35 @@ class Item {
         this.#setTier();
         this.#setEnchantment();
         this.#setRecipesAndCategories();
+    }
+    getMinCost(timespan, city) {
+        if (this.overridePrice != undefined) {
+            return this.overridePrice;
+        }
+        else {
+            const marketPrice = this.priceInfos.get(timespan).price.get(city);
+            const craftedPrice = this.craftedPriceInfos.get(timespan).price.get(city);
+            if (marketPrice == undefined && craftedPrice == undefined) {
+                return undefined;
+            }
+            else if (marketPrice != undefined && craftedPrice != undefined) {
+                return Math.min(marketPrice, craftedPrice);
+            }
+            else if (marketPrice != undefined) {
+                return marketPrice;
+            }
+            else {
+                return craftedPrice;
+            }
+        }
+    }
+    calculateCraftingCost(items) {
+        // Go through recipes and update crafting costs each time?
+        // Or go through dates and cities and go through each recipe each time
+        for (const recipe of this.recipes) {
+            // For each item in the recipe, if crafting cost is not yet determined, determine its crafting cost first
+            //recipe.calculateCraftingCost(items,????);
+        }
     }
     #setTier() {
         const secondValue = parseInt(this.id.charAt(1));
@@ -106,11 +140,20 @@ class Item {
             this.recipes.push(initialRecipe);
         }
     }
+    /*
     toString() {
-        let oldPriceData = Array.from(this.priceInfos.get(DateEnum.Old).price);
-        let newPriceData = Array.from(this.priceInfos.get(DateEnum.New).price);
-        return `name: ${idToName[Item.getPriceId(this.id)]}, id: ${this.id}, category: ${this.category}, subcategory: ${this.subcategory} tier: ${this.tier}, enchantment: ${this.enchantment}, old price: ${oldPriceData}, new price: ${newPriceData}`;
+        let oldPriceData = Array.from(this.priceInfos.get(DateEnum.Old)!.price);
+        let newPriceData = Array.from(this.priceInfos.get(DateEnum.New)!.price);
+        return `name: ${idToName[Item.getPriceId(this.id)]},
+        id: ${this.id},
+        category: ${this.category},
+        subcategory: ${this.subcategory},
+        tier: ${this.tier},
+        enchantment: ${this.enchantment},
+        old price: ${oldPriceData},
+        new price: ${newPriceData}`;
     }
+    */
     static getPriceId(s) {
         if (s.endsWith("LEVEL", s.length - 1)) {
             // Convert resources ending with LEVEL# (T4_PLANKS_LEVEL1) to LEVEL#@# (T4_PLANKS_LEVEL1@1)
@@ -188,7 +231,12 @@ class Item {
     }
 }
 class PriceInfo {
-    price = new Map(); // City name, price value
+    price = new Map(); // City name, price value 
+}
+/**
+ * This class used to store additional price info so that price fetch calculations can be more accurate
+ */
+class ExtendedPriceInfo extends PriceInfo {
     priceTimescale = new Map(); // City name, timescale covered
     // Price qualities so that items with variable quality are saved as quality 2 if possible
     priceQualities = new Map(); // City name, quality number
@@ -206,10 +254,10 @@ class Recipe {
     canReturn = true;
     /**
      *
-     * @param {number} focus
-     * @param {number} silver
-     * @param {number} time
-     * @param {array} resources Resources, as obtained from the item json
+     * @param {string} focus
+     * @param {string} silver
+     * @param {string} time
+     * @param {CraftResource[]} resources Resources, as obtained from the item json
      */
     constructor(focus, silver, time, resources) {
         this.focus = parseFloat(focus);
@@ -221,6 +269,8 @@ class Recipe {
     }
     addResource(priceId, count) {
         this.resources.push({ "priceId": priceId, "count": count });
+    }
+    calculateCraftingCost(items, timespan, city) {
     }
 }
 export { DateEnum, Item };

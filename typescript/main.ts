@@ -1,8 +1,7 @@
 "use strict";
 import { ItemData } from "./item-data.js";
 import { displayRecipes } from "./display.js";
-import {names} from "./external-data.js";
-
+import {itemNameTrie} from "./preload.js";
 
 const itemData = new ItemData();
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
@@ -64,7 +63,7 @@ document.getElementById("sidebar-buttons")!.addEventListener("click",(e)=>{
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     const input: string = ($("#item-name").val()) as string;
-    const itemIds = ItemData.getItemIds(input);
+    const itemIds = await ItemData.getItemIds(input);
     await itemData.getProfits(itemIds);
     displayRecipes(itemData.checkedItems, itemIds);
     hideLoadIcon(loadingInterval);
@@ -91,79 +90,3 @@ function hideLoadIcon(loadingInterval: NodeJS.Timeout) {
     clearInterval(loadingInterval);
 }
 
-class ItemNameTrie {
-    root = new TrieNode();
-
-    insert(fullName:string) {
-        for (const nameWord of fullName.split(" ")) {
-            this.#insertWord(nameWord,fullName);
-        }
-    }
-
-    #insertWord(nameWord:string,fullName:string) {
-        let current = this.root;
-        for (const character of nameWord) {
-            const c = character.toLowerCase();
-            if (c.match(/[a-zA-Z0-9]/)) {
-                if (!current.children.has(c)) {
-                    current.children.set(c,new TrieNode());
-                }
-                current = current.children.get(c)!;
-            }
-        }
-        current.words.add(fullName);
-    }
-
-    wordsThatMatch(fullInput:string) {
-        let matchingWords = new Set<string>();
-        const inputWords = fullInput.split(" ");
-        let index = 0;
-        for (;index < inputWords.length; index++) {
-            if (inputWords[index]!.length > 0) {
-                matchingWords = this.#wordsThatMatchWord(inputWords[index]!);
-                index++;
-                break;
-            }
-        }
-        for (;index < inputWords.length; index++) {
-            if (inputWords[index]!.length > 0) {
-                matchingWords = matchingWords.intersection(this.#wordsThatMatchWord(inputWords[index]!));
-            }
-        }
-        return matchingWords;
-    }
-
-    #wordsThatMatchWord(nameWord:string) {
-        let current = this.root;
-        for (const character of nameWord) {
-            const c = character.toLowerCase();
-            if (c.match(/[a-zA-Z0-9]/)) {
-                if (!current.children.has(c)) {
-                    return new Set<string>();
-                } else {
-                    current = current.children.get(c)!;
-                }
-            }
-        }
-        let matchingWords = new Set<string>();
-        const nodesToAddFrom = [current];
-        while (nodesToAddFrom.length > 0) {
-            const currentNode = nodesToAddFrom.pop()!;
-            matchingWords = matchingWords.union(currentNode.words);
-            for (const [_,child] of currentNode.children) {
-                nodesToAddFrom.push(child);
-            }
-        }
-        return matchingWords;
-    }
-}
-
-class TrieNode {
-    children = new Map<string,TrieNode>();
-    words = new Set<string>(); // Full name of item names that contain this node as the final letter in one of their words
-}
-
-const itemNameTrie = new ItemNameTrie();
-for (const name of names) {
-    itemNameTrie.insert(name);
-}

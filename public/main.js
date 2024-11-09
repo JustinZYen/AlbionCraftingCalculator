@@ -36,6 +36,24 @@ document.getElementById("item-name").addEventListener("input", async () => {
 document.getElementById("item-name-autocomplete").addEventListener("click", (e) => {
     document.getElementById("item-name").value = e.target.innerText;
 });
+document.getElementById("sidebar-buttons").addEventListener("click", (e) => {
+    if (e.target.tagName == "BUTTON") {
+        const [sidebarClass] = e.target.classList;
+        console.log(sidebarClass);
+        const sidebarElement = document.querySelector("#sidebars ." + sidebarClass);
+        if (sidebarElement.classList.contains("display")) { // Turn off sidebar
+            sidebarElement.classList.remove("display");
+        }
+        else { // Turn off current sidebar and add targeted sidebar
+            for (const sidebar of document.querySelectorAll(".sidebar")) {
+                {
+                    (sidebar).classList.remove("display");
+                }
+            }
+            sidebarElement.classList.add("display");
+        }
+    }
+});
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     const input = ($("#item-name").val());

@@ -3,6 +3,7 @@
 
 <head>
     <title>Albion Online Crafting Calculator</title>
+    <meta charset="utf-8">
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
     <link rel="stylesheet" href="index.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -13,40 +14,60 @@
 </head>
 
 <body>
-    <h1>Item Crafting Cost Calculator</h1>
-    <section id="user-inputs">
-        <div>
-            <input id="item-name" type="text" placeholder="Item name here">
-            <ul id="item-name-autocomplete"></ul>
+    
+    <div id="sidebars">
+        <div class="sidebar sidebar1">
+            <a href="#">About</a>
+            <a href="#">Services</a>
+            <a href="#">Clients</a>
+            <a href="#">Contact</a>
         </div>
-        <select id="city-selector">
-            <option disabled selected>Select City</option>
-            <option>Caerleon</option>
-            <option>Bridgewatch</option>
-            <option>Fort Sterling</option>
-            <option>Lymhurst</option>
-            <option>Martlock</option>
-            <option>Thetford</option>
-            <option>Brecilien</option>
-        </select>
-        <span>
-            Use new patch prices:
-            <input id="date-selector" type="checkbox" checked>
-        </span>
-        <button id="load-price-button">Click to load prices</button>
-    </section>
-    <section id="load-icon" style="display:none">
-        Loading
-    </section>
-    <svg height="0" width="0" style="position:absolute">
-        <defs>
-            <marker id="arrow" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
-                <path d="M 0 0 L 5 2.5 L 0 5 Z"></path>
-            </marker>
-        </defs>
-    </svg>
-    <div id="recipes-area">
+        <div class="sidebar sidebar2">
+            AAAAA
+        </div>
     </div>
+    <div id="sidebar-buttons">
+        <button id="openbtn" class="sidebar1">☰ Open Sidebar</button>
+        <button id="openbtn" class="sidebar2">☰ Open Sidebar2</button>
+    </div>
+
+    <div id="main">
+        <h1>Item Crafting Cost Calculator</h1>
+        <section id="user-inputs">
+            <div>
+                <input id="item-name" type="text" placeholder="Item name here">
+                <ul id="item-name-autocomplete"></ul>
+            </div>
+            <select id="city-selector">
+                <option disabled selected>Select City</option>
+                <option>Caerleon</option>
+                <option>Bridgewatch</option>
+                <option>Fort Sterling</option>
+                <option>Lymhurst</option>
+                <option>Martlock</option>
+                <option>Thetford</option>
+                <option>Brecilien</option>
+            </select>
+            <span>
+                Use new patch prices:
+                <input id="date-selector" type="checkbox" checked>
+            </span>
+            <button id="load-price-button">Click to load prices</button>
+        </section>
+        <section id="load-icon" style="display:none">
+            Loading
+        </section>
+        <svg height="0" width="0" style="position:absolute">
+            <defs>
+                <marker id="arrow" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
+                    <path d="M 0 0 L 5 2.5 L 0 5 Z"></path>
+                </marker>
+            </defs>
+        </svg>
+        <div id="recipes-area">
+        </div>
+    </div>
+    
 </body>
 
 </html>

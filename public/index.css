@@ -48,6 +48,13 @@ h1 {
     margin: 5px 0;
 }
 
+.sidebar.crafting-bonuses > div {
+    border-style: solid;
+    border-color:black;
+    border-width:2px;
+    margin: 10px 0;
+}
+
 #sidebar-buttons {
     height: 100vh;
     position: sticky;

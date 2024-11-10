@@ -2,20 +2,6 @@
 import { ItemData } from "./item-data.js";
 import { displayRecipes } from "./display.js";
 import { itemNameTrie } from "./globals/preload.js";
-import { stationNames } from "./globals/constants.js";
-const craftingFeesSidebar = document.querySelector("#sidebars .crafting-fees");
-for (const [binDumpName, ingameName] of Object.entries(stationNames)) {
-    const newInputBox = document.createElement("div");
-    newInputBox.id = binDumpName;
-    craftingFeesSidebar.appendChild(newInputBox);
-    const title = document.createElement("div");
-    title.innerText = ingameName;
-    newInputBox.appendChild(title);
-    const costInput = document.createElement("input");
-    costInput.type = "text";
-    costInput.value = "400";
-    newInputBox.appendChild(costInput);
-}
 const itemData = new ItemData();
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
 $("#city-selector").on("change", async () => {

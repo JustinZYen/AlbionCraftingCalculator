@@ -9,8 +9,9 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script type="module" src="globals/firebaseScripts.js" async></script>
     <script type="module" src="globals/preload.js" async></script>
-    <script type="module" src="globals/firebaseScripts.js" defer></script>
+    <script type="module" src="page-dynamic.js" defer></script>
     <script type="module" src="main.js" defer></script>
 </head>
 
@@ -19,12 +20,16 @@
         <aside class="sidebar crafting-fees">
             
         </aside>
+        <aside class="sidebar crafting-bonuses">
+
+        </aside>
         <aside class="sidebar legend">
             To Be Added
         </aside>
     </div>
     <div id="sidebar-buttons">
         <button id="openbtn" class="crafting-fees">Set Crafting Fees</button>
+        <button id="openbtn" class="crafting-bonuses">Set Daily Production Bonus</button>
         <button id="openbtn" class="legend">Legend</button>
     </div>
 

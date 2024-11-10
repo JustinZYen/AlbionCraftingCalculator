@@ -6,6 +6,7 @@ body {
     display: flex;
     flex-direction: row;
     margin:0;
+    background-color: gainsboro;
 }
 
 h1 {
@@ -24,16 +25,27 @@ h1 {
     z-index: 1;
     top: 0;
     left: 0;
-    background-color: green;
+    background-color: wheat;
     overflow-x: hidden;
     transition: width 0s;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .sidebar.display {
     height: 100vh;
     width: 250px;
     transition: width 0.5s;
+}
+
+.sidebar.crafting-fees > div {
+    border-style: solid;
+    border-color:black;
+    border-width:2px;
+    margin: 5px 0;
 }
 
 #sidebar-buttons {

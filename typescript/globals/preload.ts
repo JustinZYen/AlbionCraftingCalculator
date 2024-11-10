@@ -22,7 +22,7 @@ const buildingsThatCanCraft = fetch("https://raw.githubusercontent.com/ao-data/a
             }
         }
     }
-    return stationBonuses
+    return stationBonuses;
 });
 
 const itemNameTrie = new ItemNameTrie();

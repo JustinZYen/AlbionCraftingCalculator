@@ -60,8 +60,8 @@ class ItemData {
                 }
             }
             else {
-                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.Old));
-                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.New));
+                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
+                promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
                 currentItemString = currentItem.id;
             }
             index++;
@@ -70,8 +70,8 @@ class ItemData {
             console.log("No more new prices to collect.");
             return;
         }
-        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.Old));
-        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.New));
+        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_OLD, DateEnum.OLD));
+        promises.push(...this.#getPrices(PRICE_URL_START + currentItemString + PRICE_URL_END_NEW, DateEnum.NEW));
         await Promise.all(promises);
         uncheckedItems.clear();
     }

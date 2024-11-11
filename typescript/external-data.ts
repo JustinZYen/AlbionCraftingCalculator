@@ -6,7 +6,9 @@ const nameToIDPromise:Promise<any> = getDoc(doc(db,"General/Item Data/Name Conve
 })
 const idToName = (await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"))).data();
 // Needs two objects because firebase cannot store all the recipe paths at the same directory with free tier
+/**Path to item in ao-bin dumps items json */
 const recipesWithT = (await getDoc(doc(db,"General/Item Data/Items/PathsWithT"))).data();
+/**Path to item in ao-bin dumps items json */
 const recipesWithoutT = (await getDoc(doc(db,"General/Item Data/Items/PathsWithoutT"))).data();
 const itemsJSON = await (await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json")).json();
 const namesPromise = nameToIDPromise.then((namesToID)=>{

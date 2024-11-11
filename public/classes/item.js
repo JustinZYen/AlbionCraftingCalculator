@@ -1,17 +1,17 @@
 import { recipesWithT, recipesWithoutT, itemsJSON } from "../external-data.js";
 var DateEnum;
 (function (DateEnum) {
-    DateEnum[DateEnum["Old"] = 0] = "Old";
-    DateEnum[DateEnum["New"] = 1] = "New";
+    DateEnum[DateEnum["OLD"] = 0] = "OLD";
+    DateEnum[DateEnum["NEW"] = 1] = "NEW";
 })(DateEnum || (DateEnum = {}));
 class Item {
     priceInfos = new Map([
-        [DateEnum.Old, new ExtendedPriceInfo()],
-        [DateEnum.New, new ExtendedPriceInfo()]
+        [DateEnum.OLD, new ExtendedPriceInfo()],
+        [DateEnum.NEW, new ExtendedPriceInfo()]
     ]);
     craftedPriceInfos = new Map([
-        [DateEnum.Old, new PriceInfo()],
-        [DateEnum.New, new PriceInfo()]
+        [DateEnum.OLD, new PriceInfo()],
+        [DateEnum.NEW, new PriceInfo()]
     ]);
     priceCalculated = false;
     overridePrice = undefined;

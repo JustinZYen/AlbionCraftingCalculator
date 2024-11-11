@@ -1,8 +1,8 @@
 import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "../external-data.js";
 
 enum DateEnum {
-    Old,
-    New
+    OLD,
+    NEW
 }
 
 type CraftingRequirement = {
@@ -19,12 +19,12 @@ type CraftResource = {
 }
 class Item {
     priceInfos = new Map([
-        [DateEnum.Old,new ExtendedPriceInfo()],
-        [DateEnum.New,new ExtendedPriceInfo()]
+        [DateEnum.OLD,new ExtendedPriceInfo()],
+        [DateEnum.NEW,new ExtendedPriceInfo()]
     ]);
     craftedPriceInfos = new Map([
-        [DateEnum.Old,new PriceInfo()],
-        [DateEnum.New,new PriceInfo()]
+        [DateEnum.OLD,new PriceInfo()],
+        [DateEnum.NEW,new PriceInfo()]
     ]);
     priceCalculated = false;
     overridePrice = undefined;

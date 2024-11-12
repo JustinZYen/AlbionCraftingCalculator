@@ -8,3 +8,4 @@ Other Features
 - Draggable recipe boxes
 - Reorganize code so that autocomplete starts working faster upon page load
 - Look into preloading common item prices that are often used in recipes
+- In the future, exclude untradable items?

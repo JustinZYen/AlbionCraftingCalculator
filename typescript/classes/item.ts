@@ -1,5 +1,5 @@
 import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "../external-data.js";
-
+import {Recipe} from "./recipe.js";
 enum DateEnum {
     OLD,
     NEW
@@ -7,15 +7,42 @@ enum DateEnum {
 
 type CraftingRequirement = {
     "@silver":string,
-    "@time":string,
-    "@craftingfocus":string,
-    "@amountcrafted":string,
-    craftresource: CraftResource[]|CraftResource
+    "@time"?:string,
+    "@craftingfocus"?:string,
+    "@amountcrafted"?:string,
+    "@returnproductnotresource"?:string // Applies to butcher products
+    craftresource?: CraftResource[] | CraftResource // Farming items do not have any craft resources
 }
 
 type CraftResource = {
     "@uniquename":string,
     "@count":string
+    "@maxreturnamount"?:string // I assume this is for specifying that weapons do not have artifacts returned
+}
+
+type EnchantmentRequirement = {
+    "@enchantmentlevel": string
+    "craftingrequirements": CraftingRequirement
+    "upgraderequirements": {
+        "upgraderesource": {
+            "@uniquename": string
+            "@count": string
+        }
+    }
+}
+
+type ItemData = {
+    "@uniquename":string,
+    "@tier"?: string // Skins do not have tier
+    "@enchantment"?: string
+    "@shopcategory"?: string // Certain skins do not have shopcategory or shopsubcategory
+    "@shopsubcategory1"?: string
+    "@itemvalue"?: string // itemvalue and craftingcategory seem to be mutually exclusive
+    "@craftingcategory"?: string
+    "craftingrequirements"?: CraftingRequirement | CraftingRequirement []
+    "enchantments"?: {
+        enchantment: EnchantmentRequirement[]
+    }
 }
 class Item {
     priceInfos = new Map([
@@ -262,39 +289,5 @@ class ExtendedPriceInfo extends PriceInfo{
     priceQualities = new Map<string,number>(); // City name, quality number
 }
 
-class Recipe {
-    // Might be issue with results being strings
-    focus;
-    silver;
-    time;
-    // formatted as item id followed by amount of resources
-    resources:{priceId:string,count:number}[] = [];
-    // amount is amount crafted
-    amount = 1;
-    // Whether or not the recipe can return resources
-    canReturn = true;
-    /**
-     * 
-     * @param {string} focus 
-     * @param {string} silver 
-     * @param {string} time 
-     * @param {CraftResource[]} resources Resources, as obtained from the item json
-     */
-    constructor (focus:string,silver:string,time:string,resources:CraftResource[]) {
-        this.focus = parseFloat(focus);
-        this.silver = parseFloat(silver);
-        this.time = parseFloat(time);
-        for (const resource of resources) {
-            this.addResource(Item.getPriceId(resource["@uniquename"]),parseInt(resource["@count"]));
-        }
-    }
 
-    addResource(priceId:string,count:number) {
-        this.resources.push({"priceId":priceId,"count":count});
-    }
-
-    calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:string) {
-
-    }
-}
-export {DateEnum,Item};
+export {DateEnum,Item,CraftResource};

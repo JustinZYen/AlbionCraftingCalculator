@@ -1,5 +1,5 @@
 import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "../external-data.js";
-import {Recipe} from "./recipe.js";
+import {Recipe,CraftingBonusRecipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe} from "./recipe.js";
 enum DateEnum {
     OLD,
     NEW
@@ -154,11 +154,7 @@ class Item {
                 if (!Array.isArray(craftResource)) {
                     craftResource = [craftResource];
                 }
-                //console.log(`craftresource used to add to recipe: ${craftResource}`);
-                let currentRecipe = new Recipe(craftingRequirement["@craftingfocus"]!,craftingRequirement["@silver"],craftingRequirement["@time"]!,craftResource);
-                if (craftingRequirement.hasOwnProperty("@amountcrafted")) {
-                    currentRecipe.amount = parseInt(craftingRequirement["@amountcrafted"]!);
-                }
+                let currentRecipe = new Recipe(parseInt(craftingRequirement["@silver"]),craftResource);
                 this.recipes.push(currentRecipe);
             }
         }
@@ -182,8 +178,8 @@ class Item {
                     previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
                 }
                 console.log(enchantmentInfo);
-                const initialRecipe = new Recipe((0).toString(),(0).toString(),(0).toString(),[enchantmentInfo.upgraderequirements!.upgraderesource]);    
-                initialRecipe.addResource(previousId,1);
+                const initialRecipe = new EnchantmentRecipe(0,[enchantmentInfo.upgraderequirements!.upgraderesource as CraftResource]);   
+                initialRecipe.addLowerEnchantment(previousId);
                 this.recipes.push(initialRecipe);
             }
         } else {

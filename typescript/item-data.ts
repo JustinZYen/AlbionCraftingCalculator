@@ -22,7 +22,7 @@ class ItemData {
             if (!uncheckedItems.has(currentItem.priceId) && !this.checkedItems.has(currentItem.priceId)) {
                 //console.log(`currentItem: ${typeof currentItem}`);
                 for (const recipe of currentItem.recipes) {
-                    for (const resource of recipe.resources) {
+                    for (const resource of recipe.getResources()) {
                         itemStack.push(new Item(resource.priceId));
                     }
                 }

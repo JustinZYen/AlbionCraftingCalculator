@@ -22,8 +22,8 @@ type CraftResource = {
 
 type EnchantmentRequirement = {
     "@enchantmentlevel": string
-    "craftingrequirements": CraftingRequirement
-    "upgraderequirements": {
+    "craftingrequirements": CraftingRequirement|CraftingRequirement[]
+    "upgraderequirements"?: { // Enchantment level 4 weapons do not have the ability to upgrade
         "upgraderesource": {
             "@uniquename": string
             "@count": string
@@ -126,25 +126,12 @@ class Item {
             console.log(`No path found for id ${this.id}`);
             return;
         }
-        let itemInfo = itemsJSON;
+        let current = itemsJSON;
         for (const pathElement of path) {
-            itemInfo = itemInfo[pathElement];
+            current = current[pathElement];
         }
         //console.log(itemInfo);
-        
-        this.category = itemInfo["@shopcategory"];
-
-        this.subcategory = itemInfo["@shopsubcategory1"];
-        if (itemInfo.hasOwnProperty("enchantments") && this.enchantment > 0) {
-            itemInfo = itemInfo.enchantments.enchantment[this.enchantment-1];
-        }
-        if (!itemInfo.hasOwnProperty("craftingrequirements")) {
-            console.log(`ID ${this.id} cannot be crafted`);
-            return;
-        }
-        let craftingRequirements = itemInfo.craftingrequirements;
-        // Add a recipe based on the contents of craftingrequirements
-        
+        /*
         const addRecipe= (element:CraftingRequirement) => {
             //console.log(`id: ${this.id}, addRecipe element: ${JSON.stringify(element)}`);
             if (element.hasOwnProperty("craftresource")) {
@@ -160,28 +147,58 @@ class Item {
                 this.recipes.push(currentRecipe);
             }
         }
-        if (Array.isArray(craftingRequirements)) {
-            for (const craftingRequirement of craftingRequirements) {
-                addRecipe(craftingRequirement);
+        */
+        const addCraftingRequirement = (craftingRequirement:CraftingRequirement) => { // Has to be arrow function for the correct reference to "this" (should be item)
+            if (craftingRequirement.hasOwnProperty("craftresource")) {
+                let craftResource = craftingRequirement.craftresource!;
+                if (!Array.isArray(craftResource)) {
+                    craftResource = [craftResource];
+                }
+                //console.log(`craftresource used to add to recipe: ${craftResource}`);
+                let currentRecipe = new Recipe(craftingRequirement["@craftingfocus"]!,craftingRequirement["@silver"],craftingRequirement["@time"]!,craftResource);
+                if (craftingRequirement.hasOwnProperty("@amountcrafted")) {
+                    currentRecipe.amount = parseInt(craftingRequirement["@amountcrafted"]!);
+                }
+                this.recipes.push(currentRecipe);
+            }
+        }
+        let itemInfo:ItemData = current;
+        if (Object.hasOwn(itemInfo,"enchantments") && this.enchantment > 0) {
+            const enchantmentInfo:EnchantmentRequirement = itemInfo.enchantments!.enchantment[this.enchantment-1]!;
+            if (Array.isArray(enchantmentInfo.craftingrequirements)) {
+                for (const craftingRequirement of enchantmentInfo.craftingrequirements) {
+                    addCraftingRequirement(craftingRequirement);
+                }
+            } else {
+                addCraftingRequirement(enchantmentInfo.craftingrequirements);
+            }
+            if (Object.hasOwn(enchantmentInfo,"upgraderequirements")) {
+                let previousId;
+                if (this.enchantment === 1) {
+                    previousId = this.priceId.slice(0,-2);
+                } else {
+                    previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
+                }
+                console.log(enchantmentInfo);
+                const initialRecipe = new Recipe((0).toString(),(0).toString(),(0).toString(),[enchantmentInfo.upgraderequirements!.upgraderesource]);    
+                initialRecipe.addResource(previousId,1);
+                this.recipes.push(initialRecipe);
             }
         } else {
-            addRecipe(craftingRequirements);
-        }
-        
-        // Item id must end with @number
-        if (itemInfo.hasOwnProperty("upgraderequirements")) {
-            //let upgradeRequirements = itemInfo.upgraderequirements;
-            let previousId;
-            if (this.enchantment === 1) {
-                previousId = this.priceId.slice(0,-2);
-            } else {
-                previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
+            if (!Object.hasOwn(itemInfo,"craftingrequirements")) {
+                console.log(`ID ${this.id} cannot be crafted`);
+                return;
             }
-            let initialRecipe = new Recipe((0).toString(),(0).toString(),(0).toString(),[itemInfo.upgraderequirements.upgraderesource]);
-            
-            initialRecipe.addResource(previousId,1);
-            this.recipes.push(initialRecipe);
+            const craftingRequirements = itemInfo.craftingrequirements!;
+            if (Array.isArray(craftingRequirements)) {
+                for (const craftingRequirement of craftingRequirements) {
+                    addCraftingRequirement(craftingRequirement);
+                }
+            } else {
+                addCraftingRequirement(craftingRequirements);
+            }
         }
+        // Add a recipe based on the contents of craftingrequirements
     }
 
     /*

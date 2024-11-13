@@ -1,4 +1,4 @@
-import { CraftResource, DateEnum, Item } from "./item";
+import { CraftResource, DateEnum, Item } from "./item.js";
 
 class Recipe {
     // Might be issue with results being strings

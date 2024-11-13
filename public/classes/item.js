@@ -1,4 +1,5 @@
 import { recipesWithT, recipesWithoutT, itemsJSON } from "../external-data.js";
+import { Recipe } from "./recipe.js";
 var DateEnum;
 (function (DateEnum) {
     DateEnum[DateEnum["OLD"] = 0] = "OLD";
@@ -86,23 +87,13 @@ class Item {
             console.log(`No path found for id ${this.id}`);
             return;
         }
-        let itemInfo = itemsJSON;
+        let current = itemsJSON;
         for (const pathElement of path) {
-            itemInfo = itemInfo[pathElement];
+            current = current[pathElement];
         }
         //console.log(itemInfo);
-        this.category = itemInfo["@shopcategory"];
-        this.subcategory = itemInfo["@shopsubcategory1"];
-        if (itemInfo.hasOwnProperty("enchantments") && this.enchantment > 0) {
-            itemInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
-        }
-        if (!itemInfo.hasOwnProperty("craftingrequirements")) {
-            console.log(`ID ${this.id} cannot be crafted`);
-            return;
-        }
-        let craftingRequirements = itemInfo.craftingrequirements;
-        // Add a recipe based on the contents of craftingrequirements
-        const addRecipe = (element) => {
+        /*
+        const addRecipe= (element:CraftingRequirement) => {
             //console.log(`id: ${this.id}, addRecipe element: ${JSON.stringify(element)}`);
             if (element.hasOwnProperty("craftresource")) {
                 let craftResource = element.craftresource;
@@ -110,35 +101,69 @@ class Item {
                     craftResource = [craftResource];
                 }
                 //console.log(`craftresource used to add to recipe: ${craftResource}`);
-                let currentRecipe = new Recipe(element["@craftingfocus"], element["@silver"], element["@time"], craftResource);
+                let currentRecipe = new Recipe(element["@craftingfocus"],element["@silver"],element["@time"],craftResource);
                 if (element.hasOwnProperty("@amountcrafted")) {
                     currentRecipe.amount = parseInt(element["@amountcrafted"]);
                 }
                 this.recipes.push(currentRecipe);
             }
+        }
+        */
+        const addCraftingRequirement = (craftingRequirement) => {
+            if (craftingRequirement.hasOwnProperty("craftresource")) {
+                let craftResource = craftingRequirement.craftresource;
+                if (!Array.isArray(craftResource)) {
+                    craftResource = [craftResource];
+                }
+                //console.log(`craftresource used to add to recipe: ${craftResource}`);
+                let currentRecipe = new Recipe(craftingRequirement["@craftingfocus"], craftingRequirement["@silver"], craftingRequirement["@time"], craftResource);
+                if (craftingRequirement.hasOwnProperty("@amountcrafted")) {
+                    currentRecipe.amount = parseInt(craftingRequirement["@amountcrafted"]);
+                }
+                this.recipes.push(currentRecipe);
+            }
         };
-        if (Array.isArray(craftingRequirements)) {
-            for (const craftingRequirement of craftingRequirements) {
-                addRecipe(craftingRequirement);
+        let itemInfo = current;
+        if (Object.hasOwn(itemInfo, "enchantments") && this.enchantment > 0) {
+            const enchantmentInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
+            if (Array.isArray(enchantmentInfo.craftingrequirements)) {
+                for (const craftingRequirement of enchantmentInfo.craftingrequirements) {
+                    addCraftingRequirement(craftingRequirement);
+                }
+            }
+            else {
+                addCraftingRequirement(enchantmentInfo.craftingrequirements);
+            }
+            if (Object.hasOwn(enchantmentInfo, "upgraderequirements")) {
+                let previousId;
+                if (this.enchantment === 1) {
+                    previousId = this.priceId.slice(0, -2);
+                }
+                else {
+                    previousId = this.priceId.slice(0, -1) + (this.enchantment - 1);
+                }
+                console.log(enchantmentInfo);
+                const initialRecipe = new Recipe((0).toString(), (0).toString(), (0).toString(), [enchantmentInfo.upgraderequirements.upgraderesource]);
+                initialRecipe.addResource(previousId, 1);
+                this.recipes.push(initialRecipe);
             }
         }
         else {
-            addRecipe(craftingRequirements);
-        }
-        // Item id must end with @number
-        if (itemInfo.hasOwnProperty("upgraderequirements")) {
-            //let upgradeRequirements = itemInfo.upgraderequirements;
-            let previousId;
-            if (this.enchantment === 1) {
-                previousId = this.priceId.slice(0, -2);
+            if (!Object.hasOwn(itemInfo, "craftingrequirements")) {
+                console.log(`ID ${this.id} cannot be crafted`);
+                return;
+            }
+            const craftingRequirements = itemInfo.craftingrequirements;
+            if (Array.isArray(craftingRequirements)) {
+                for (const craftingRequirement of craftingRequirements) {
+                    addCraftingRequirement(craftingRequirement);
+                }
             }
             else {
-                previousId = this.priceId.slice(0, -1) + (this.enchantment - 1);
+                addCraftingRequirement(craftingRequirements);
             }
-            let initialRecipe = new Recipe((0).toString(), (0).toString(), (0).toString(), [itemInfo.upgraderequirements.upgraderesource]);
-            initialRecipe.addResource(previousId, 1);
-            this.recipes.push(initialRecipe);
         }
+        // Add a recipe based on the contents of craftingrequirements
     }
     /*
     toString() {
@@ -240,37 +265,5 @@ class ExtendedPriceInfo extends PriceInfo {
     priceTimescale = new Map(); // City name, timescale covered
     // Price qualities so that items with variable quality are saved as quality 2 if possible
     priceQualities = new Map(); // City name, quality number
-}
-class Recipe {
-    // Might be issue with results being strings
-    focus;
-    silver;
-    time;
-    // formatted as item id followed by amount of resources
-    resources = [];
-    // amount is amount crafted
-    amount = 1;
-    // Whether or not the recipe can return resources
-    canReturn = true;
-    /**
-     *
-     * @param {string} focus
-     * @param {string} silver
-     * @param {string} time
-     * @param {CraftResource[]} resources Resources, as obtained from the item json
-     */
-    constructor(focus, silver, time, resources) {
-        this.focus = parseFloat(focus);
-        this.silver = parseFloat(silver);
-        this.time = parseFloat(time);
-        for (const resource of resources) {
-            this.addResource(Item.getPriceId(resource["@uniquename"]), parseInt(resource["@count"]));
-        }
-    }
-    addResource(priceId, count) {
-        this.resources.push({ "priceId": priceId, "count": count });
-    }
-    calculateCraftingCost(items, timespan, city) {
-    }
 }
 export { DateEnum, Item };

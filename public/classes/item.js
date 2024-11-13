@@ -126,6 +126,7 @@ class Item {
         let itemInfo = current;
         if (Object.hasOwn(itemInfo, "enchantments") && this.enchantment > 0) {
             const enchantmentInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
+            // Add crafting requirements (using enchanted materials)
             if (Array.isArray(enchantmentInfo.craftingrequirements)) {
                 for (const craftingRequirement of enchantmentInfo.craftingrequirements) {
                     addCraftingRequirement(craftingRequirement);
@@ -134,6 +135,7 @@ class Item {
             else {
                 addCraftingRequirement(enchantmentInfo.craftingrequirements);
             }
+            // Add upgrade requirements, if they exist
             if (Object.hasOwn(enchantmentInfo, "upgraderequirements")) {
                 let previousId;
                 if (this.enchantment === 1) {
@@ -153,6 +155,10 @@ class Item {
                 console.log(`ID ${this.id} cannot be crafted`);
                 return;
             }
+            if (itemInfo["@shopcategory"] == "artefacts") {
+                return; // Artifacts have a crafting recipe, but it is based on random chance, so we will not consider it
+            }
+            // Add crafting requirements
             const craftingRequirements = itemInfo.craftingrequirements;
             if (Array.isArray(craftingRequirements)) {
                 for (const craftingRequirement of craftingRequirements) {

@@ -125,6 +125,15 @@ cityBonuses[City.THETFORD] = thetfordBonus;
 cityBonuses[City.BRECILIEN] = brecilienBonus;
 Object.freeze(cityBonuses);
 
+const reverseCityBonuses:{[key:string]:City} = Object.create(null);
+for (const [cityName,bonuses] of Object.entries(cityBonuses)) {
+    const cityNameAsEnum = reverseCity[cityName]!;
+    for (const itemName in bonuses) {
+        reverseCityBonuses[itemName] = cityNameAsEnum;
+    }
+}
+Object.freeze(reverseCityBonuses);
+
 /**
  * Maps Albion binary names for crafting stations to their ingame names
  */
@@ -143,7 +152,7 @@ stationNames["T8_STONEMASONRY"] = "Stonemason";
 stationNames["T8_TANNERY"] = "Tanner";
 stationNames["T8_WEAVINGMILL"] = "Weaver";
 Object.freeze(stationNames)
-export {baseCityBonus,cityBonuses,stationNames};
+export { baseCityBonus, cityBonuses, reverseCityBonuses, stationNames, City };
 
 // @craftingcategory for refined resources (@shopsubcategory1 says refined name (not right for crafting bonus))
 // @shopsubcategory1 for weapons

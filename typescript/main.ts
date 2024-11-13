@@ -62,10 +62,14 @@ document.getElementById("sidebar-buttons")!.addEventListener("click",(e)=>{
 
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
-    const input: string = ($("#item-name").val()) as string;
-    const itemIds = await ItemData.getItemIds(input);
-    await itemData.getProfits(itemIds);
-    displayRecipes(itemData.checkedItems, itemIds);
+    try {
+        const input: string = ($("#item-name").val()) as string;
+        const itemIds = await ItemData.getItemIds(input);
+        await itemData.getProfits(itemIds);
+        displayRecipes(itemData.checkedItems, itemIds);
+    } catch (error) {
+        console.error(error);
+    }
     hideLoadIcon(loadingInterval);
 }
 

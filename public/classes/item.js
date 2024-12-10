@@ -1,5 +1,6 @@
+import { reverseCityBonuses } from "../globals/constants.js";
 import { recipesWithT, recipesWithoutT, itemsJSON } from "../external-data.js";
-import { Recipe, EnchantmentRecipe } from "./recipe.js";
+import { CraftingBonusRecipe, MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe } from "./recipe.js";
 var DateEnum;
 (function (DateEnum) {
     DateEnum[DateEnum["OLD"] = 0] = "OLD";
@@ -20,10 +21,12 @@ class Item {
     enchantment = 0;
     id;
     priceId;
-    // Recipes will be array of Recipe objects
+    itemValue;
     recipes = [];
-    category;
-    subcategory;
+    /*
+    category:string;
+    subcategory:string;
+    */
     constructor(priceId) {
         this.priceId = priceId;
         this.id = Item.getBaseId(priceId);
@@ -109,27 +112,55 @@ class Item {
             }
         }
         */
-        const addCraftingRequirement = (craftingRequirement) => {
-            if (craftingRequirement.hasOwnProperty("craftresource")) {
-                let craftResource = craftingRequirement.craftresource;
-                if (!Array.isArray(craftResource)) {
-                    craftResource = [craftResource];
-                }
-                let currentRecipe = new Recipe(parseInt(craftingRequirement["@silver"]), craftResource);
-                this.recipes.push(currentRecipe);
+        const addCraftingBonusRecipe = (craftingCategory, craftingRequirement) => {
+            // Determine which city this item receives the crafting bonus for
+            const bonusCity = reverseCityBonuses[craftingCategory];
+            let resources = craftingRequirement.craftresource;
+            if (!Array.isArray(resources)) {
+                resources = [resources];
             }
-        };
-        let itemInfo = current;
-        if (Object.hasOwn(itemInfo, "enchantments") && this.enchantment > 0) {
-            const enchantmentInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
-            // Add crafting requirements (using enchanted materials)
-            if (Array.isArray(enchantmentInfo.craftingrequirements)) {
-                for (const craftingRequirement of enchantmentInfo.craftingrequirements) {
-                    addCraftingRequirement(craftingRequirement);
+            let newRecipe;
+            if (Object.hasOwn(craftingRequirement, "@amountcrafted")) { // Multi recipe
+                if (Object.hasOwn(craftingRequirement, "@returnproductnotresource")) { // Butcher recipe
+                    newRecipe = new ButcherRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), bonusCity, parseInt(craftingRequirement["@amountcrafted"]), resources);
+                }
+                else {
+                    newRecipe = new MultiRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), bonusCity, parseInt(craftingRequirement["@amountcrafted"]), resources);
                 }
             }
             else {
-                addCraftingRequirement(enchantmentInfo.craftingrequirements);
+                newRecipe = new CraftingBonusRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), bonusCity, resources);
+            }
+            this.recipes.push(newRecipe);
+        };
+        const addEnchantmentRecipe = (previousId, craftResources) => {
+            const newRecipe = new EnchantmentRecipe(0, craftResources, previousId);
+            this.recipes.push(newRecipe);
+        };
+        const addMerchantRecipe = (craftingRequirement) => {
+            // Might or might not have resources involved in the recipe
+            let resources = craftingRequirement.craftresource;
+            if (resources == undefined) {
+                resources = [];
+            }
+            else if (!Array.isArray(resources)) {
+                resources = [resources];
+            }
+            const newRecipe = new MerchantRecipe(parseInt(craftingRequirement["@silver"]), resources);
+            this.recipes.push(newRecipe);
+        };
+        let itemInfo = current;
+        if (Object.hasOwn(itemInfo, "enchantments") && this.enchantment > 0) { // Check if enchanted item
+            const enchantmentInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
+            // Add crafting requirements (using enchanted materials)
+            const craftingRequirements = enchantmentInfo.craftingrequirements;
+            if (Array.isArray(craftingRequirements)) {
+                for (const craftingRequirement of craftingRequirements) {
+                    addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirement);
+                }
+            }
+            else {
+                addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirements);
             }
             // Add upgrade requirements, if they exist
             if (Object.hasOwn(enchantmentInfo, "upgraderequirements")) {
@@ -140,10 +171,7 @@ class Item {
                 else {
                     previousId = this.priceId.slice(0, -1) + (this.enchantment - 1);
                 }
-                console.log(enchantmentInfo);
-                const initialRecipe = new EnchantmentRecipe(0, [enchantmentInfo.upgraderequirements.upgraderesource]);
-                initialRecipe.addLowerEnchantment(previousId);
-                this.recipes.push(initialRecipe);
+                addEnchantmentRecipe(previousId, [enchantmentInfo.upgraderequirements.upgraderesource]);
             }
         }
         else {
@@ -156,13 +184,25 @@ class Item {
             }
             // Add crafting requirements
             const craftingRequirements = itemInfo.craftingrequirements;
-            if (Array.isArray(craftingRequirements)) {
-                for (const craftingRequirement of craftingRequirements) {
-                    addCraftingRequirement(craftingRequirement);
+            if (Object.hasOwn(itemInfo, "@craftingcategory")) {
+                if (Array.isArray(craftingRequirements)) {
+                    for (const craftingRequirement of craftingRequirements) {
+                        addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirement);
+                    }
+                }
+                else {
+                    addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirements);
                 }
             }
             else {
-                addCraftingRequirement(craftingRequirements);
+                if (Array.isArray(craftingRequirements)) {
+                    for (const craftingRequirement of craftingRequirements) {
+                        addMerchantRecipe(craftingRequirement);
+                    }
+                }
+                else {
+                    addMerchantRecipe(craftingRequirements);
+                }
             }
         }
         // Add a recipe based on the contents of craftingrequirements

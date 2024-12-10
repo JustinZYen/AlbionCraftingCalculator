@@ -48,7 +48,7 @@ const baseCityBonus = 0.18;
 /**
  * Maps city name to map of item ids and their corresponding bonus amounts
  */
-const cityBonuses:{[key in City]:{[key:string]:number}} = Object.create(null);
+const cityBonuses:{[key in City]:{[craftingCategory:string]:number}} = Object.create(null);
 // #region City crafting bonus values
 const thetfordBonus = {
     "ore":0.4,
@@ -125,7 +125,7 @@ cityBonuses[City.THETFORD] = thetfordBonus;
 cityBonuses[City.BRECILIEN] = brecilienBonus;
 Object.freeze(cityBonuses);
 
-const reverseCityBonuses:{[key:string]:City} = Object.create(null);
+const reverseCityBonuses:{[craftingCategory:string]:City} = Object.create(null);
 for (const [cityName,bonuses] of Object.entries(cityBonuses)) {
     const cityNameAsEnum = reverseCity[cityName]!;
     for (const itemName in bonuses) {

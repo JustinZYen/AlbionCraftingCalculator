@@ -1,5 +1,6 @@
+import { reverseCityBonuses } from "../globals/constants.js";
 import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "../external-data.js";
-import {Recipe,CraftingBonusRecipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe} from "./recipe.js";
+import {Recipe,CraftingBonusRecipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe, MerchantRecipe} from "./recipe.js";
 enum DateEnum {
     OLD,
     NEW
@@ -11,7 +12,7 @@ type CraftingRequirement = {
     "@craftingfocus"?:string,
     "@amountcrafted"?:string,
     "@returnproductnotresource"?:string // Applies to butcher products
-    craftresource?: CraftResource[] | CraftResource // Farming items do not have any craft resources
+    craftresource?: CraftResource[] | CraftResource // Farming items do not have any craft resources (also dungeon tokens)
 }
 
 type CraftResource = {
@@ -59,11 +60,12 @@ class Item {
     enchantment = 0;
     id;
     priceId;
-    // Recipes will be array of Recipe objects
+    itemValue:number;
     recipes:Recipe[] = [];
+    /*
     category:string;
     subcategory:string;
-
+    */
     constructor(priceId:string) {
         this.priceId = priceId;
         this.id = Item.getBaseId(priceId);
@@ -148,26 +150,71 @@ class Item {
             }
         }
         */
-        const addCraftingRequirement = (craftingRequirement:CraftingRequirement) => { // Has to be arrow function for the correct reference to "this" (should be item)
-            if (craftingRequirement.hasOwnProperty("craftresource")) {
-                let craftResource = craftingRequirement.craftresource!;
-                if (!Array.isArray(craftResource)) {
-                    craftResource = [craftResource];
-                }
-                let currentRecipe = new Recipe(parseInt(craftingRequirement["@silver"]),craftResource);
-                this.recipes.push(currentRecipe);
+        const addCraftingBonusRecipe = (craftingCategory:string, craftingRequirement:CraftingRequirement)=>{ // Has to be arrow function for the correct reference to "this" (should be the containing Item, not the function)
+            // Determine which city this item receives the crafting bonus for
+            const bonusCity = reverseCityBonuses[craftingCategory]!;
+            let resources = craftingRequirement.craftresource!;
+            if (!Array.isArray(resources)) {
+                resources = [resources];
             }
-        }
-        let itemInfo:ItemData = current;
-        if (Object.hasOwn(itemInfo,"enchantments") && this.enchantment > 0) {
-            const enchantmentInfo:EnchantmentRequirement = itemInfo.enchantments!.enchantment[this.enchantment-1]!;
-            // Add crafting requirements (using enchanted materials)
-            if (Array.isArray(enchantmentInfo.craftingrequirements)) {
-                for (const craftingRequirement of enchantmentInfo.craftingrequirements) {
-                    addCraftingRequirement(craftingRequirement);
+            let newRecipe;
+            if (Object.hasOwn(craftingRequirement,"@amountcrafted")) { // Multi recipe
+                if (Object.hasOwn(craftingRequirement,"@returnproductnotresource")) { // Butcher recipe
+                    newRecipe = new ButcherRecipe(
+                        parseInt(craftingRequirement["@silver"]),
+                        parseInt(craftingRequirement["@craftingfocus"]!),
+                        bonusCity,
+                        parseInt(craftingRequirement["@amountcrafted"]!),
+                        resources
+                    )
+                } else {
+                    newRecipe = new MultiRecipe(
+                        parseInt(craftingRequirement["@silver"]),
+                        parseInt(craftingRequirement["@craftingfocus"]!),
+                        bonusCity,
+                        parseInt(craftingRequirement["@amountcrafted"]!),
+                        resources
+                    )
                 }
             } else {
-                addCraftingRequirement(enchantmentInfo.craftingrequirements);
+                newRecipe = new CraftingBonusRecipe(
+                    parseInt(craftingRequirement["@silver"]),
+                    parseInt(craftingRequirement["@craftingfocus"]!),
+                    bonusCity,
+                    resources);
+            }
+            this.recipes.push(newRecipe);
+        }
+        const addEnchantmentRecipe = (previousId:string, craftResources:CraftResource[])=>{
+            const newRecipe = new EnchantmentRecipe(0,craftResources,previousId);
+            this.recipes.push(newRecipe);
+        }
+        const addMerchantRecipe = (craftingRequirement:CraftingRequirement)=>{
+            // Might or might not have resources involved in the recipe
+            let resources = craftingRequirement.craftresource;
+            if (resources == undefined) {
+                resources = [];
+            } else if (!Array.isArray(resources)) {
+                resources = [resources];
+            }
+            const newRecipe = new MerchantRecipe(
+                parseInt(craftingRequirement["@silver"]),
+                resources
+            )
+            this.recipes.push(newRecipe);
+        }
+        let itemInfo:ItemData = current;
+
+        if (Object.hasOwn(itemInfo,"enchantments") && this.enchantment > 0) { // Check if enchanted item
+            const enchantmentInfo:EnchantmentRequirement = itemInfo.enchantments!.enchantment[this.enchantment-1]!;
+            // Add crafting requirements (using enchanted materials)
+            const craftingRequirements = enchantmentInfo.craftingrequirements;
+            if (Array.isArray(craftingRequirements)) {
+                for (const craftingRequirement of craftingRequirements) {
+                    addCraftingBonusRecipe(itemInfo["@craftingcategory"]!,craftingRequirement);
+                }
+            } else {
+                addCraftingBonusRecipe(itemInfo["@craftingcategory"]!,craftingRequirements);
             }
             // Add upgrade requirements, if they exist
             if (Object.hasOwn(enchantmentInfo,"upgraderequirements")) {
@@ -177,10 +224,7 @@ class Item {
                 } else {
                     previousId = this.priceId.slice(0,-1)+(this.enchantment-1);
                 }
-                console.log(enchantmentInfo);
-                const initialRecipe = new EnchantmentRecipe(0,[enchantmentInfo.upgraderequirements!.upgraderesource as CraftResource]);   
-                initialRecipe.addLowerEnchantment(previousId);
-                this.recipes.push(initialRecipe);
+                addEnchantmentRecipe(previousId,[enchantmentInfo.upgraderequirements!.upgraderesource as CraftResource]);
             }
         } else {
             if (!Object.hasOwn(itemInfo,"craftingrequirements")) {
@@ -192,16 +236,29 @@ class Item {
             }
             // Add crafting requirements
             const craftingRequirements = itemInfo.craftingrequirements!;
-            if (Array.isArray(craftingRequirements)) {
-                for (const craftingRequirement of craftingRequirements) {
-                    addCraftingRequirement(craftingRequirement);
+            if (Object.hasOwn(itemInfo,"@craftingcategory")) {
+                if (Array.isArray(craftingRequirements)) {
+                    for (const craftingRequirement of craftingRequirements) {
+                        addCraftingBonusRecipe(itemInfo["@craftingcategory"]!,craftingRequirement);
+                    }
+                } else {
+                    addCraftingBonusRecipe(itemInfo["@craftingcategory"]!,craftingRequirements);
                 }
             } else {
-                addCraftingRequirement(craftingRequirements);
+                if (Array.isArray(craftingRequirements)) {
+                    for (const craftingRequirement of craftingRequirements) {
+                        addMerchantRecipe(craftingRequirement);
+                    }
+                } else {
+                    addMerchantRecipe(craftingRequirements);
+                }
             }
+            
         }
         // Add a recipe based on the contents of craftingrequirements
     }
+
+    
 
     /*
     toString() {

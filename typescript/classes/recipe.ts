@@ -1,7 +1,7 @@
 import { CraftResource, DateEnum, Item } from "./item.js";
 import {City} from "../globals/constants.js";
-import { isJSDocOverrideTag } from "typescript";
-class Recipe {
+
+abstract class Recipe {
     // Might be issue with results being strings
     protected silver;
     // formatted as item id followed by amount of resources
@@ -13,7 +13,7 @@ class Recipe {
             const currentResource:{priceId:string,count:number,returned:boolean} = Object.create(null);
             currentResource["priceId"] = Item.getPriceId(craftResource["@uniquename"]);
             currentResource["count"] = parseInt(Item.getPriceId(craftResource["@count"]));
-            if (Object.hasOwn(craftResource,"@maxreturnamount")) {
+            if (Object.hasOwn(craftResource,"@maxreturnamount")) { // Assuming that if @maxreturnamount property exists that item is not returned
                 currentResource["returned"] = false;
             } else {
                 currentResource["returned"] = true;
@@ -23,11 +23,15 @@ class Recipe {
         }
     }
 
-    calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:string) {
-        let totalCost = 0;
+    calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:City) {
+        let totalCost = this.silver;
         return totalCost;
     }
 
+    /**
+     * 
+     * @returns Array of all the resources used to craft the item
+     */
     getResources() {
         if (!Object.isFrozen(this.resources)) {
             Object.freeze(this.resources);
@@ -36,7 +40,10 @@ class Recipe {
     }
 }
 
-class CraftingBonusRecipe extends Recipe { // Recipes that have a city that gives them a crafting bonus recipe
+/**
+ * Recipes that have a city that gives them a crafting bonus
+ */
+class CraftingBonusRecipe extends Recipe {
     protected focus:number;
     protected city:City;
     constructor(silver:number,focus:number,city:City,resources:CraftResource[]) {
@@ -44,22 +51,49 @@ class CraftingBonusRecipe extends Recipe { // Recipes that have a city that give
         this.focus = focus;
         this.city = city;
     }
+
+    override calculateCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City): number {
+        return -1;
+    }
 }
 
-class MultiRecipe extends CraftingBonusRecipe { //  Potions and butcher products
+/**
+ * Potions and butcher products
+ */
+class MultiRecipe extends CraftingBonusRecipe { 
     protected amount:number
     constructor(silver:number,focus:number,city:City,amount:number,resources:CraftResource[]) {
         super(silver,focus,city,resources);
         this.amount = amount;
     }
+
+    override calculateCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City): number {
+        return -1;
+    }
 }
 
-class ButcherRecipe extends MultiRecipe { // Butcher recipes return their product as part of the crafting bonus rather than materials
-
+/**
+ * Butcher products (their product is returned as part of the return rate rather than the ingredients)
+ */
+class ButcherRecipe extends MultiRecipe { 
+    override calculateCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City): number {
+        return -1;
+    }
 }
 
+/**
+ * Recipes that take items of lower enchantments in order to craft higher-enchantment products
+ */
 class EnchantmentRecipe extends Recipe {
-    addLowerEnchantment(priceId:string) {
+    constructor(silver:number,resources:CraftResource[],lowerEnchantmentId:string) {
+        super(silver,resources);
+        this.addLowerEnchantment(lowerEnchantmentId);
+    }
+    /**
+     * Add the item of the lower enchantment level that is used for this enchantment recipe
+     * @param priceId The price ID of the lower enchantment level item
+     */
+    private addLowerEnchantment(priceId:string) {
         const currentResource:{priceId:string,count:number,returned:boolean} = Object.create(null);
         currentResource["priceId"] = priceId;
         currentResource["count"] = 1;
@@ -68,4 +102,11 @@ class EnchantmentRecipe extends Recipe {
         this.resources.push(currentResource);
     }
 }
-export {Recipe,CraftingBonusRecipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe};
+
+/**
+ * Recipes that are just bought from a merchant (May still require materials, such as faction hearts)
+ */
+class MerchantRecipe extends Recipe { 
+    
+}
+export {Recipe,CraftingBonusRecipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe,MerchantRecipe};

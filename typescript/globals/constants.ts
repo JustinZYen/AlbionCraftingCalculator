@@ -152,7 +152,7 @@ stationNames["T8_STONEMASONRY"] = "Stonemason";
 stationNames["T8_TANNERY"] = "Tanner";
 stationNames["T8_WEAVINGMILL"] = "Weaver";
 Object.freeze(stationNames)
-export { baseCityBonus, cityBonuses, reverseCityBonuses, stationNames, City };
+export { baseCityBonus, cityBonuses, reverseCityBonuses, stationNames, City, reverseCity};
 
 // @craftingcategory for refined resources (@shopsubcategory1 says refined name (not right for crafting bonus))
 // @shopsubcategory1 for weapons

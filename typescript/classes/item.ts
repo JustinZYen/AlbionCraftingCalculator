@@ -1,4 +1,4 @@
-import { reverseCityBonuses } from "../globals/constants.js";
+import { City, reverseCityBonuses } from "../globals/constants.js";
 import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "../external-data.js";
 import {Recipe,CraftingBonusRecipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe, MerchantRecipe} from "./recipe.js";
 enum DateEnum {
@@ -66,7 +66,7 @@ class Item {
     enchantment = 0;
     id;
     priceId;
-    itemValue:number;
+    private itemValue:number;
     recipes:Recipe[] = [];
     /*
     category:string;
@@ -80,7 +80,7 @@ class Item {
         this.#setRecipesAndCategories();
     }
 
-    getMinCost(timespan:DateEnum,city:string) {
+    getMinCost(timespan:DateEnum,city:City) {
         if (this.overridePrice != undefined) {
             return this.overridePrice;
         } else {
@@ -138,24 +138,11 @@ class Item {
         for (const pathElement of path) {
             current = current[pathElement];
         }
-        //console.log(itemInfo);
-        /*
-        const addRecipe= (element:CraftingRequirement) => {
-            //console.log(`id: ${this.id}, addRecipe element: ${JSON.stringify(element)}`);
-            if (element.hasOwnProperty("craftresource")) {
-                let craftResource = element.craftresource;
-                if (!Array.isArray(craftResource)) {
-                    craftResource = [craftResource];
-                }
-                //console.log(`craftresource used to add to recipe: ${craftResource}`);
-                let currentRecipe = new Recipe(element["@craftingfocus"],element["@silver"],element["@time"],craftResource);
-                if (element.hasOwnProperty("@amountcrafted")) {
-                    currentRecipe.amount = parseInt(element["@amountcrafted"]);
-                }
-                this.recipes.push(currentRecipe);
-            }
-        }
-        */
+        /**
+         * Adds a recipe for an item that receives a city bonus (decides which type of CraftingBonusRecipe internally)
+         * @param craftingCategory 
+         * @param craftingRequirement 
+         */
         const addCraftingBonusRecipe = (craftingCategory:string, craftingRequirement:CraftingRequirement)=>{ // Has to be arrow function for the correct reference to "this" (should be the containing Item, not the function)
             // Determine which city this item receives the crafting bonus for
             const bonusCity = reverseCityBonuses[craftingCategory]!;
@@ -191,10 +178,22 @@ class Item {
             }
             this.recipes.push(newRecipe);
         }
+        /**
+         * Adds an enchantment recipe for an item that can be crafted using runes/etc + item of a lower enchantment
+         * @param previousId 
+         * @param craftResources 
+         */
         const addEnchantmentRecipe = (previousId:string, craftResources:CraftResource[])=>{
             const newRecipe = new EnchantmentRecipe(0,craftResources,previousId);
             this.recipes.push(newRecipe);
         }
+        /**
+         * Adds a merchant recipe for an item that can be bought
+         * 
+         * !!! WILL NOT CREATE RECIPE IF CRAFTING REQUIREMENT INCLUDES A 'currency' FIELD !!!
+         * @param craftingRequirement 
+         * @returns 
+         */
         const addMerchantRecipe = (craftingRequirement:CraftingRequirement)=>{
             if (Object.hasOwn(craftingRequirement,"currency")) {
                 return; // Object has a currency like faction points, which is difficult to convert to silver
@@ -264,7 +263,6 @@ class Item {
             }
             
         }
-        // Add a recipe based on the contents of craftingrequirements
     }
 
     
@@ -361,17 +359,20 @@ class Item {
     }
 }
 
+/**
+ * Just contains a price field for storing city name-price pairs
+ */
 class PriceInfo {
-    price = new Map<string,number>(); // City name, price value 
+    price = new Map<City,number>(); // City name, price value 
 }
 
 /**
- * This class used to store additional price info so that price fetch calculations can be more accurate
+ * This class used to store additional price info of timescale and quality so that price fetch calculations can be more accurate
  */
 class ExtendedPriceInfo extends PriceInfo{
-    priceTimescale = new Map<string,number>(); // City name, timescale covered
+    priceTimescale = new Map<City,number>(); // City name, timescale covered
     // Price qualities so that items with variable quality are saved as quality 2 if possible
-    priceQualities = new Map<string,number>(); // City name, quality number
+    priceQualities = new Map<City,number>(); // City name, quality number
 }
 
 

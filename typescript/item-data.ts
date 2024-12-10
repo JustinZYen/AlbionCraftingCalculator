@@ -2,6 +2,7 @@ import { nameToIDPromise } from "./external-data.js";
 import { db } from "./globals/firebaseScripts.js";
 import { DateEnum, Item } from "./classes/item.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { City, reverseCity } from "./globals/constants.js";
 class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
@@ -82,11 +83,18 @@ class ItemData {
     * @returns An array of Promises representing each currently active price fetch
     */
     #getPrices(priceURL: string, timeSpan: DateEnum) {
-        function fixLocation(initialLocation: string) {
+        function fixLocation(initialLocation: string):City {
+            let cityString;
             if (initialLocation == "5003") {
-                return "Brecilien";
+                cityString =  "Brecilien";
             } else {
-                return initialLocation;
+                cityString = initialLocation;
+            }
+            const resultCity = reverseCity[cityString];
+            if (resultCity == undefined) {
+                throw `city string ${initialLocation} could not match any of the saved city names`
+            } else {
+                return resultCity;
             }
         }
         console.log("Price url: " + priceURL);

@@ -94,24 +94,11 @@ class Item {
         for (const pathElement of path) {
             current = current[pathElement];
         }
-        //console.log(itemInfo);
-        /*
-        const addRecipe= (element:CraftingRequirement) => {
-            //console.log(`id: ${this.id}, addRecipe element: ${JSON.stringify(element)}`);
-            if (element.hasOwnProperty("craftresource")) {
-                let craftResource = element.craftresource;
-                if (!Array.isArray(craftResource)) {
-                    craftResource = [craftResource];
-                }
-                //console.log(`craftresource used to add to recipe: ${craftResource}`);
-                let currentRecipe = new Recipe(element["@craftingfocus"],element["@silver"],element["@time"],craftResource);
-                if (element.hasOwnProperty("@amountcrafted")) {
-                    currentRecipe.amount = parseInt(element["@amountcrafted"]);
-                }
-                this.recipes.push(currentRecipe);
-            }
-        }
-        */
+        /**
+         * Adds a recipe for an item that receives a city bonus (decides which type of CraftingBonusRecipe internally)
+         * @param craftingCategory
+         * @param craftingRequirement
+         */
         const addCraftingBonusRecipe = (craftingCategory, craftingRequirement) => {
             // Determine which city this item receives the crafting bonus for
             const bonusCity = reverseCityBonuses[craftingCategory];
@@ -133,10 +120,22 @@ class Item {
             }
             this.recipes.push(newRecipe);
         };
+        /**
+         * Adds an enchantment recipe for an item that can be crafted using runes/etc + item of a lower enchantment
+         * @param previousId
+         * @param craftResources
+         */
         const addEnchantmentRecipe = (previousId, craftResources) => {
             const newRecipe = new EnchantmentRecipe(0, craftResources, previousId);
             this.recipes.push(newRecipe);
         };
+        /**
+         * Adds a merchant recipe for an item that can be bought
+         *
+         * !!! WILL NOT CREATE RECIPE IF CRAFTING REQUIREMENT INCLUDES A 'currency' FIELD !!!
+         * @param craftingRequirement
+         * @returns
+         */
         const addMerchantRecipe = (craftingRequirement) => {
             if (Object.hasOwn(craftingRequirement, "currency")) {
                 return; // Object has a currency like faction points, which is difficult to convert to silver
@@ -208,7 +207,6 @@ class Item {
                 }
             }
         }
-        // Add a recipe based on the contents of craftingrequirements
     }
     /*
     toString() {
@@ -300,11 +298,14 @@ class Item {
         return s;
     }
 }
+/**
+ * Just contains a price field for storing city name-price pairs
+ */
 class PriceInfo {
     price = new Map(); // City name, price value 
 }
 /**
- * This class used to store additional price info so that price fetch calculations can be more accurate
+ * This class used to store additional price info of timescale and quality so that price fetch calculations can be more accurate
  */
 class ExtendedPriceInfo extends PriceInfo {
     priceTimescale = new Map(); // City name, timescale covered

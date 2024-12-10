@@ -5,7 +5,7 @@ abstract class Recipe {
     // Might be issue with results being strings
     protected silver;
     // formatted as item id followed by amount of resources
-    protected resources:{priceId:string,count:number,returned:boolean}[] = [];
+    resources:{priceId:string,count:number,returned:boolean}[] = [];
     // amount is amount crafted
     constructor (silver:number,resources:CraftResource[]) {
         this.silver = silver;

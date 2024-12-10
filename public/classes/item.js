@@ -138,6 +138,9 @@ class Item {
             this.recipes.push(newRecipe);
         };
         const addMerchantRecipe = (craftingRequirement) => {
+            if (Object.hasOwn(craftingRequirement, "currency")) {
+                return; // Object has a currency like faction points, which is difficult to convert to silver
+            }
             // Might or might not have resources involved in the recipe
             let resources = craftingRequirement.craftresource;
             if (resources == undefined) {

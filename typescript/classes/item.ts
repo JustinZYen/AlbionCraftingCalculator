@@ -12,6 +12,7 @@ type CraftingRequirement = {
     "@craftingfocus"?:string,
     "@amountcrafted"?:string,
     "@returnproductnotresource"?:string // Applies to butcher products
+    currency?: Currency[] | Currency // For things like faction hearts that use faction points
     craftresource?: CraftResource[] | CraftResource // Farming items do not have any craft resources (also dungeon tokens)
 }
 
@@ -19,6 +20,11 @@ type CraftResource = {
     "@uniquename":string,
     "@count":string
     "@maxreturnamount"?:string // I assume this is for specifying that weapons do not have artifacts returned
+}
+
+type Currency = {
+    "@uniquename":string,
+    "@amount":string
 }
 
 type EnchantmentRequirement = {
@@ -190,6 +196,9 @@ class Item {
             this.recipes.push(newRecipe);
         }
         const addMerchantRecipe = (craftingRequirement:CraftingRequirement)=>{
+            if (Object.hasOwn(craftingRequirement,"currency")) {
+                return; // Object has a currency like faction points, which is difficult to convert to silver
+            }
             // Might or might not have resources involved in the recipe
             let resources = craftingRequirement.craftresource;
             if (resources == undefined) {

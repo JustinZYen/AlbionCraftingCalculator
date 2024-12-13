@@ -104,7 +104,7 @@ class Item {
         }
     }
 
-    private calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum,city:City) {
+    calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum,city:City) {
         let minCraftingCost = -1;
         for (const recipe of this.recipes) {
             // For each item in the recipe, if crafting cost is not yet determined, determine its crafting cost first

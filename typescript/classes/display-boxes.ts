@@ -55,14 +55,8 @@ class ItemBox {
     count;
     static BOX_WIDTH = 200;
     static BOX_HEIGHT = 100;
-    /**
-     * 
-     * @param {RecipeBox} boundingRecipe 
-     * @param {Item} item 
-     * @param {Number} offset 
-     * @param {Boolean} allowInput
-     */
-    constructor(boundingRecipe:RecipeBox, item:Item, offset:number,count:number) {
+
+    constructor(boundingRecipe:RecipeBox, item:Item, items: Map<string, Item>, offset:number,count:number) {
         this.boundingRecipe = boundingRecipe;
         this.boundingRecipe.boundedItems.push(this);
         this.currentBox = document.createElement("div");
@@ -78,10 +72,27 @@ class ItemBox {
         descriptor.innerText = `${idToName[this.item.priceId]} (${this.item.tier}.${this.item.enchantment}) (x${count})`;
         this.currentBox.appendChild(descriptor);
 
+        let timespan;
+        if ($("#date-selector").is(":checked")) {
+            timespan = DateEnum.NEW;
+        } else {
+            timespan = DateEnum.OLD;
+        }
+
+        const currentCity = reverseCity[(<HTMLInputElement>document.getElementById("city-selector"))!.value];
+
         const craftCost = document.createElement("p");
         craftCost.innerText = "Crafting cost: ";
         this.craftingCostSpan = document.createElement("span");
-        this.craftingCostSpan.innerText = "N/A";
+        if (currentCity != undefined) {
+            item.calculateCraftingCost(items,timespan,currentCity);
+            const craftingCost = item.craftedPriceInfos.get(timespan)!.price.get(currentCity);
+            if (craftingCost) {
+                this.craftingCostSpan.innerText = craftingCost.toString();
+            } else {
+                this.craftingCostSpan.innerText = "N/A";
+            }
+        }
         craftCost.appendChild(this.craftingCostSpan);
         this.currentBox.appendChild(craftCost);
 
@@ -89,15 +100,8 @@ class ItemBox {
         buyCost.innerText = "Market price: ";
         const inputBox = document.createElement("input");
         inputBox.type = "text";
-        let priceInfos = null;
-        if (!$("#date-selector").is(":checked")) {
-            priceInfos = item.priceInfos.get(DateEnum.OLD)!;
-        } else {
-            priceInfos = item.priceInfos.get(DateEnum.NEW)!;
-        }
-        const currentCity = reverseCity[(<HTMLInputElement>document.getElementById("city-selector"))!.value];
         if (currentCity != undefined) {
-            const cityPrice = priceInfos.price.get(currentCity);
+            const cityPrice = item.priceInfos.get(timespan)!.price.get(currentCity);
             if (cityPrice) {
                 inputBox.placeholder = cityPrice.toString();
             } else {

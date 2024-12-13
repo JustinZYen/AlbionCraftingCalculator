@@ -78,7 +78,7 @@ function createAndLinkBoxes(baseItem:Item,checkedItems: Map<string,Item>, displa
     // Create the head box
     const headBox = new RecipeBox(null);
     headBox.index = 0;
-    const itemBox = new ItemBox(headBox, baseItem, 0, 1);
+    const itemBox = new ItemBox(headBox, baseItem, checkedItems, 0, 1);
     headBox.setWidth(ItemBox.BOX_WIDTH + 4.8); //4.8 to account for border width
     itemBox.currentBox.style.backgroundColor = "gold";
     headBox.currentBox.appendChild(itemBox.currentBox);
@@ -130,7 +130,7 @@ function createAndLinkBoxes(baseItem:Item,checkedItems: Map<string,Item>, displa
                     const offset = ItemBox.BOX_WIDTH * i;
                     const newItemId = recipe.resources[i]!.priceId;
                     const newItemCount = recipe.resources[i]!.count;
-                    const currentItemBox = new ItemBox(recipeBox, checkedItems.get(newItemId)!, offset, newItemCount);
+                    const currentItemBox = new ItemBox(recipeBox, checkedItems.get(newItemId)!, checkedItems, offset, newItemCount);
                     recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                     itemBoxStack.push(currentItemBox);
                 }

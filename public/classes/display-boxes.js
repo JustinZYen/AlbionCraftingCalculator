@@ -1,3 +1,4 @@
+import { reverseCity } from "../globals/constants.js";
 import { idToName } from "../external-data.js";
 import { DateEnum } from "./item.js";
 class RecipeBox {
@@ -90,12 +91,15 @@ class ItemBox {
         else {
             priceInfos = item.priceInfos.get(DateEnum.NEW);
         }
-        const cityPrice = priceInfos.price.get(document.getElementById("city-selector").value);
-        if (cityPrice) {
-            inputBox.placeholder = cityPrice.toString();
-        }
-        else {
-            inputBox.placeholder = "Undefined";
+        const currentCity = reverseCity[document.getElementById("city-selector").value];
+        if (currentCity != undefined) {
+            const cityPrice = priceInfos.price.get(currentCity);
+            if (cityPrice) {
+                inputBox.placeholder = cityPrice.toString();
+            }
+            else {
+                inputBox.placeholder = "Undefined";
+            }
         }
         buyCost.appendChild(inputBox);
         this.currentBox.appendChild(buyCost);

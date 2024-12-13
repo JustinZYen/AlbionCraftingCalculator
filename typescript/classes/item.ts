@@ -1,5 +1,5 @@
-import { City, reverseCityBonuses } from "../globals/constants.js";
-import { recipesWithT,recipesWithoutT,itemsJSON,idToName } from "../external-data.js";
+import { City } from "../globals/constants.js";
+import { recipesWithT,recipesWithoutT,itemsJSON} from "../external-data.js";
 import {Recipe,CraftingBonusRecipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe, MerchantRecipe} from "./recipe.js";
 enum DateEnum {
     OLD,
@@ -10,7 +10,7 @@ type CraftingRequirement = {
     "@silver":string,
     "@time"?:string,
     "@craftingfocus"?:string,
-    "@amountcrafted"?:string,
+    "@amountcrafted"?:string, // Applies to potions and butcher products
     "@returnproductnotresource"?:string // Applies to butcher products
     currency?: Currency[] | Currency // For things like faction hearts that use faction points
     craftresource?: CraftResource[] | CraftResource // Farming items do not have any craft resources (also dungeon tokens)
@@ -52,21 +52,24 @@ type ItemData = {
     }
 }
 class Item {
-    priceInfos = new Map([
+    priceInfos = new Map([ // Map to store prices fetched from the albion data project API
         [DateEnum.OLD,new ExtendedPriceInfo()],
         [DateEnum.NEW,new ExtendedPriceInfo()]
     ]);
-    craftedPriceInfos = new Map([
+    craftedPriceInfos = new Map([ // Map to store crafted prices (Note: some crafted prices may be MAX_SAFE_INTEGER)
         [DateEnum.OLD,new PriceInfo()],
         [DateEnum.NEW,new PriceInfo()]
     ]);
-    priceCalculated = false;
+    priceCalculated = new Map([ // Map to store cities for which prices 
+        [DateEnum.OLD,new Set<City>()],
+        [DateEnum.NEW,new Set<City>()],
+    ])
     overridePrice = undefined;
     tier:number|undefined = undefined;
     enchantment = 0;
     id;
     priceId;
-    private itemValue:number;
+    private itemValue:number|undefined = undefined;
     recipes:Recipe[] = [];
     /*
     category:string;
@@ -80,10 +83,13 @@ class Item {
         this.#setRecipesAndCategories();
     }
 
-    getMinCost(timespan:DateEnum,city:City) {
-        if (this.overridePrice != undefined) {
+    getCost(items:Map<string,Item>,timespan:DateEnum,city:City) {
+        if (this.overridePrice != undefined) { // Return override price no matter what the other prices
             return this.overridePrice;
         } else {
+            if (!this.priceCalculated.get(timespan)!.has(city)) { // Check if the given timespan + city has already had its price calculated
+                this.calculateCraftingCost(items,timespan,city);
+            }
             const marketPrice = this.priceInfos.get(timespan)!.price.get(city);
             const craftedPrice = this.craftedPriceInfos.get(timespan)!.price.get(city);
             if (marketPrice == undefined && craftedPrice == undefined) {
@@ -98,13 +104,24 @@ class Item {
         }
     }
 
-    calculateCraftingCost(items:Map<string,Item>) {
-        // Go through recipes and update crafting costs each time?
-        // Or go through dates and cities and go through each recipe each time
+    private calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum,city:City) {
+        let minCraftingCost = -1;
         for (const recipe of this.recipes) {
             // For each item in the recipe, if crafting cost is not yet determined, determine its crafting cost first
             //recipe.calculateCraftingCost(items,????);
+            const currentCraftingCost = recipe.getCraftingCost(items,timespan,city);
+            if (currentCraftingCost != undefined) {
+                if (minCraftingCost == -1) {
+                    minCraftingCost = currentCraftingCost;
+                } else {
+                    minCraftingCost = Math.min(minCraftingCost,currentCraftingCost);
+                }
+            }
         }
+        if (minCraftingCost != -1) {
+            this.craftedPriceInfos.get(timespan)!.price.set(city,minCraftingCost); // Set the crafting cost for this timespan + city combination
+        }
+        this.priceCalculated.get(timespan)!.add(city); // Mark this timespan + city combination as calculated
     }
 
     #setTier() {
@@ -145,7 +162,6 @@ class Item {
          */
         const addCraftingBonusRecipe = (craftingCategory:string, craftingRequirement:CraftingRequirement)=>{ // Has to be arrow function for the correct reference to "this" (should be the containing Item, not the function)
             // Determine which city this item receives the crafting bonus for
-            const bonusCity = reverseCityBonuses[craftingCategory]!;
             let resources = craftingRequirement.craftresource!;
             if (!Array.isArray(resources)) {
                 resources = [resources];
@@ -156,7 +172,7 @@ class Item {
                     newRecipe = new ButcherRecipe(
                         parseInt(craftingRequirement["@silver"]),
                         parseInt(craftingRequirement["@craftingfocus"]!),
-                        bonusCity,
+                        craftingCategory,
                         parseInt(craftingRequirement["@amountcrafted"]!),
                         resources
                     )
@@ -164,7 +180,7 @@ class Item {
                     newRecipe = new MultiRecipe(
                         parseInt(craftingRequirement["@silver"]),
                         parseInt(craftingRequirement["@craftingfocus"]!),
-                        bonusCity,
+                        craftingCategory,
                         parseInt(craftingRequirement["@amountcrafted"]!),
                         resources
                     )
@@ -173,7 +189,7 @@ class Item {
                 newRecipe = new CraftingBonusRecipe(
                     parseInt(craftingRequirement["@silver"]),
                     parseInt(craftingRequirement["@craftingfocus"]!),
-                    bonusCity,
+                    craftingCategory,
                     resources);
             }
             this.recipes.push(newRecipe);
@@ -265,7 +281,29 @@ class Item {
         }
     }
 
-    
+    /**
+     * Gets the item value of this item. If there is no item value calculated yet, calculates item value based off of item values of recipe
+     */
+    getItemValue(items:Map<string,Item>):number {
+        if (this.itemValue != undefined) {
+            return this.itemValue;
+        }
+        for (const recipe of this.recipes) {
+            if (recipe instanceof CraftingBonusRecipe) {
+                let calculatedValue = 0;
+                for (const resource of recipe.resources) {
+                    const resourceValue = items.get(resource.priceId)?.getItemValue(items) 
+                    if (resourceValue == undefined) {
+                        throw `Resource with price id ${resource.priceId} could not be found`;
+                    }
+                    calculatedValue += resourceValue* resource.count;
+                }
+                this.itemValue = calculatedValue;
+                return calculatedValue;
+            }
+        }
+        throw `Item ${this.priceId} did not have a crafting bonus recipe`
+    }
 
     /*
     toString() {

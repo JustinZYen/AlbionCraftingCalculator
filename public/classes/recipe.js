@@ -1,4 +1,5 @@
 import { Item } from "./item.js";
+import { baseCityBonus, cityBonuses, reverseCityBonuses } from "../globals/constants.js";
 class Recipe {
     // Might be issue with results being strings
     silver;
@@ -21,8 +22,15 @@ class Recipe {
             this.resources.push(currentResource);
         }
     }
-    calculateCraftingCost(items, timespan, city) {
+    getCraftingCost(items, timespan, city) {
         let totalCost = this.silver;
+        for (const resource of this.resources) {
+            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
+            if (resourceCost == undefined) { // One of the resources doesn't have a cost
+                return undefined;
+            }
+            totalCost += resourceCost * resource.count;
+        }
         return totalCost;
     }
     /**
@@ -35,6 +43,14 @@ class Recipe {
         }
         return this.resources;
     }
+    /**
+     * Calculate the return rate, given a production bonus
+     * @param productionBonus The production bonus, as a fraction out of 1
+     * @returns
+     */
+    static GET_RETURN_RATE(productionBonus) {
+        return 1 - 1 / (productionBonus);
+    }
 }
 /**
  * Recipes that have a city that gives them a crafting bonus
@@ -42,13 +58,33 @@ class Recipe {
 class CraftingBonusRecipe extends Recipe {
     focus;
     city;
-    constructor(silver, focus, city, resources) {
+    productionBonus;
+    constructor(silver, focus, craftingcategory, resources) {
         super(silver, resources);
         this.focus = focus;
-        this.city = city;
+        this.city = reverseCityBonuses[craftingcategory];
+        this.productionBonus = cityBonuses[this.city][craftingcategory];
     }
-    calculateCraftingCost(items, timespan, city) {
-        return -1;
+    getCraftingCost(items, timespan, city) {
+        let craftingBonus = baseCityBonus;
+        if (this.city == city) {
+            craftingBonus += this.productionBonus;
+        }
+        const returnRate = CraftingBonusRecipe.GET_RETURN_RATE(craftingBonus);
+        let totalCost = this.silver;
+        for (const resource of this.resources) {
+            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
+            if (resourceCost == undefined) { // One of the resources doesn't have a cost
+                return undefined;
+            }
+            if (resource.returned == true) {
+                totalCost += resourceCost * (1 - returnRate);
+            }
+            else {
+                totalCost += resourceCost;
+            }
+        }
+        return totalCost;
     }
 }
 /**
@@ -56,20 +92,39 @@ class CraftingBonusRecipe extends Recipe {
  */
 class MultiRecipe extends CraftingBonusRecipe {
     amount;
-    constructor(silver, focus, city, amount, resources) {
-        super(silver, focus, city, resources);
+    constructor(silver, focus, craftingcategory, amount, resources) {
+        super(silver, focus, craftingcategory, resources);
         this.amount = amount;
     }
-    calculateCraftingCost(items, timespan, city) {
-        return -1;
+    getCraftingCost(items, timespan, city) {
+        const batchCost = super.getCraftingCost(items, timespan, city);
+        if (batchCost == undefined) {
+            return undefined;
+        }
+        else {
+            return batchCost / this.amount;
+        }
     }
 }
 /**
  * Butcher products (their product is returned as part of the return rate rather than the ingredients)
  */
 class ButcherRecipe extends MultiRecipe {
-    calculateCraftingCost(items, timespan, city) {
-        return -1;
+    getCraftingCost(items, timespan, city) {
+        let craftingBonus = baseCityBonus;
+        if (this.city == city) {
+            craftingBonus += this.productionBonus;
+        }
+        const returnRate = CraftingBonusRecipe.GET_RETURN_RATE(craftingBonus);
+        let totalCost = this.silver;
+        for (const resource of this.resources) {
+            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
+            if (resourceCost == undefined) { // One of the resources doesn't have a cost
+                return undefined;
+            }
+            totalCost += resourceCost;
+        }
+        return totalCost / (this.amount * (1 + returnRate));
     }
 }
 /**

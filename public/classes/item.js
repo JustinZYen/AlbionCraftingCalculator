@@ -1,4 +1,3 @@
-import { reverseCityBonuses } from "../globals/constants.js";
 import { recipesWithT, recipesWithoutT, itemsJSON } from "../external-data.js";
 import { CraftingBonusRecipe, MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe } from "./recipe.js";
 var DateEnum;
@@ -15,13 +14,16 @@ class Item {
         [DateEnum.OLD, new PriceInfo()],
         [DateEnum.NEW, new PriceInfo()]
     ]);
-    priceCalculated = false;
+    priceCalculated = new Map([
+        [DateEnum.OLD, new Set()],
+        [DateEnum.NEW, new Set()],
+    ]);
     overridePrice = undefined;
     tier = undefined;
     enchantment = 0;
     id;
     priceId;
-    itemValue;
+    itemValue = undefined;
     recipes = [];
     /*
     category:string;
@@ -34,11 +36,14 @@ class Item {
         this.#setEnchantment();
         this.#setRecipesAndCategories();
     }
-    getMinCost(timespan, city) {
-        if (this.overridePrice != undefined) {
+    getCost(items, timespan, city) {
+        if (this.overridePrice != undefined) { // Return override price no matter what the other prices
             return this.overridePrice;
         }
         else {
+            if (!this.priceCalculated.get(timespan).has(city)) { // Check if the given timespan + city has already had its price calculated
+                this.calculateCraftingCost(items, timespan, city);
+            }
             const marketPrice = this.priceInfos.get(timespan).price.get(city);
             const craftedPrice = this.craftedPriceInfos.get(timespan).price.get(city);
             if (marketPrice == undefined && craftedPrice == undefined) {
@@ -55,13 +60,25 @@ class Item {
             }
         }
     }
-    calculateCraftingCost(items) {
-        // Go through recipes and update crafting costs each time?
-        // Or go through dates and cities and go through each recipe each time
+    calculateCraftingCost(items, timespan, city) {
+        let minCraftingCost = -1;
         for (const recipe of this.recipes) {
             // For each item in the recipe, if crafting cost is not yet determined, determine its crafting cost first
             //recipe.calculateCraftingCost(items,????);
+            const currentCraftingCost = recipe.getCraftingCost(items, timespan, city);
+            if (currentCraftingCost != undefined) {
+                if (minCraftingCost == -1) {
+                    minCraftingCost = currentCraftingCost;
+                }
+                else {
+                    minCraftingCost = Math.min(minCraftingCost, currentCraftingCost);
+                }
+            }
         }
+        if (minCraftingCost != -1) {
+            this.craftedPriceInfos.get(timespan).price.set(city, minCraftingCost); // Set the crafting cost for this timespan + city combination
+        }
+        this.priceCalculated.get(timespan).add(city); // Mark this timespan + city combination as calculated
     }
     #setTier() {
         const secondValue = parseInt(this.id.charAt(1));
@@ -101,7 +118,6 @@ class Item {
          */
         const addCraftingBonusRecipe = (craftingCategory, craftingRequirement) => {
             // Determine which city this item receives the crafting bonus for
-            const bonusCity = reverseCityBonuses[craftingCategory];
             let resources = craftingRequirement.craftresource;
             if (!Array.isArray(resources)) {
                 resources = [resources];
@@ -109,14 +125,14 @@ class Item {
             let newRecipe;
             if (Object.hasOwn(craftingRequirement, "@amountcrafted")) { // Multi recipe
                 if (Object.hasOwn(craftingRequirement, "@returnproductnotresource")) { // Butcher recipe
-                    newRecipe = new ButcherRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), bonusCity, parseInt(craftingRequirement["@amountcrafted"]), resources);
+                    newRecipe = new ButcherRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, parseInt(craftingRequirement["@amountcrafted"]), resources);
                 }
                 else {
-                    newRecipe = new MultiRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), bonusCity, parseInt(craftingRequirement["@amountcrafted"]), resources);
+                    newRecipe = new MultiRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, parseInt(craftingRequirement["@amountcrafted"]), resources);
                 }
             }
             else {
-                newRecipe = new CraftingBonusRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), bonusCity, resources);
+                newRecipe = new CraftingBonusRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, resources);
             }
             this.recipes.push(newRecipe);
         };
@@ -207,6 +223,29 @@ class Item {
                 }
             }
         }
+    }
+    /**
+     * Gets the item value of this item. If there is no item value calculated yet, calculates item value based off of item values of recipe
+     */
+    getItemValue(items) {
+        if (this.itemValue != undefined) {
+            return this.itemValue;
+        }
+        for (const recipe of this.recipes) {
+            if (recipe instanceof CraftingBonusRecipe) {
+                let calculatedValue = 0;
+                for (const resource of recipe.resources) {
+                    const resourceValue = items.get(resource.priceId)?.getItemValue(items);
+                    if (resourceValue == undefined) {
+                        throw `Resource with price id ${resource.priceId} could not be found`;
+                    }
+                    calculatedValue += resourceValue * resource.count;
+                }
+                this.itemValue = calculatedValue;
+                return calculatedValue;
+            }
+        }
+        throw `Item ${this.priceId} did not have a crafting bonus recipe`;
     }
     /*
     toString() {

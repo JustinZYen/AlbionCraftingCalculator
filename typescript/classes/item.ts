@@ -7,7 +7,7 @@ enum DateEnum {
 }
 
 type CraftingRequirement = {
-    "@silver":string,
+    "@silver"?:string, // Refined materials may not have silver requirement
     "@time"?:string,
     "@craftingfocus"?:string,
     "@amountcrafted"?:string, // Applies to potions and butcher products
@@ -167,10 +167,16 @@ class Item {
                 resources = [resources];
             }
             let newRecipe;
+            let silverRequirement;
+            if (Object.hasOwn(craftingRequirement,"@silver")) {
+                silverRequirement = parseInt(craftingRequirement["@silver"]!);
+            } else {
+                silverRequirement = 0;
+            }
             if (Object.hasOwn(craftingRequirement,"@amountcrafted")) { // Multi recipe
                 if (Object.hasOwn(craftingRequirement,"@returnproductnotresource")) { // Butcher recipe
                     newRecipe = new ButcherRecipe(
-                        parseInt(craftingRequirement["@silver"]),
+                        silverRequirement,
                         parseInt(craftingRequirement["@craftingfocus"]!),
                         craftingCategory,
                         parseInt(craftingRequirement["@amountcrafted"]!),
@@ -178,7 +184,7 @@ class Item {
                     )
                 } else {
                     newRecipe = new MultiRecipe(
-                        parseInt(craftingRequirement["@silver"]),
+                        silverRequirement,
                         parseInt(craftingRequirement["@craftingfocus"]!),
                         craftingCategory,
                         parseInt(craftingRequirement["@amountcrafted"]!),
@@ -187,7 +193,7 @@ class Item {
                 }
             } else {
                 newRecipe = new CityBonusRecipe(
-                    parseInt(craftingRequirement["@silver"]),
+                    silverRequirement,
                     parseInt(craftingRequirement["@craftingfocus"]!),
                     craftingCategory,
                     resources);
@@ -222,7 +228,7 @@ class Item {
                 resources = [resources];
             }
             const newRecipe = new MerchantRecipe(
-                parseInt(craftingRequirement["@silver"]),
+                Object.hasOwn(craftingRequirement,"@silver")?parseInt(craftingRequirement["@silver"]!):0,
                 resources
             )
             this.recipes.push(newRecipe);
@@ -235,7 +241,7 @@ class Item {
                 resources = [resources];
             }
             const newRecipe = new OffhandRecipe(
-                parseInt(craftingRequirement["@silver"]),
+                Object.hasOwn(craftingRequirement,"@silver")?parseInt(craftingRequirement["@silver"]!):0,
                 parseInt(craftingRequirement["@craftingfocus"]!),
                 shobsubcategory1,
                 resources);
@@ -248,7 +254,7 @@ class Item {
                 resources = [resources];
             }
             const newRecipe = new MountRecipe(
-                parseInt(craftingRequirement["@silver"]),
+                Object.hasOwn(craftingRequirement,"@silver")?parseInt(craftingRequirement["@silver"]!):0,
                 parseInt(craftingRequirement["@craftingfocus"]!),
                 resources);
             this.recipes.push(newRecipe);

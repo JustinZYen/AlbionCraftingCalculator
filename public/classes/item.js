@@ -123,16 +123,23 @@ class Item {
                 resources = [resources];
             }
             let newRecipe;
+            let silverRequirement;
+            if (Object.hasOwn(craftingRequirement, "@silver")) {
+                silverRequirement = parseInt(craftingRequirement["@silver"]);
+            }
+            else {
+                silverRequirement = 0;
+            }
             if (Object.hasOwn(craftingRequirement, "@amountcrafted")) { // Multi recipe
                 if (Object.hasOwn(craftingRequirement, "@returnproductnotresource")) { // Butcher recipe
-                    newRecipe = new ButcherRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, parseInt(craftingRequirement["@amountcrafted"]), resources);
+                    newRecipe = new ButcherRecipe(silverRequirement, parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, parseInt(craftingRequirement["@amountcrafted"]), resources);
                 }
                 else {
-                    newRecipe = new MultiRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, parseInt(craftingRequirement["@amountcrafted"]), resources);
+                    newRecipe = new MultiRecipe(silverRequirement, parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, parseInt(craftingRequirement["@amountcrafted"]), resources);
                 }
             }
             else {
-                newRecipe = new CityBonusRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, resources);
+                newRecipe = new CityBonusRecipe(silverRequirement, parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, resources);
             }
             this.recipes.push(newRecipe);
         };
@@ -164,7 +171,7 @@ class Item {
             else if (!Array.isArray(resources)) {
                 resources = [resources];
             }
-            const newRecipe = new MerchantRecipe(parseInt(craftingRequirement["@silver"]), resources);
+            const newRecipe = new MerchantRecipe(Object.hasOwn(craftingRequirement, "@silver") ? parseInt(craftingRequirement["@silver"]) : 0, resources);
             this.recipes.push(newRecipe);
         };
         let itemInfo = current;
@@ -173,7 +180,7 @@ class Item {
             if (!Array.isArray(resources)) {
                 resources = [resources];
             }
-            const newRecipe = new OffhandRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), shobsubcategory1, resources);
+            const newRecipe = new OffhandRecipe(Object.hasOwn(craftingRequirement, "@silver") ? parseInt(craftingRequirement["@silver"]) : 0, parseInt(craftingRequirement["@craftingfocus"]), shobsubcategory1, resources);
             this.recipes.push(newRecipe);
         };
         const addMountRecipe = (craftingRequirement) => {
@@ -181,7 +188,7 @@ class Item {
             if (!Array.isArray(resources)) {
                 resources = [resources];
             }
-            const newRecipe = new MountRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), resources);
+            const newRecipe = new MountRecipe(Object.hasOwn(craftingRequirement, "@silver") ? parseInt(craftingRequirement["@silver"]) : 0, parseInt(craftingRequirement["@craftingfocus"]), resources);
             this.recipes.push(newRecipe);
         };
         if (Object.hasOwn(itemInfo, "enchantments") && this.enchantment > 0) { // Check if enchanted item

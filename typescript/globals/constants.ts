@@ -125,6 +125,9 @@ cityBonuses[City.THETFORD] = thetfordBonus;
 cityBonuses[City.BRECILIEN] = brecilienBonus;
 Object.freeze(cityBonuses);
 
+/**
+ * Maps crafting bonuses to the city that provides that crafting bonus
+ */
 const reverseCityBonuses:{[craftingCategory:string]:City} = Object.create(null);
 for (const [cityName,bonuses] of Object.entries(cityBonuses)) {
     const cityNameAsEnum = reverseCity[cityName]!;
@@ -152,7 +155,124 @@ stationNames["T8_STONEMASONRY"] = "Stonemason";
 stationNames["T8_TANNERY"] = "Tanner";
 stationNames["T8_WEAVINGMILL"] = "Weaver";
 Object.freeze(stationNames)
-export { baseCityBonus, cityBonuses, reverseCityBonuses, stationNames, City, reverseCity};
+
+
+const stationCraftable:{[key:string]:string[]} = Object.create(null);
+const forgeCraftable = [
+    "mace",
+    "sword",
+    "crossbow",
+    "plate_armor",
+    "axe",
+    "plate_shoes",
+    "hammer",
+    "plate_helmet",
+    "knuckles",
+    "shield"
+];
+Object.freeze(forgeCraftable);
+const lodgeCraftable = [
+    "naturestaff",
+    "leather_armor",
+    "bow",
+    "leather_helmet",
+    "leather_shoes",
+    "dagger",
+    "quarterstaff",
+    "spear",
+    "shapeshifterstaff",
+    "torch"
+];
+Object.freeze(lodgeCraftable);
+const towerCraftable = [
+    "firestaff",
+    "cloth_helmet",
+    "arcanestaff",
+    "cursestaff",
+    "cloth_shoes",
+    "frostaff",
+    "holystaff",
+    "cloth_armor",
+    "book"
+];
+Object.freeze(towerCraftable);
+const toolmakerCraftable = [
+    "gatherergear",
+    "tools",
+    "cape",
+    "bag"
+];
+Object.freeze(toolmakerCraftable);
+const labCraftable = [
+    "potion"
+];
+Object.freeze(labCraftable);
+const saddlerCraftable = [
+    "mounts"
+];
+Object.freeze(saddlerCraftable);
+const cookCraftable = [
+    "food"
+];
+Object.freeze(cookCraftable);
+const butcherCraftable = [
+    "meat_pig",
+    "meat_goose",
+    "meat_goat",
+    "meat_cow",
+    "meat_chicken",
+    "meat_sheep"
+];
+Object.freeze(butcherCraftable);
+const millCraftable = [
+    "wood"
+];
+Object.freeze(millCraftable);
+const smelterCraftable = [
+    "ore"
+];
+Object.freeze(smelterCraftable);
+const masonCraftable = [
+    "rock"
+];
+Object.freeze(masonCraftable);
+const tannerCraftable = [
+    "hide"
+];
+Object.freeze(tannerCraftable);
+const weaverCraftable = [
+    "fiber"
+];
+Object.freeze(weaverCraftable);
+stationCraftable["T8_FORGE"] = forgeCraftable;
+stationCraftable["T8_HUNTERSLODGE"] = lodgeCraftable;
+stationCraftable["T8_MAGICITEMS"] = towerCraftable;
+stationCraftable["T8_TOOLMAKER"] = toolmakerCraftable;
+stationCraftable["T8_ALCHEMIST"] = labCraftable;
+stationCraftable["T8_STABLE"] = saddlerCraftable;
+stationCraftable["T8_COOK"] = cookCraftable;
+stationCraftable["T8_BUTCHER"] = butcherCraftable;
+stationCraftable["T8_CARPENTERSWORKSHOP"] = millCraftable;
+stationCraftable["T8_SMELTER"] = smelterCraftable;
+stationCraftable["T8_STONEMASONRY"] = masonCraftable;
+stationCraftable["T8_TANNERY"] = tannerCraftable;
+stationCraftable["T8_WEAVINGMILL"] = weaverCraftable;
+Object.freeze(stationCraftable);
+// !!!!!!!!!!
+// offhands are weird
+// !!!!!!!!!!
+/**
+ * Maps crafting categories to the station that crafts them
+ */
+const reverseStation:{[key:string]:string} = Object.create(null);
+for (const [stationName,craftingCategories] of Object.entries(stationCraftable)) {
+    for (const craftingCategory of craftingCategories) {
+        reverseStation[craftingCategory] = stationName;
+    }
+}
+Object.freeze(reverseStation);
+
+export { baseCityBonus, cityBonuses, reverseCityBonuses, stationNames, City, reverseCity, reverseStation};
 
 // @craftingcategory for refined resources (@shopsubcategory1 says refined name (not right for crafting bonus))
 // @shopsubcategory1 for weapons

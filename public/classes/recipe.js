@@ -1,5 +1,5 @@
 import { Item } from "./item.js";
-import { baseCityBonus, cityBonuses, reverseCityBonuses } from "../globals/constants.js";
+import { baseCityBonus, cityBonuses, reverseCityBonuses, reverseStation } from "../globals/constants.js";
 class Recipe {
     // Might be issue with results being strings
     silver;
@@ -43,34 +43,28 @@ class Recipe {
         }
         return this.resources;
     }
-    /**
-     * Calculate the return rate, given a production bonus
-     * @param productionBonus The production bonus, as a fraction out of 1
-     * @returns
-     */
-    static GET_RETURN_RATE(productionBonus) {
-        return 1 - 1 / (productionBonus);
+    getItemValue(items) {
+        let itemValue = 0;
+        for (const resource of this.resources) {
+            itemValue += items.get(resource.priceId).getItemValue(items) * resource.count;
+        }
+        return itemValue;
     }
 }
 /**
- * Recipes that have a city that gives them a crafting bonus
+ * Recipes that are craftable at a crafting station
  */
-class CraftingBonusRecipe extends Recipe {
+class CraftingStationRecipe extends Recipe {
     focus;
-    city;
-    productionBonus;
-    constructor(silver, focus, craftingcategory, resources) {
+    stationName;
+    constructor(silver, focus, resources) {
         super(silver, resources);
         this.focus = focus;
-        this.city = reverseCityBonuses[craftingcategory];
-        this.productionBonus = cityBonuses[this.city][craftingcategory];
     }
     getCraftingCost(items, timespan, city) {
-        let craftingBonus = baseCityBonus;
-        if (this.city == city) {
-            craftingBonus += this.productionBonus;
-        }
-        const returnRate = CraftingBonusRecipe.GET_RETURN_RATE(craftingBonus);
+        //a
+        // Calculate crafting station cost
+        const returnRate = this.getReturnRate(city);
         let totalCost = this.silver;
         for (const resource of this.resources) {
             const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
@@ -78,19 +72,84 @@ class CraftingBonusRecipe extends Recipe {
                 return undefined;
             }
             if (resource.returned == true) {
-                totalCost += resourceCost * (1 - returnRate);
+                totalCost += resourceCost * (1 - returnRate) * resource.count;
             }
             else {
-                totalCost += resourceCost;
+                totalCost += resourceCost * resource.count;
             }
         }
         return totalCost;
+    }
+    /**
+     * Calculate the return rate, given a production bonus
+     * @param productionBonus The production bonus, as a fraction out of 1
+     * @returns
+     */
+    static TO_RETURN_RATE(productionBonus) {
+        return 1 - 1 / (1 + productionBonus);
+    }
+    getReturnRate(_currentCity) {
+        let productionBonus = baseCityBonus;
+        return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
+    }
+}
+/**
+ * Mounts (they do not have a city that provides them with crafting bonuses)
+ */
+class MountRecipe extends CraftingStationRecipe {
+    static CRAFTING_CATEGORY = "mounts"; // Technically not a real craftingcategory
+    constructor(silver, focus, resources) {
+        super(silver, focus, resources);
+        this.stationName = reverseStation[MountRecipe.CRAFTING_CATEGORY];
+    }
+}
+/**
+ * Recipes that have a crafting category and so receive a crafting bonus at some city
+ */
+class CityBonusRecipe extends CraftingStationRecipe {
+    city;
+    station;
+    productionBonus;
+    constructor(silver, focus, craftingcategory, resources) {
+        super(silver, focus, resources);
+        this.city = reverseCityBonuses[craftingcategory];
+        this.station = reverseStation[craftingcategory];
+        this.productionBonus = cityBonuses[this.city][craftingcategory];
+    }
+    getReturnRate(currentCity) {
+        let productionBonus = baseCityBonus;
+        if (currentCity == this.city) {
+            productionBonus += this.productionBonus;
+        }
+        return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
+    }
+}
+/**
+ * Offhands (their crafting category does not include enough information to determine which station uses them)
+ */
+class OffhandRecipe extends CraftingStationRecipe {
+    city;
+    station;
+    productionBonus;
+    static CRAFTING_CATEGORY = "offhand";
+    constructor(silver, focus, shopsubcategory1, resources) {
+        super(silver, focus, resources);
+        this.city = reverseCityBonuses[OffhandRecipe.CRAFTING_CATEGORY];
+        this.station = reverseStation[shopsubcategory1];
+        this.productionBonus = cityBonuses[this.city][OffhandRecipe.CRAFTING_CATEGORY];
+    }
+    getReturnRate(currentCity) {
+        let productionBonus = baseCityBonus;
+        if (currentCity == this.city) {
+            productionBonus += this.productionBonus;
+        }
+        return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
     }
 }
 /**
  * Potions and butcher products
  */
-class MultiRecipe extends CraftingBonusRecipe {
+class MultiRecipe extends CityBonusRecipe {
     amount;
     constructor(silver, focus, craftingcategory, amount, resources) {
         super(silver, focus, craftingcategory, resources);
@@ -111,18 +170,14 @@ class MultiRecipe extends CraftingBonusRecipe {
  */
 class ButcherRecipe extends MultiRecipe {
     getCraftingCost(items, timespan, city) {
-        let craftingBonus = baseCityBonus;
-        if (this.city == city) {
-            craftingBonus += this.productionBonus;
-        }
-        const returnRate = CraftingBonusRecipe.GET_RETURN_RATE(craftingBonus);
+        const returnRate = this.getReturnRate(city);
         let totalCost = this.silver;
         for (const resource of this.resources) {
             const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
-            totalCost += resourceCost;
+            totalCost += resourceCost * resource.count;
         }
         return totalCost / (this.amount * (1 + returnRate));
     }
@@ -153,4 +208,4 @@ class EnchantmentRecipe extends Recipe {
  */
 class MerchantRecipe extends Recipe {
 }
-export { Recipe, CraftingBonusRecipe, MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe };
+export { Recipe, CraftingStationRecipe, CityBonusRecipe, MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe, OffhandRecipe, MountRecipe };

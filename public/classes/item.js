@@ -1,5 +1,5 @@
 import { recipesWithT, recipesWithoutT, itemsJSON } from "../external-data.js";
-import { CraftingBonusRecipe, MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe } from "./recipe.js";
+import { MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe, OffhandRecipe, MountRecipe, CityBonusRecipe } from "./recipe.js";
 var DateEnum;
 (function (DateEnum) {
     DateEnum[DateEnum["OLD"] = 0] = "OLD";
@@ -132,7 +132,7 @@ class Item {
                 }
             }
             else {
-                newRecipe = new CraftingBonusRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, resources);
+                newRecipe = new CityBonusRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), craftingCategory, resources);
             }
             this.recipes.push(newRecipe);
         };
@@ -168,6 +168,22 @@ class Item {
             this.recipes.push(newRecipe);
         };
         let itemInfo = current;
+        const addOffhandRecipe = (shobsubcategory1, craftingRequirement) => {
+            let resources = craftingRequirement.craftresource;
+            if (!Array.isArray(resources)) {
+                resources = [resources];
+            }
+            const newRecipe = new OffhandRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), shobsubcategory1, resources);
+            this.recipes.push(newRecipe);
+        };
+        const addMountRecipe = (craftingRequirement) => {
+            let resources = craftingRequirement.craftresource;
+            if (!Array.isArray(resources)) {
+                resources = [resources];
+            }
+            const newRecipe = new MountRecipe(parseInt(craftingRequirement["@silver"]), parseInt(craftingRequirement["@craftingfocus"]), resources);
+            this.recipes.push(newRecipe);
+        };
         if (Object.hasOwn(itemInfo, "enchantments") && this.enchantment > 0) { // Check if enchanted item
             const enchantmentInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
             // Add crafting requirements (using enchanted materials)
@@ -203,13 +219,32 @@ class Item {
             // Add crafting requirements
             const craftingRequirements = itemInfo.craftingrequirements;
             if (Object.hasOwn(itemInfo, "@craftingcategory")) {
+                let category = itemInfo["@craftingcategory"];
+                let addingFunction;
+                if (category == "offhand") {
+                    addingFunction = addOffhandRecipe;
+                    category = itemInfo["@shopsubcategory1"];
+                }
+                else {
+                    addingFunction = addCraftingBonusRecipe;
+                }
                 if (Array.isArray(craftingRequirements)) {
                     for (const craftingRequirement of craftingRequirements) {
-                        addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirement);
+                        addingFunction(category, craftingRequirement);
                     }
                 }
                 else {
-                    addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirements);
+                    addingFunction(category, craftingRequirements);
+                }
+            }
+            else if (itemInfo["@shopcategory"] == "mounts") {
+                if (Array.isArray(craftingRequirements)) {
+                    for (const craftingRequirement of craftingRequirements) {
+                        addMountRecipe(craftingRequirement);
+                    }
+                }
+                else {
+                    addMountRecipe(craftingRequirements);
                 }
             }
             else {
@@ -232,7 +267,7 @@ class Item {
             return this.itemValue;
         }
         for (const recipe of this.recipes) {
-            if (recipe instanceof CraftingBonusRecipe) {
+            if (recipe instanceof CityBonusRecipe) {
                 let calculatedValue = 0;
                 for (const resource of recipe.resources) {
                     const resourceValue = items.get(resource.priceId)?.getItemValue(items);

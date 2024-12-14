@@ -112,9 +112,18 @@ class CityBonusRecipe extends CraftingStationRecipe {
     productionBonus;
     constructor(silver, focus, craftingcategory, resources) {
         super(silver, focus, resources);
-        this.city = reverseCityBonuses[craftingcategory];
-        this.station = reverseStation[craftingcategory];
-        this.productionBonus = cityBonuses[this.city][craftingcategory];
+        this.city = this.toCity(craftingcategory);
+        this.station = this.toStation(craftingcategory);
+        this.productionBonus = this.toProductionBonus(craftingcategory);
+    }
+    toCity(craftingcategory) {
+        return reverseCityBonuses[craftingcategory];
+    }
+    toStation(craftingcategory) {
+        return reverseStation[craftingcategory];
+    }
+    toProductionBonus(craftingcategory) {
+        return cityBonuses[this.city][craftingcategory];
     }
     getReturnRate(currentCity) {
         let productionBonus = baseCityBonus;
@@ -127,16 +136,17 @@ class CityBonusRecipe extends CraftingStationRecipe {
 /**
  * Offhands (their crafting category does not include enough information to determine which station uses them)
  */
-class OffhandRecipe extends CraftingStationRecipe {
-    city;
-    station;
-    productionBonus;
+class OffhandRecipe extends CityBonusRecipe {
     static CRAFTING_CATEGORY = "offhand";
     constructor(silver, focus, shopsubcategory1, resources) {
-        super(silver, focus, resources);
-        this.city = reverseCityBonuses[OffhandRecipe.CRAFTING_CATEGORY];
-        this.station = reverseStation[shopsubcategory1];
-        this.productionBonus = cityBonuses[this.city][OffhandRecipe.CRAFTING_CATEGORY];
+        super(silver, focus, shopsubcategory1, resources);
+    }
+    toCity(_craftingcategory) {
+        return reverseCityBonuses[OffhandRecipe.CRAFTING_CATEGORY];
+    }
+    toProductionBonus(_craftingcategory) {
+        console.log("using override method");
+        return cityBonuses[this.city][OffhandRecipe.CRAFTING_CATEGORY];
     }
     getReturnRate(currentCity) {
         let productionBonus = baseCityBonus;

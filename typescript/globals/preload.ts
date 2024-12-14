@@ -3,6 +3,8 @@ import {namesPromise} from "../external-data.js";
 import { ItemNameTrie } from "../classes/trie.js";
 /**
  * Maps item ids (in Albion binaries) to crafting station ids (in Albion binaries)
+ * 
+ * Maybe not needed, as can determine just from crafting category
  */
 const buildingsThatCanCraft = fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/refs/heads/master/buildings.json").then((response)=>{
     return response.json();

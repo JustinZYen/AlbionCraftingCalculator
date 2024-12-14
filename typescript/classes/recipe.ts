@@ -120,9 +120,21 @@ class CityBonusRecipe extends CraftingStationRecipe {
     protected productionBonus: number;
     constructor(silver:number,focus:number,craftingcategory:string,resources:CraftResource[]) {
         super(silver,focus,resources);
-        this.city = reverseCityBonuses[craftingcategory]!;
-        this.station = reverseStation[craftingcategory]!;
-        this.productionBonus = cityBonuses[this.city][craftingcategory]!;
+        this.city = this.toCity(craftingcategory);
+        this.station = this.toStation(craftingcategory);
+        this.productionBonus = this.toProductionBonus(craftingcategory);
+    }
+
+    protected toCity(craftingcategory:string) {
+        return reverseCityBonuses[craftingcategory]!;
+    }
+
+    protected toStation(craftingcategory:string) {
+        return reverseStation[craftingcategory]!;
+    }
+
+    protected toProductionBonus(craftingcategory:string) {
+        return cityBonuses[this.city][craftingcategory]!
     }
 
     override getReturnRate(currentCity:City) {
@@ -137,24 +149,18 @@ class CityBonusRecipe extends CraftingStationRecipe {
 /**
  * Offhands (their crafting category does not include enough information to determine which station uses them)
  */
-class OffhandRecipe extends CraftingStationRecipe {
-    protected city: City;
-    protected station: string;
-    protected productionBonus: number;
+class OffhandRecipe extends CityBonusRecipe {
     private static CRAFTING_CATEGORY = "offhand";
     constructor(silver:number,focus:number,shopsubcategory1:string,resources:CraftResource[]) {
-        super(silver,focus,resources);
-        this.city = reverseCityBonuses[OffhandRecipe.CRAFTING_CATEGORY]!;
-        this.station = reverseStation[shopsubcategory1]!;
-        this.productionBonus = cityBonuses[this.city][OffhandRecipe.CRAFTING_CATEGORY]!;
+        super(silver,focus,shopsubcategory1,resources);
     }
 
-    override getReturnRate(currentCity:City) {
-        let productionBonus = baseCityBonus;
-        if (currentCity == this.city) {
-            productionBonus += this.productionBonus;
-        }
-        return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
+    override toCity(_craftingcategory:string) {
+        return reverseCityBonuses[OffhandRecipe.CRAFTING_CATEGORY]!;
+    }
+
+    override toProductionBonus(_craftingcategory:string) {
+        return cityBonuses[this.city][OffhandRecipe.CRAFTING_CATEGORY]!;
     }
 }
 

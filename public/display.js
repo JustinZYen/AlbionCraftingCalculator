@@ -1,6 +1,6 @@
 import { ItemBox, RecipeBox } from "./classes/display-boxes.js";
 import { idToName } from "./external-data.js";
-function displayRecipes(checkedItems, ids) {
+function displayRecipes(checkedItems, ids, stationFees, productionBonuses) {
     document.getElementById("recipes-area").innerHTML = "";
     for (const currentPriceId of ids) {
         const currentItem = checkedItems.get(currentPriceId);
@@ -43,10 +43,10 @@ function displayRecipes(checkedItems, ids) {
         */
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
-        createAndLinkBoxes(currentItem, checkedItems, displayBox, boxLines);
+        createAndLinkBoxes(currentItem, checkedItems, displayBox, boxLines, stationFees, productionBonuses);
     }
 }
-function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines) {
+function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines, stationFees, productionBonuses) {
     const nodes = []; // Recipe boxes
     const links = []; // Links between recipe boxes that also contain information for which item is actually linked
     // Set of item IDs that have been visited already mapped to an array of recipe link indexes (do not need to create associated recipes again)
@@ -56,7 +56,7 @@ function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines) {
     // Create the head box
     const headBox = new RecipeBox(null);
     headBox.index = 0;
-    const itemBox = new ItemBox(headBox, baseItem, checkedItems, 0, 1);
+    const itemBox = new ItemBox(headBox, baseItem, checkedItems, 0, 1, stationFees, productionBonuses);
     headBox.setWidth(ItemBox.BOX_WIDTH + 4.8); //4.8 to account for border width
     itemBox.currentBox.style.backgroundColor = "gold";
     headBox.currentBox.appendChild(itemBox.currentBox);
@@ -108,7 +108,7 @@ function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines) {
                     const offset = ItemBox.BOX_WIDTH * i;
                     const newItemId = recipe.resources[i].priceId;
                     const newItemCount = recipe.resources[i].count;
-                    const currentItemBox = new ItemBox(recipeBox, checkedItems.get(newItemId), checkedItems, offset, newItemCount);
+                    const currentItemBox = new ItemBox(recipeBox, checkedItems.get(newItemId), checkedItems, offset, newItemCount, stationFees, productionBonuses);
                     recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                     itemBoxStack.push(currentItemBox);
                 }

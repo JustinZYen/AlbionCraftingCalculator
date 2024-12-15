@@ -36,13 +36,13 @@ class Item {
         this.#setEnchantment();
         this.#setRecipesAndCategories();
     }
-    getCost(items, timespan, city) {
+    getCost(items, timespan, city, stationFees, productionBonuses) {
         if (this.overridePrice != undefined) { // Return override price no matter what the other prices
             return this.overridePrice;
         }
         else {
             if (!this.priceCalculated.get(timespan).has(city)) { // Check if the given timespan + city has already had its price calculated
-                this.calculateCraftingCost(items, timespan, city);
+                this.calculateCraftingCost(items, timespan, city, stationFees, productionBonuses);
             }
             const marketPrice = this.priceInfos.get(timespan).price.get(city);
             const craftedPrice = this.craftedPriceInfos.get(timespan).price.get(city);
@@ -60,12 +60,12 @@ class Item {
             }
         }
     }
-    calculateCraftingCost(items, timespan, city) {
+    calculateCraftingCost(items, timespan, city, stationFees, productionBonuses) {
         let minCraftingCost = -1;
         for (const recipe of this.recipes) {
             // For each item in the recipe, if crafting cost is not yet determined, determine its crafting cost first
             //recipe.calculateCraftingCost(items,????);
-            const currentCraftingCost = recipe.getCraftingCost(items, timespan, city);
+            const currentCraftingCost = recipe.getCraftingCost(items, timespan, city, stationFees, productionBonuses);
             if (currentCraftingCost != undefined) {
                 if (minCraftingCost == -1) {
                     minCraftingCost = currentCraftingCost;
@@ -95,6 +95,10 @@ class Item {
             this.enchantment = lastVal;
         }
     }
+    /**
+     * Sets recipes and item value if it exists
+     * @returns
+     */
     #setRecipesAndCategories() {
         let path;
         if (this.id.charAt(0) == "T") {
@@ -174,7 +178,6 @@ class Item {
             const newRecipe = new MerchantRecipe(Object.hasOwn(craftingRequirement, "@silver") ? parseInt(craftingRequirement["@silver"]) : 0, resources);
             this.recipes.push(newRecipe);
         };
-        let itemInfo = current;
         const addOffhandRecipe = (shobsubcategory1, craftingRequirement) => {
             let resources = craftingRequirement.craftresource;
             if (!Array.isArray(resources)) {
@@ -191,6 +194,13 @@ class Item {
             const newRecipe = new MountRecipe(Object.hasOwn(craftingRequirement, "@silver") ? parseInt(craftingRequirement["@silver"]) : 0, parseInt(craftingRequirement["@craftingfocus"]), resources);
             this.recipes.push(newRecipe);
         };
+        let itemInfo = current;
+        if (Object.hasOwn(itemInfo, "@itemvalue")) {
+            this.itemValue = parseInt(itemInfo["@itemvalue"]);
+        }
+        else {
+            this.itemValue = 0;
+        }
         if (Object.hasOwn(itemInfo, "enchantments") && this.enchantment > 0) { // Check if enchanted item
             const enchantmentInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
             // Add crafting requirements (using enchanted materials)

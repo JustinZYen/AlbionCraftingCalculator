@@ -30,12 +30,12 @@ abstract class Recipe {
      * @param city 
      * @returns 
      */
-    getCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:City) {
+    getCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let totalCost = this.silver;
         if (Number.isNaN(totalCost)) {
             console.log("silver for base recipe NaN, for some reason")
         }
-        const materialsCost = this.getMaterialsCost(items,timespan,city);
+        const materialsCost = this.getMaterialsCost(items,timespan,city,stationFees,productionBonuses);
         if (materialsCost == undefined) {
             return undefined;
         }
@@ -43,10 +43,10 @@ abstract class Recipe {
         return totalCost;
     }
 
-    protected getMaterialsCost(items:Map<string,Item>,timespan:DateEnum, city:City) {
+    protected getMaterialsCost(items:Map<string,Item>,timespan:DateEnum, city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city);
+            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -106,12 +106,12 @@ abstract class CraftingStationRecipe extends Recipe {
      * @param city 
      * @returns 
      */
-    override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
-        let totalCost = super.getCraftingCost(items,timespan,city);
+    override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+        let totalCost = super.getCraftingCost(items,timespan,city,stationFees,productionBonuses);
         if (totalCost == undefined) {
             return undefined;
         }
-        totalCost += this.getCraftingStationCost();
+        totalCost += this.getCraftingStationCost(items, stationFees);
         return totalCost;
     }
 
@@ -124,20 +124,33 @@ abstract class CraftingStationRecipe extends Recipe {
         return 1-1/(1+productionBonus);
     }
 
-    protected getReturnRate(_currentCity:City) {
+    protected getReturnRate(_currentCity:City,_productionBonuses:Map<string,number>) {
         let productionBonus = baseCityBonus;
         return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
     }
 
-    protected getCraftingStationCost() {
-        return 0;
+    protected getCraftingStationCost(items: Map<string, Item>, stationFees:Map<string,number>) {
+        if (stationFees.has(this.stationName)) {
+            // Get total item value
+            let itemValue = 0;
+            for (const resource of this.resources) {
+                const currentItemValue = items.get(resource.priceId)!.getItemValue(items);
+                itemValue += currentItemValue * resource.count;
+            }
+            const nutritionCost = itemValue * 0.1125; // Amount of nutrition needed
+            // Get station fee cost
+            const costPerNutrition = stationFees.get(this.stationName)!/100; // Because stationFees has values per 100 nutrition
+            return nutritionCost * costPerNutrition;
+        } else {
+            throw `Station with name ${this.stationName} does not exist`;
+        }
     }
 
-    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
+    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
-        const returnRate = this.getReturnRate(city);
+        const returnRate = this.getReturnRate(city,productionBonuses);
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city);
+            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -167,13 +180,14 @@ class MountRecipe extends CraftingStationRecipe {
  */
 class CityBonusRecipe extends CraftingStationRecipe {
     protected city: City;
-    protected station: string;
     protected productionBonus: number;
+    protected craftingCategory: string;
     constructor(silver:number,focus:number,craftingcategory:string,resources:CraftResource[]) {
         super(silver,focus,resources);
         this.city = this.toCity(craftingcategory);
-        this.station = this.toStation(craftingcategory);
+        this.stationName = this.toStation(craftingcategory);
         this.productionBonus = this.toProductionBonus(craftingcategory);
+        this.craftingCategory = craftingcategory;
     }
 
     protected toCity(craftingcategory:string) {
@@ -188,13 +202,17 @@ class CityBonusRecipe extends CraftingStationRecipe {
         return cityBonuses[this.city][craftingcategory]!
     }
 
-    override getReturnRate(currentCity:City) {
+    override getReturnRate(currentCity:City,productionBonuses:Map<string,number>) {
         let productionBonus = baseCityBonus;
         if (currentCity == this.city) {
             productionBonus += this.productionBonus;
         }
+        if (productionBonuses.has(this.craftingCategory)) {
+            productionBonus += productionBonuses.get(this.craftingCategory)!/100; // Production bonus map stores a percentage (out of 100)
+        }
         return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
     }
+
 
 }
 /**
@@ -232,16 +250,16 @@ class MultiRecipe extends CityBonusRecipe {
      * @param city 
      * @returns 
      */
-    override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
-        const batchCost = super.getCraftingCost(items,timespan,city);
+    override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+        const batchCost = super.getCraftingCost(items,timespan,city,stationFees,productionBonuses);
         if (batchCost == undefined) {
             return undefined;
         } else {
-            return this.distributeCosts(batchCost,city);
+            return this.distributeCosts(batchCost,city,productionBonuses);
         }
     }
 
-    protected distributeCosts(batchCost:number,_city:City) {
+    protected distributeCosts(batchCost:number,_city:City,_productionBonuses:Map<string,number>) {
         return batchCost/this.amount;
     }
 }
@@ -258,10 +276,10 @@ class ButcherRecipe extends MultiRecipe {
      * @param city 
      * @returns 
      */
-    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
+    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city);
+            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -270,8 +288,8 @@ class ButcherRecipe extends MultiRecipe {
         return materialsCost;
     }
 
-    override distributeCosts(batchCost: number,city:City){
-        return batchCost/(this.amount * (1+this.getReturnRate(city)));
+    override distributeCosts(batchCost: number,city:City,productionBonuses:Map<string,number>){
+        return batchCost/(this.amount * (1+this.getReturnRate(city,productionBonuses)));
     }
 }
 

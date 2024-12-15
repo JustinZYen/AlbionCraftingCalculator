@@ -29,22 +29,22 @@ class Recipe {
      * @param city
      * @returns
      */
-    getCraftingCost(items, timespan, city) {
+    getCraftingCost(items, timespan, city, stationFees, productionBonuses) {
         let totalCost = this.silver;
         if (Number.isNaN(totalCost)) {
             console.log("silver for base recipe NaN, for some reason");
         }
-        const materialsCost = this.getMaterialsCost(items, timespan, city);
+        const materialsCost = this.getMaterialsCost(items, timespan, city, stationFees, productionBonuses);
         if (materialsCost == undefined) {
             return undefined;
         }
         totalCost += materialsCost;
         return totalCost;
     }
-    getMaterialsCost(items, timespan, city) {
+    getMaterialsCost(items, timespan, city, stationFees, productionBonuses) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
+            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city, stationFees, productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -99,12 +99,12 @@ class CraftingStationRecipe extends Recipe {
      * @param city
      * @returns
      */
-    getCraftingCost(items, timespan, city) {
-        let totalCost = super.getCraftingCost(items, timespan, city);
+    getCraftingCost(items, timespan, city, stationFees, productionBonuses) {
+        let totalCost = super.getCraftingCost(items, timespan, city, stationFees, productionBonuses);
         if (totalCost == undefined) {
             return undefined;
         }
-        totalCost += this.getCraftingStationCost();
+        totalCost += this.getCraftingStationCost(items, stationFees);
         return totalCost;
     }
     /**
@@ -115,18 +115,32 @@ class CraftingStationRecipe extends Recipe {
     static TO_RETURN_RATE(productionBonus) {
         return 1 - 1 / (1 + productionBonus);
     }
-    getReturnRate(_currentCity) {
+    getReturnRate(_currentCity, _productionBonuses) {
         let productionBonus = baseCityBonus;
         return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
     }
-    getCraftingStationCost() {
-        return 0;
+    getCraftingStationCost(items, stationFees) {
+        if (stationFees.has(this.stationName)) {
+            // Get total item value
+            let itemValue = 0;
+            for (const resource of this.resources) {
+                const currentItemValue = items.get(resource.priceId).getItemValue(items);
+                itemValue += currentItemValue * resource.count;
+            }
+            const nutritionCost = itemValue * 0.1125; // Amount of nutrition needed
+            // Get station fee cost
+            const costPerNutrition = stationFees.get(this.stationName) / 100; // Because stationFees has values per 100 nutrition
+            return nutritionCost * costPerNutrition;
+        }
+        else {
+            throw `Station with name ${this.stationName} does not exist`;
+        }
     }
-    getMaterialsCost(items, timespan, city) {
+    getMaterialsCost(items, timespan, city, stationFees, productionBonuses) {
         let materialsCost = 0;
-        const returnRate = this.getReturnRate(city);
+        const returnRate = this.getReturnRate(city, productionBonuses);
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
+            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city, stationFees, productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -155,13 +169,14 @@ class MountRecipe extends CraftingStationRecipe {
  */
 class CityBonusRecipe extends CraftingStationRecipe {
     city;
-    station;
     productionBonus;
+    craftingCategory;
     constructor(silver, focus, craftingcategory, resources) {
         super(silver, focus, resources);
         this.city = this.toCity(craftingcategory);
-        this.station = this.toStation(craftingcategory);
+        this.stationName = this.toStation(craftingcategory);
         this.productionBonus = this.toProductionBonus(craftingcategory);
+        this.craftingCategory = craftingcategory;
     }
     toCity(craftingcategory) {
         return reverseCityBonuses[craftingcategory];
@@ -172,10 +187,13 @@ class CityBonusRecipe extends CraftingStationRecipe {
     toProductionBonus(craftingcategory) {
         return cityBonuses[this.city][craftingcategory];
     }
-    getReturnRate(currentCity) {
+    getReturnRate(currentCity, productionBonuses) {
         let productionBonus = baseCityBonus;
         if (currentCity == this.city) {
             productionBonus += this.productionBonus;
+        }
+        if (productionBonuses.has(this.craftingCategory)) {
+            productionBonus += productionBonuses.get(this.craftingCategory) / 100; // Production bonus map stores a percentage (out of 100)
         }
         return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
     }
@@ -211,16 +229,16 @@ class MultiRecipe extends CityBonusRecipe {
      * @param city
      * @returns
      */
-    getCraftingCost(items, timespan, city) {
-        const batchCost = super.getCraftingCost(items, timespan, city);
+    getCraftingCost(items, timespan, city, stationFees, productionBonuses) {
+        const batchCost = super.getCraftingCost(items, timespan, city, stationFees, productionBonuses);
         if (batchCost == undefined) {
             return undefined;
         }
         else {
-            return this.distributeCosts(batchCost, city);
+            return this.distributeCosts(batchCost, city, productionBonuses);
         }
     }
-    distributeCosts(batchCost, _city) {
+    distributeCosts(batchCost, _city, _productionBonuses) {
         return batchCost / this.amount;
     }
 }
@@ -235,10 +253,10 @@ class ButcherRecipe extends MultiRecipe {
      * @param city
      * @returns
      */
-    getMaterialsCost(items, timespan, city) {
+    getMaterialsCost(items, timespan, city, stationFees, productionBonuses) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
+            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city, stationFees, productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -246,8 +264,8 @@ class ButcherRecipe extends MultiRecipe {
         }
         return materialsCost;
     }
-    distributeCosts(batchCost, city) {
-        return batchCost / (this.amount * (1 + this.getReturnRate(city)));
+    distributeCosts(batchCost, city, productionBonuses) {
+        return batchCost / (this.amount * (1 + this.getReturnRate(city, productionBonuses)));
     }
 }
 /**

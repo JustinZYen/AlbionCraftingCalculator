@@ -70,9 +70,10 @@ async function loadPriceProcedure() {
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
         
-        displayRecipes(itemData.checkedItems, itemIds);
+        displayRecipes(itemData.checkedItems, itemIds,stationFees,productionBonuses);
     } catch (error) {
         console.error(error);
+        console.trace()
     }
     hideLoadIcon(loadingInterval);
 }

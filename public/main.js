@@ -57,6 +57,9 @@ document.getElementById("sidebar-buttons").addEventListener("click", (e) => {
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     try {
+        // Snapshot user inputs 
+        const stationFees = getStationFees();
+        const productionBonuses = getProductionBonuses();
         const input = ($("#item-name").val());
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
@@ -66,6 +69,41 @@ async function loadPriceProcedure() {
         console.error(error);
     }
     hideLoadIcon(loadingInterval);
+}
+/**
+ * Returns a Map mapping crafting station names (binary file names) to their fee per 100 nutrition
+ */
+function getStationFees() {
+    const stationFees = new Map();
+    const stationFeeDivs = document.querySelectorAll(".sidebar.crafting-fees > div");
+    for (const stationFeeDiv of stationFeeDivs) {
+        const currentId = stationFeeDiv.id;
+        const currentInputBox = stationFeeDiv.querySelector("input");
+        const currentFee = parseFloat(currentInputBox.value);
+        stationFees.set(currentId, currentFee);
+    }
+    console.log(stationFees);
+    return stationFees;
+}
+/**
+ * Returns a Map mapping crafting categories to their production bonus value (as a percentage)
+ */
+function getProductionBonuses() {
+    const productionBonuses = new Map();
+    const productionBonusDivs = document.querySelectorAll(".sidebar.crafting-bonuses > div");
+    for (const productionBonusDiv of productionBonusDivs) {
+        const selectedCraftingCategory = productionBonusDiv.querySelector("select").value;
+        const currentProductionBonus = parseFloat(productionBonusDiv.querySelector("input").value);
+        if (productionBonuses.has(selectedCraftingCategory)) {
+            const prevProductionBonuses = productionBonuses.get(selectedCraftingCategory);
+            productionBonuses.set(selectedCraftingCategory, prevProductionBonuses + currentProductionBonus);
+        }
+        else {
+            productionBonuses.set(selectedCraftingCategory, currentProductionBonus);
+        }
+    }
+    console.log(productionBonuses);
+    return productionBonuses;
 }
 function displayLoadIcon() {
     const loadIcon = document.getElementById("load-icon");

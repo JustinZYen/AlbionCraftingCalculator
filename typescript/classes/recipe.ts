@@ -23,16 +23,36 @@ abstract class Recipe {
         }
     }
 
+    /**
+     * Calculate crafting cost based off of silver cost plus cost of materials
+     * @param items 
+     * @param timespan 
+     * @param city 
+     * @returns 
+     */
     getCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:City) {
         let totalCost = this.silver;
+        if (Number.isNaN(totalCost)) {
+            console.log("silver for base recipe NaN, for some reason")
+        }
+        const materialsCost = this.getMaterialsCost(items,timespan,city);
+        if (materialsCost == undefined) {
+            return undefined;
+        }
+        totalCost += materialsCost;
+        return totalCost;
+    }
+
+    protected getMaterialsCost(items:Map<string,Item>,timespan:DateEnum, city:City) {
+        let materialsCost = 0;
         for (const resource of this.resources) {
             const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
-            totalCost += resourceCost * resource.count;
+            materialsCost += resourceCost * resource.count;
         }
-        return totalCost;
+        return materialsCost;
     }
 
     /**
@@ -53,6 +73,19 @@ abstract class Recipe {
         }
         return itemValue;
     }
+
+    toString() {
+        let result = "[";
+        let first = true;
+        for (const resource of this.resources) {
+            if (!first) {
+                result += ", "
+            }
+            result += resource.priceId + " | " + resource.count;
+            first = false;
+        }
+        return result+"]";
+    }
 }
 
 /**
@@ -66,22 +99,19 @@ abstract class CraftingStationRecipe extends Recipe {
         this.focus = focus;
     }
 
+    /**
+     * Calculate crafting cost based off of silver cost + cost of materials + crafting station cost
+     * @param items 
+     * @param timespan 
+     * @param city 
+     * @returns 
+     */
     override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
-        //a
-        // Calculate crafting station cost
-        const returnRate = this.getReturnRate(city);
-        let totalCost = this.silver;
-        for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city);
-            if (resourceCost == undefined) { // One of the resources doesn't have a cost
-                return undefined;
-            }
-            if (resource.returned == true) {
-                totalCost += resourceCost*(1-returnRate)*resource.count;
-            } else {
-                totalCost += resourceCost*resource.count;
-            }
+        let totalCost = super.getCraftingCost(items,timespan,city);
+        if (totalCost == undefined) {
+            return undefined;
         }
+        totalCost += this.getCraftingStationCost();
         return totalCost;
     }
 
@@ -97,6 +127,27 @@ abstract class CraftingStationRecipe extends Recipe {
     protected getReturnRate(_currentCity:City) {
         let productionBonus = baseCityBonus;
         return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
+    }
+
+    protected getCraftingStationCost() {
+        return 0;
+    }
+
+    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
+        let materialsCost = 0;
+        const returnRate = this.getReturnRate(city);
+        for (const resource of this.resources) {
+            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city);
+            if (resourceCost == undefined) { // One of the resources doesn't have a cost
+                return undefined;
+            }
+            if (resource.returned == true) {
+                materialsCost += resourceCost*(1-returnRate)*resource.count;
+            } else {
+                materialsCost += resourceCost*resource.count;
+            }
+        }
+        return materialsCost;
     }
 }
 
@@ -174,31 +225,53 @@ class MultiRecipe extends CityBonusRecipe {
         this.amount = amount;
     }
 
+    /**
+     * Calculate crafting cost based off of silver cost + materials cost + crafting station cost, divided by the amount that is crafted
+     * @param items 
+     * @param timespan 
+     * @param city 
+     * @returns 
+     */
     override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
         const batchCost = super.getCraftingCost(items,timespan,city);
         if (batchCost == undefined) {
             return undefined;
         } else {
-            return batchCost/this.amount;
+            return this.distributeCosts(batchCost,city);
         }
+    }
+
+    protected distributeCosts(batchCost:number,_city:City) {
+        return batchCost/this.amount;
     }
 }
 
 /**
  * Butcher products (their product is returned as part of the return rate rather than the ingredients)
  */
-class ButcherRecipe extends MultiRecipe { 
-    override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City){
-        const returnRate = this.getReturnRate(city);
-        let totalCost = this.silver;
+class ButcherRecipe extends MultiRecipe {
+
+    /**
+     * Get the cost of materials for a butcher recipe (the return rate is not incorporated here)
+     * @param items 
+     * @param timespan 
+     * @param city 
+     * @returns 
+     */
+    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City) {
+        let materialsCost = 0;
         for (const resource of this.resources) {
             const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
-            totalCost += resourceCost*resource.count;
+            materialsCost += resourceCost*resource.count;
         }
-        return totalCost/(this.amount*(1+returnRate));
+        return materialsCost;
+    }
+
+    override distributeCosts(batchCost: number,city:City){
+        return batchCost/(this.amount * (1+this.getReturnRate(city)));
     }
 }
 

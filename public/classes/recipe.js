@@ -22,16 +22,35 @@ class Recipe {
             this.resources.push(currentResource);
         }
     }
+    /**
+     * Calculate crafting cost based off of silver cost plus cost of materials
+     * @param items
+     * @param timespan
+     * @param city
+     * @returns
+     */
     getCraftingCost(items, timespan, city) {
         let totalCost = this.silver;
+        if (Number.isNaN(totalCost)) {
+            console.log("silver for base recipe NaN, for some reason");
+        }
+        const materialsCost = this.getMaterialsCost(items, timespan, city);
+        if (materialsCost == undefined) {
+            return undefined;
+        }
+        totalCost += materialsCost;
+        return totalCost;
+    }
+    getMaterialsCost(items, timespan, city) {
+        let materialsCost = 0;
         for (const resource of this.resources) {
             const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
-            totalCost += resourceCost * resource.count;
+            materialsCost += resourceCost * resource.count;
         }
-        return totalCost;
+        return materialsCost;
     }
     /**
      *
@@ -50,6 +69,18 @@ class Recipe {
         }
         return itemValue;
     }
+    toString() {
+        let result = "[";
+        let first = true;
+        for (const resource of this.resources) {
+            if (!first) {
+                result += ", ";
+            }
+            result += resource.priceId + " | " + resource.count;
+            first = false;
+        }
+        return result + "]";
+    }
 }
 /**
  * Recipes that are craftable at a crafting station
@@ -61,23 +92,19 @@ class CraftingStationRecipe extends Recipe {
         super(silver, resources);
         this.focus = focus;
     }
+    /**
+     * Calculate crafting cost based off of silver cost + cost of materials + crafting station cost
+     * @param items
+     * @param timespan
+     * @param city
+     * @returns
+     */
     getCraftingCost(items, timespan, city) {
-        //a
-        // Calculate crafting station cost
-        const returnRate = this.getReturnRate(city);
-        let totalCost = this.silver;
-        for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
-            if (resourceCost == undefined) { // One of the resources doesn't have a cost
-                return undefined;
-            }
-            if (resource.returned == true) {
-                totalCost += resourceCost * (1 - returnRate) * resource.count;
-            }
-            else {
-                totalCost += resourceCost * resource.count;
-            }
+        let totalCost = super.getCraftingCost(items, timespan, city);
+        if (totalCost == undefined) {
+            return undefined;
         }
+        totalCost += this.getCraftingStationCost();
         return totalCost;
     }
     /**
@@ -91,6 +118,26 @@ class CraftingStationRecipe extends Recipe {
     getReturnRate(_currentCity) {
         let productionBonus = baseCityBonus;
         return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
+    }
+    getCraftingStationCost() {
+        return 0;
+    }
+    getMaterialsCost(items, timespan, city) {
+        let materialsCost = 0;
+        const returnRate = this.getReturnRate(city);
+        for (const resource of this.resources) {
+            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
+            if (resourceCost == undefined) { // One of the resources doesn't have a cost
+                return undefined;
+            }
+            if (resource.returned == true) {
+                materialsCost += resourceCost * (1 - returnRate) * resource.count;
+            }
+            else {
+                materialsCost += resourceCost * resource.count;
+            }
+        }
+        return materialsCost;
     }
 }
 /**
@@ -145,15 +192,7 @@ class OffhandRecipe extends CityBonusRecipe {
         return reverseCityBonuses[OffhandRecipe.CRAFTING_CATEGORY];
     }
     toProductionBonus(_craftingcategory) {
-        console.log("using override method");
         return cityBonuses[this.city][OffhandRecipe.CRAFTING_CATEGORY];
-    }
-    getReturnRate(currentCity) {
-        let productionBonus = baseCityBonus;
-        if (currentCity == this.city) {
-            productionBonus += this.productionBonus;
-        }
-        return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
     }
 }
 /**
@@ -165,31 +204,50 @@ class MultiRecipe extends CityBonusRecipe {
         super(silver, focus, craftingcategory, resources);
         this.amount = amount;
     }
+    /**
+     * Calculate crafting cost based off of silver cost + materials cost + crafting station cost, divided by the amount that is crafted
+     * @param items
+     * @param timespan
+     * @param city
+     * @returns
+     */
     getCraftingCost(items, timespan, city) {
         const batchCost = super.getCraftingCost(items, timespan, city);
         if (batchCost == undefined) {
             return undefined;
         }
         else {
-            return batchCost / this.amount;
+            return this.distributeCosts(batchCost, city);
         }
+    }
+    distributeCosts(batchCost, _city) {
+        return batchCost / this.amount;
     }
 }
 /**
  * Butcher products (their product is returned as part of the return rate rather than the ingredients)
  */
 class ButcherRecipe extends MultiRecipe {
-    getCraftingCost(items, timespan, city) {
-        const returnRate = this.getReturnRate(city);
-        let totalCost = this.silver;
+    /**
+     * Get the cost of materials for a butcher recipe (the return rate is not incorporated here)
+     * @param items
+     * @param timespan
+     * @param city
+     * @returns
+     */
+    getMaterialsCost(items, timespan, city) {
+        let materialsCost = 0;
         for (const resource of this.resources) {
             const resourceCost = items.get(resource.priceId).getCost(items, timespan, city);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
-            totalCost += resourceCost * resource.count;
+            materialsCost += resourceCost * resource.count;
         }
-        return totalCost / (this.amount * (1 + returnRate));
+        return materialsCost;
+    }
+    distributeCosts(batchCost, city) {
+        return batchCost / (this.amount * (1 + this.getReturnRate(city)));
     }
 }
 /**

@@ -1,6 +1,6 @@
 "use strict";
 import { ItemData } from "./item-data.js";
-import { displayRecipes } from "./display.js";
+import { displayBoxes, displayPrices } from "./display.js";
 import { itemNameTrie } from "./globals/preload.js";
 const itemData = new ItemData();
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
@@ -60,12 +60,11 @@ async function loadPriceProcedure() {
         const input = ($("#item-name").val());
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
+        const itemBoxes = displayBoxes(itemData.items, itemIds);
         // Snapshot user inputs 
         const stationFees = getStationFees();
         const productionBonuses = getProductionBonuses();
-        // Lock user out of modifying anything while prices are being calculated?
-        displayRecipes(itemData.items, itemIds, stationFees, productionBonuses);
-        // Unlock?
+        displayPrices(itemBoxes, stationFees, productionBonuses);
     }
     catch (error) {
         console.error(error);

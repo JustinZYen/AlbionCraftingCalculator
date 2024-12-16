@@ -175,7 +175,7 @@ abstract class CraftingStationRecipe extends Recipe {
  * Mounts (they do not have a city that provides them with crafting bonuses)
  */
 class MountRecipe extends CraftingStationRecipe {
-    private static CRAFTING_CATEGORY = "mounts"; // Technically not a real craftingcategory
+    private static readonly CRAFTING_CATEGORY = "mounts"; // Technically not a real craftingcategory
     constructor(silver:number,focus:number,resources:CraftResource[],items:Map<string,Item>) {
         super(silver,focus,resources,items);
         this.stationName = reverseStation[MountRecipe.CRAFTING_CATEGORY]!;
@@ -226,7 +226,7 @@ class CityBonusRecipe extends CraftingStationRecipe {
  * Offhands (their crafting category does not include enough information to determine which station uses them)
  */
 class OffhandRecipe extends CityBonusRecipe {
-    private static CRAFTING_CATEGORY = "offhand";
+    private static readonly CRAFTING_CATEGORY = "offhand";
     constructor(silver:number,focus:number,shopsubcategory1:string,resources:CraftResource[],items:Map<string,Item>) {
         super(silver,focus,shopsubcategory1,resources,items);
     }

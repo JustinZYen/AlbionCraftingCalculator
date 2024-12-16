@@ -1,9 +1,17 @@
 import { ItemBox, RecipeBox } from "./classes/display-boxes.js";
 import { idToName } from "./external-data.js";
-function displayRecipes(checkedItems, ids, stationFees, productionBonuses) {
+/**
+ * Displays item boxes
+ * @param items
+ * @param string
+ * @param param2
+ * @returns Array of all ItemBoxes currently being displayed
+ */
+function displayBoxes(items, ids) {
     document.getElementById("recipes-area").innerHTML = "";
+    const itemBoxes = [];
     for (const currentPriceId of ids) {
-        const currentItem = checkedItems.get(currentPriceId);
+        const currentItem = items.get(currentPriceId);
         if (!currentItem) {
             console.log("current item with id " + currentPriceId + " was not found");
             break;
@@ -23,30 +31,28 @@ function displayRecipes(checkedItems, ids, stationFees, productionBonuses) {
         const boxLines = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
         boxLines.setAttribute("height", (2000).toString());
         boxLines.setAttribute("width", (4000).toString());
-        /*
-        const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-        const arrowhead = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", "M 0 0 L 5 2.5 L 0 5 Z");
-        //path.setAttribute("fill","black");
-        arrowhead.appendChild(path);
-        arrowhead.setAttribute("id", "arrow");
-        arrowhead.setAttribute("markerWidth", "5");
-        arrowhead.setAttribute("markerHeight", "5");
-
-        arrowhead.setAttribute("refX", "2.5");
-        arrowhead.setAttribute("refY", "2.5");
-
-        arrowhead.setAttribute("orient", "auto");
-        defs.appendChild(arrowhead);
-        boxLines.appendChild(defs);
-        */
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
-        createAndLinkBoxes(currentItem, displayBox, boxLines, stationFees, productionBonuses);
+        const currentItemBoxes = createAndLinkBoxes(currentItem, displayBox, boxLines);
+        itemBoxes.push(...currentItemBoxes);
+    }
+    console.log("item boxes:");
+    console.log(itemBoxes);
+    return itemBoxes;
+}
+/**
+ * Update item boxes so that they display prices that match user inputted values
+ * @param itemBoxes
+ * @param stationFees
+ * @param productionBonuses
+ */
+function displayPrices(itemBoxes, stationFees, productionBonuses) {
+    for (const itemBox of itemBoxes) {
+        itemBox.loadItemData(stationFees, productionBonuses);
     }
 }
-function createAndLinkBoxes(baseItem, displayBox, boxLines, stationFees, productionBonuses) {
+function createAndLinkBoxes(baseItem, displayBox, boxLines) {
+    const itemBoxes = [];
     const nodes = []; // Recipe boxes
     const links = []; // Links between recipe boxes that also contain information for which item is actually linked
     // Set of item IDs that have been visited already mapped to an array of recipe link indexes (do not need to create associated recipes again)
@@ -56,7 +62,8 @@ function createAndLinkBoxes(baseItem, displayBox, boxLines, stationFees, product
     // Create the head box
     const headBox = new RecipeBox(null);
     headBox.index = 0;
-    const itemBox = new ItemBox(headBox, baseItem, 0, 1, stationFees, productionBonuses);
+    const itemBox = new ItemBox(headBox, baseItem, 0, 1);
+    itemBoxes.push(itemBox);
     headBox.setWidth(ItemBox.BOX_WIDTH + 4.8); //4.8 to account for border width
     itemBox.currentBox.style.backgroundColor = "gold";
     headBox.currentBox.appendChild(itemBox.currentBox);
@@ -108,7 +115,8 @@ function createAndLinkBoxes(baseItem, displayBox, boxLines, stationFees, product
                     const offset = ItemBox.BOX_WIDTH * i;
                     const newItem = recipe.resources[i].item;
                     const newItemCount = recipe.resources[i].count;
-                    const currentItemBox = new ItemBox(recipeBox, newItem, offset, newItemCount, stationFees, productionBonuses);
+                    const currentItemBox = new ItemBox(recipeBox, newItem, offset, newItemCount);
+                    itemBoxes.push(currentItemBox);
                     recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                     itemBoxStack.push(currentItemBox);
                 }
@@ -116,7 +124,6 @@ function createAndLinkBoxes(baseItem, displayBox, boxLines, stationFees, product
             visitedItems.set(activeItem.priceId, sourceIndexes);
         }
     }
-    calculateCosts(itemBox);
     // Create svg elements to correspond with lines
     for (const link of links) {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -169,16 +176,6 @@ function createAndLinkBoxes(baseItem, displayBox, boxLines, stationFees, product
             }
         }
     });
+    return itemBoxes;
 }
-/**
- *
- * @param {ItemBox} currentItemBox
- * @return {Number}
- */
-function calculateCosts(currentItemBox) {
-    // Figure out minimum crafting cost among links of the current item
-    // Determine minimum cost (compare to buying the item itself)
-    // Display minimum crafting cost using craftingCost field 
-    console.log(currentItemBox.item.priceId);
-}
-export { displayRecipes };
+export { displayBoxes, displayPrices };

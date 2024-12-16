@@ -58,7 +58,7 @@ class ItemBox {
     static BOX_WIDTH = 200;
     static BOX_HEIGHT = 100;
 
-    constructor(boundingRecipe:RecipeBox, item:Item, offset:number,count:number,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+    constructor(boundingRecipe:RecipeBox, item:Item, offset:number,count:number) {
         this.boundingRecipe = boundingRecipe;
         this.boundingRecipe.boundedItems.push(this);
         
@@ -66,9 +66,7 @@ class ItemBox {
         this.offset = offset;
         this.count = count;
         // Create box sections
-        this.intializeItemBox(offset,count);
-        this.loadItemData(stationFees,productionBonuses);
-        
+        this.intializeItemBox(offset,count);        
     }
 
     private intializeItemBox(offset:number,count:number) {

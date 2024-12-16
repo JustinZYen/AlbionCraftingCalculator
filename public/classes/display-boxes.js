@@ -54,7 +54,7 @@ class ItemBox {
     count;
     static BOX_WIDTH = 200;
     static BOX_HEIGHT = 100;
-    constructor(boundingRecipe, item, offset, count, stationFees, productionBonuses) {
+    constructor(boundingRecipe, item, offset, count) {
         this.boundingRecipe = boundingRecipe;
         this.boundingRecipe.boundedItems.push(this);
         this.item = item;
@@ -62,7 +62,6 @@ class ItemBox {
         this.count = count;
         // Create box sections
         this.intializeItemBox(offset, count);
-        this.loadItemData(stationFees, productionBonuses);
     }
     intializeItemBox(offset, count) {
         this.currentBox = document.createElement("div");

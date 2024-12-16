@@ -73,7 +73,7 @@ async function loadPriceProcedure() {
 
         const itemBoxes = displayBoxes(itemData.items, itemIds);
         // Snapshot user inputs 
-        let timespan = (<HTMLInputElement>document.getElementById("date-selector")).checked ?
+        const timespan = (<HTMLInputElement>document.getElementById("date-selector")).checked ?
             DateEnum.NEW
             :
             DateEnum.OLD;

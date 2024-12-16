@@ -1,4 +1,4 @@
-import { City, reverseCity } from "../globals/constants.js";
+import { City } from "../globals/constants.js";
 import { idToName } from "../external-data.js";
 import { DateEnum, Item } from "./item.js";
 class RecipeBox {

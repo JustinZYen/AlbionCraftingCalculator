@@ -57,13 +57,15 @@ document.getElementById("sidebar-buttons").addEventListener("click", (e) => {
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     try {
-        // Snapshot user inputs 
-        const stationFees = getStationFees();
-        const productionBonuses = getProductionBonuses();
         const input = ($("#item-name").val());
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
-        displayRecipes(itemData.checkedItems, itemIds, stationFees, productionBonuses);
+        // Snapshot user inputs 
+        const stationFees = getStationFees();
+        const productionBonuses = getProductionBonuses();
+        // Lock user out of modifying anything while prices are being calculated?
+        displayRecipes(itemData.items, itemIds, stationFees, productionBonuses);
+        // Unlock?
     }
     catch (error) {
         console.error(error);

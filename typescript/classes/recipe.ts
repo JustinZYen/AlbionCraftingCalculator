@@ -5,13 +5,20 @@ abstract class Recipe {
     // Might be issue with results being strings
     protected silver;
     // formatted as item id followed by amount of resources
-    resources:{priceId:string,count:number,returned:boolean}[] = [];
+    resources:{item:Item,count:number,returned:boolean}[] = [];
     // amount is amount crafted
-    constructor (silver:number,resources:CraftResource[]) {
+    constructor (silver:number,resources:CraftResource[],items:Map<string,Item>) {
         this.silver = silver;
         for (const craftResource of resources) {
-            const currentResource:{priceId:string,count:number,returned:boolean} = Object.create(null);
-            currentResource["priceId"] = Item.getPriceId(craftResource["@uniquename"]);
+            const currentResource:{item:Item,count:number,returned:boolean} = Object.create(null);
+            const priceId = Item.getPriceId(craftResource["@uniquename"]);
+            if (items.has(priceId)) {
+                currentResource["item"] = items.get(priceId)!;
+            } else {
+                const newItem = new Item(priceId,items);
+                items.set(priceId,newItem);
+                currentResource["item"] = newItem;
+            }
             currentResource["count"] = parseInt(Item.getPriceId(craftResource["@count"]));
             if (Object.hasOwn(craftResource,"@maxreturnamount")) { // Assuming that if @maxreturnamount property exists that item is not returned
                 currentResource["returned"] = false;
@@ -46,7 +53,7 @@ abstract class Recipe {
     protected getMaterialsCost(items:Map<string,Item>,timespan:DateEnum, city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city,stationFees,productionBonuses);
+            const resourceCost = resource.item.getCost(items,timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -69,7 +76,7 @@ abstract class Recipe {
     protected getItemValue(items:Map<string,Item>) {
         let itemValue = 0;
         for (const resource of this.resources) {
-            itemValue += items.get(resource.priceId)!.getItemValue(items) * resource.count;
+            itemValue += resource.item.getItemValue(items) * resource.count;
         }
         return itemValue;
     }
@@ -81,7 +88,7 @@ abstract class Recipe {
             if (!first) {
                 result += ", "
             }
-            result += resource.priceId + " | " + resource.count;
+            result += resource.item + " | " + resource.count;
             first = false;
         }
         return result+"]";
@@ -94,8 +101,8 @@ abstract class Recipe {
 abstract class CraftingStationRecipe extends Recipe {
     protected focus:number;
     protected stationName:string;
-    constructor(silver:number,focus:number,resources:CraftResource[]) {
-        super(silver,resources)
+    constructor(silver:number,focus:number,resources:CraftResource[],items:Map<string,Item>) {
+        super(silver,resources,items)
         this.focus = focus;
     }
 
@@ -134,7 +141,7 @@ abstract class CraftingStationRecipe extends Recipe {
             // Get total item value
             let itemValue = 0;
             for (const resource of this.resources) {
-                const currentItemValue = items.get(resource.priceId)!.getItemValue(items);
+                const currentItemValue = resource.item.getItemValue(items);
                 itemValue += currentItemValue * resource.count;
             }
             const nutritionCost = itemValue * 0.1125; // Amount of nutrition needed
@@ -150,7 +157,7 @@ abstract class CraftingStationRecipe extends Recipe {
         let materialsCost = 0;
         const returnRate = this.getReturnRate(city,productionBonuses);
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city,stationFees,productionBonuses);
+            const resourceCost = resource.item.getCost(items,timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -169,8 +176,8 @@ abstract class CraftingStationRecipe extends Recipe {
  */
 class MountRecipe extends CraftingStationRecipe {
     private static CRAFTING_CATEGORY = "mounts"; // Technically not a real craftingcategory
-    constructor(silver:number,focus:number,resources:CraftResource[]) {
-        super(silver,focus,resources);
+    constructor(silver:number,focus:number,resources:CraftResource[],items:Map<string,Item>) {
+        super(silver,focus,resources,items);
         this.stationName = reverseStation[MountRecipe.CRAFTING_CATEGORY]!;
     }
 }
@@ -182,8 +189,8 @@ class CityBonusRecipe extends CraftingStationRecipe {
     protected city: City;
     protected productionBonus: number;
     protected craftingCategory: string;
-    constructor(silver:number,focus:number,craftingcategory:string,resources:CraftResource[]) {
-        super(silver,focus,resources);
+    constructor(silver:number,focus:number,craftingcategory:string,resources:CraftResource[],items:Map<string,Item>) {
+        super(silver,focus,resources,items);
         this.city = this.toCity(craftingcategory);
         this.stationName = this.toStation(craftingcategory);
         this.productionBonus = this.toProductionBonus(craftingcategory);
@@ -220,8 +227,8 @@ class CityBonusRecipe extends CraftingStationRecipe {
  */
 class OffhandRecipe extends CityBonusRecipe {
     private static CRAFTING_CATEGORY = "offhand";
-    constructor(silver:number,focus:number,shopsubcategory1:string,resources:CraftResource[]) {
-        super(silver,focus,shopsubcategory1,resources);
+    constructor(silver:number,focus:number,shopsubcategory1:string,resources:CraftResource[],items:Map<string,Item>) {
+        super(silver,focus,shopsubcategory1,resources,items);
     }
 
     override toCity(_craftingcategory:string) {
@@ -238,8 +245,8 @@ class OffhandRecipe extends CityBonusRecipe {
  */
 class MultiRecipe extends CityBonusRecipe { 
     protected amount:number
-    constructor(silver:number,focus:number,craftingcategory:string,amount:number,resources:CraftResource[]) {
-        super(silver,focus,craftingcategory,resources);
+    constructor(silver:number,focus:number,craftingcategory:string,amount:number,resources:CraftResource[],items:Map<string,Item>) {
+        super(silver,focus,craftingcategory,resources,items);
         this.amount = amount;
     }
 
@@ -279,7 +286,7 @@ class ButcherRecipe extends MultiRecipe {
     override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId)!.getCost(items,timespan,city,stationFees,productionBonuses);
+            const resourceCost = resource.item.getCost(items,timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -297,17 +304,23 @@ class ButcherRecipe extends MultiRecipe {
  * Recipes that take items of lower enchantments in order to craft higher-enchantment products
  */
 class EnchantmentRecipe extends Recipe {
-    constructor(silver:number,resources:CraftResource[],lowerEnchantmentId:string) {
-        super(silver,resources);
-        this.addLowerEnchantment(lowerEnchantmentId);
+    constructor(silver:number,resources:CraftResource[],items:Map<string,Item>,lowerEnchantmentId:string) {
+        super(silver,resources,items);
+        if (items.has(lowerEnchantmentId)) {
+            this.addLowerEnchantment(items.get(lowerEnchantmentId)!);
+        } else {
+            const newItem = new Item(lowerEnchantmentId,items);
+            items.set(lowerEnchantmentId,newItem);
+            this.addLowerEnchantment(newItem);
+        }
     }
     /**
      * Add the item of the lower enchantment level that is used for this enchantment recipe
      * @param priceId The price ID of the lower enchantment level item
      */
-    private addLowerEnchantment(priceId:string) {
-        const currentResource:{priceId:string,count:number,returned:boolean} = Object.create(null);
-        currentResource["priceId"] = priceId;
+    private addLowerEnchantment(item:Item) {
+        const currentResource:{item:Item,count:number,returned:boolean} = Object.create(null);
+        currentResource["item"] = item;
         currentResource["count"] = 1;
         currentResource["returned"] = false;
         Object.freeze(currentResource);

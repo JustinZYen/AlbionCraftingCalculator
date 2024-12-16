@@ -6,11 +6,19 @@ class Recipe {
     // formatted as item id followed by amount of resources
     resources = [];
     // amount is amount crafted
-    constructor(silver, resources) {
+    constructor(silver, resources, items) {
         this.silver = silver;
         for (const craftResource of resources) {
             const currentResource = Object.create(null);
-            currentResource["priceId"] = Item.getPriceId(craftResource["@uniquename"]);
+            const priceId = Item.getPriceId(craftResource["@uniquename"]);
+            if (items.has(priceId)) {
+                currentResource["item"] = items.get(priceId);
+            }
+            else {
+                const newItem = new Item(priceId, items);
+                items.set(priceId, newItem);
+                currentResource["item"] = newItem;
+            }
             currentResource["count"] = parseInt(Item.getPriceId(craftResource["@count"]));
             if (Object.hasOwn(craftResource, "@maxreturnamount")) { // Assuming that if @maxreturnamount property exists that item is not returned
                 currentResource["returned"] = false;
@@ -44,7 +52,7 @@ class Recipe {
     getMaterialsCost(items, timespan, city, stationFees, productionBonuses) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city, stationFees, productionBonuses);
+            const resourceCost = resource.item.getCost(items, timespan, city, stationFees, productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -65,7 +73,7 @@ class Recipe {
     getItemValue(items) {
         let itemValue = 0;
         for (const resource of this.resources) {
-            itemValue += items.get(resource.priceId).getItemValue(items) * resource.count;
+            itemValue += resource.item.getItemValue(items) * resource.count;
         }
         return itemValue;
     }
@@ -76,7 +84,7 @@ class Recipe {
             if (!first) {
                 result += ", ";
             }
-            result += resource.priceId + " | " + resource.count;
+            result += resource.item + " | " + resource.count;
             first = false;
         }
         return result + "]";
@@ -88,8 +96,8 @@ class Recipe {
 class CraftingStationRecipe extends Recipe {
     focus;
     stationName;
-    constructor(silver, focus, resources) {
-        super(silver, resources);
+    constructor(silver, focus, resources, items) {
+        super(silver, resources, items);
         this.focus = focus;
     }
     /**
@@ -124,7 +132,7 @@ class CraftingStationRecipe extends Recipe {
             // Get total item value
             let itemValue = 0;
             for (const resource of this.resources) {
-                const currentItemValue = items.get(resource.priceId).getItemValue(items);
+                const currentItemValue = resource.item.getItemValue(items);
                 itemValue += currentItemValue * resource.count;
             }
             const nutritionCost = itemValue * 0.1125; // Amount of nutrition needed
@@ -140,7 +148,7 @@ class CraftingStationRecipe extends Recipe {
         let materialsCost = 0;
         const returnRate = this.getReturnRate(city, productionBonuses);
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city, stationFees, productionBonuses);
+            const resourceCost = resource.item.getCost(items, timespan, city, stationFees, productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -159,8 +167,8 @@ class CraftingStationRecipe extends Recipe {
  */
 class MountRecipe extends CraftingStationRecipe {
     static CRAFTING_CATEGORY = "mounts"; // Technically not a real craftingcategory
-    constructor(silver, focus, resources) {
-        super(silver, focus, resources);
+    constructor(silver, focus, resources, items) {
+        super(silver, focus, resources, items);
         this.stationName = reverseStation[MountRecipe.CRAFTING_CATEGORY];
     }
 }
@@ -171,8 +179,8 @@ class CityBonusRecipe extends CraftingStationRecipe {
     city;
     productionBonus;
     craftingCategory;
-    constructor(silver, focus, craftingcategory, resources) {
-        super(silver, focus, resources);
+    constructor(silver, focus, craftingcategory, resources, items) {
+        super(silver, focus, resources, items);
         this.city = this.toCity(craftingcategory);
         this.stationName = this.toStation(craftingcategory);
         this.productionBonus = this.toProductionBonus(craftingcategory);
@@ -203,8 +211,8 @@ class CityBonusRecipe extends CraftingStationRecipe {
  */
 class OffhandRecipe extends CityBonusRecipe {
     static CRAFTING_CATEGORY = "offhand";
-    constructor(silver, focus, shopsubcategory1, resources) {
-        super(silver, focus, shopsubcategory1, resources);
+    constructor(silver, focus, shopsubcategory1, resources, items) {
+        super(silver, focus, shopsubcategory1, resources, items);
     }
     toCity(_craftingcategory) {
         return reverseCityBonuses[OffhandRecipe.CRAFTING_CATEGORY];
@@ -218,8 +226,8 @@ class OffhandRecipe extends CityBonusRecipe {
  */
 class MultiRecipe extends CityBonusRecipe {
     amount;
-    constructor(silver, focus, craftingcategory, amount, resources) {
-        super(silver, focus, craftingcategory, resources);
+    constructor(silver, focus, craftingcategory, amount, resources, items) {
+        super(silver, focus, craftingcategory, resources, items);
         this.amount = amount;
     }
     /**
@@ -256,7 +264,7 @@ class ButcherRecipe extends MultiRecipe {
     getMaterialsCost(items, timespan, city, stationFees, productionBonuses) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = items.get(resource.priceId).getCost(items, timespan, city, stationFees, productionBonuses);
+            const resourceCost = resource.item.getCost(items, timespan, city, stationFees, productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -272,17 +280,24 @@ class ButcherRecipe extends MultiRecipe {
  * Recipes that take items of lower enchantments in order to craft higher-enchantment products
  */
 class EnchantmentRecipe extends Recipe {
-    constructor(silver, resources, lowerEnchantmentId) {
-        super(silver, resources);
-        this.addLowerEnchantment(lowerEnchantmentId);
+    constructor(silver, resources, items, lowerEnchantmentId) {
+        super(silver, resources, items);
+        if (items.has(lowerEnchantmentId)) {
+            this.addLowerEnchantment(items.get(lowerEnchantmentId));
+        }
+        else {
+            const newItem = new Item(lowerEnchantmentId, items);
+            items.set(lowerEnchantmentId, newItem);
+            this.addLowerEnchantment(newItem);
+        }
     }
     /**
      * Add the item of the lower enchantment level that is used for this enchantment recipe
      * @param priceId The price ID of the lower enchantment level item
      */
-    addLowerEnchantment(priceId) {
+    addLowerEnchantment(item) {
         const currentResource = Object.create(null);
-        currentResource["priceId"] = priceId;
+        currentResource["item"] = item;
         currentResource["count"] = 1;
         currentResource["returned"] = false;
         Object.freeze(currentResource);

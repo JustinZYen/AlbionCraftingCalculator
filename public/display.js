@@ -106,9 +106,9 @@ function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines, statio
                 sourceIndexes.push(recipeBox.index);
                 for (let i = 0; i < resourceCount; i++) {
                     const offset = ItemBox.BOX_WIDTH * i;
-                    const newItemId = recipe.resources[i].priceId;
+                    const newItem = recipe.resources[i].item;
                     const newItemCount = recipe.resources[i].count;
-                    const currentItemBox = new ItemBox(recipeBox, checkedItems.get(newItemId), checkedItems, offset, newItemCount, stationFees, productionBonuses);
+                    const currentItemBox = new ItemBox(recipeBox, newItem, checkedItems, offset, newItemCount, stationFees, productionBonuses);
                     recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                     itemBoxStack.push(currentItemBox);
                 }

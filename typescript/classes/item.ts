@@ -75,12 +75,12 @@ class Item {
     category:string;
     subcategory:string;
     */
-    constructor(priceId:string) {
+    constructor(priceId:string,items:Map<string,Item>) {
         this.priceId = priceId;
         this.id = Item.getBaseId(priceId);
         this.#setTier();
         this.#setEnchantment();
-        this.#setRecipesAndCategories();
+        this.#setRecipesAndCategories(items);
     }
 
     getCost(items:Map<string,Item>,timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
@@ -144,7 +144,7 @@ class Item {
      * Sets recipes and item value if it exists
      * @returns 
      */
-    #setRecipesAndCategories() {
+    #setRecipesAndCategories(items:Map<string,Item>) {
         let path;
         if (this.id.charAt(0)=="T") {
             path = recipesWithT[this.id];
@@ -184,7 +184,8 @@ class Item {
                         parseInt(craftingRequirement["@craftingfocus"]!),
                         craftingCategory,
                         parseInt(craftingRequirement["@amountcrafted"]!),
-                        resources
+                        resources,
+                        items
                     )
                 } else {
                     newRecipe = new MultiRecipe(
@@ -192,7 +193,8 @@ class Item {
                         parseInt(craftingRequirement["@craftingfocus"]!),
                         craftingCategory,
                         parseInt(craftingRequirement["@amountcrafted"]!),
-                        resources
+                        resources,
+                        items
                     )
                 }
             } else {
@@ -200,7 +202,9 @@ class Item {
                     silverRequirement,
                     parseInt(craftingRequirement["@craftingfocus"]!),
                     craftingCategory,
-                    resources);
+                    resources,
+                    items
+                );
             }
             this.recipes.push(newRecipe);
         }
@@ -210,7 +214,7 @@ class Item {
          * @param craftResources 
          */
         const addEnchantmentRecipe = (previousId:string, craftResources:CraftResource[])=>{
-            const newRecipe = new EnchantmentRecipe(0,craftResources,previousId);
+            const newRecipe = new EnchantmentRecipe(0,craftResources,items,previousId);
             this.recipes.push(newRecipe);
         }
         /**
@@ -233,7 +237,8 @@ class Item {
             }
             const newRecipe = new MerchantRecipe(
                 Object.hasOwn(craftingRequirement,"@silver")?parseInt(craftingRequirement["@silver"]!):0,
-                resources
+                resources,
+                items
             )
             this.recipes.push(newRecipe);
         }
@@ -247,7 +252,9 @@ class Item {
                 Object.hasOwn(craftingRequirement,"@silver")?parseInt(craftingRequirement["@silver"]!):0,
                 parseInt(craftingRequirement["@craftingfocus"]!),
                 shobsubcategory1,
-                resources);
+                resources,
+                items
+            );
             this.recipes.push(newRecipe);
         }
 
@@ -259,7 +266,9 @@ class Item {
             const newRecipe = new MountRecipe(
                 Object.hasOwn(craftingRequirement,"@silver")?parseInt(craftingRequirement["@silver"]!):0,
                 parseInt(craftingRequirement["@craftingfocus"]!),
-                resources);
+                resources,
+                items
+            );
             this.recipes.push(newRecipe);
         }
 
@@ -350,10 +359,7 @@ class Item {
             if (recipe instanceof CityBonusRecipe) {
                 let calculatedValue = 0;
                 for (const resource of recipe.resources) {
-                    const resourceValue = items.get(resource.priceId)?.getItemValue(items) 
-                    if (resourceValue == undefined) {
-                        throw `Resource with price id ${resource.priceId} could not be found`;
-                    }
+                    const resourceValue = resource.item.getItemValue(items) 
                     calculatedValue += resourceValue* resource.count;
                 }
                 this.itemValue = calculatedValue;

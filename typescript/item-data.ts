@@ -6,7 +6,12 @@ import { City, reverseCity } from "./globals/constants.js";
 class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
-    checkedItems = new Map<string,Item>();
+    checkedItems = new Set<Item>();
+    items = new Map<string,Item>();
+    /**
+     * Loads prices for items that have not had their prices loaded yet
+     * @param ids 
+     */
     async getProfits(ids: string[]) {
         // Set containing all strings for which prices need to be determined
         let uncheckedItems = new Map<string, Item>();
@@ -14,21 +19,22 @@ class ItemData {
         let itemStack: Item[] = [];
         // Set up stack with all items in ids array
         for (const priceId of ids) {
-            itemStack.push(new Item(priceId));
+            itemStack.push(new Item(priceId,this.items));
         }
         while (itemStack.length > 0) {
             const currentItem = itemStack.pop()!;
             // console.log(`current item: ${currentItem}`);
             // If current item is not in checked or unchecked items
-            if (!uncheckedItems.has(currentItem.priceId) && !this.checkedItems.has(currentItem.priceId)) {
+            if (!this.checkedItems.has(currentItem)) {
                 //console.log(`currentItem: ${typeof currentItem}`);
                 for (const recipe of currentItem.recipes) {
                     for (const resource of recipe.getResources()) {
-                        itemStack.push(new Item(resource.priceId));
+                        itemStack.push(resource.item);
                     }
                 }
                 uncheckedItems.set(currentItem.priceId, currentItem);
-                this.checkedItems.set(currentItem.priceId, currentItem);
+                this.items.set(currentItem.priceId, currentItem);
+                this.checkedItems.add(currentItem);
             }
         }
         //console.log(uncheckedItems)
@@ -118,12 +124,12 @@ class ItemData {
                 for (const currentItem of priceContentsJSON) {
                     const currentPriceId = currentItem.item_id;
                     let targetItem:Item;
-                    if (!this.checkedItems.has(currentPriceId)) {
+                    if (!this.items.has(currentPriceId)) {
                         console.log("priceId " + currentPriceId + " was not added to checkedItems");
-                        targetItem = new Item(currentPriceId);
-                        this.checkedItems.set(currentPriceId, targetItem);
+                        targetItem = new Item(currentPriceId,this.items);
+                        this.items.set(currentPriceId, targetItem);
                     } else {
-                        targetItem = this.checkedItems.get(currentPriceId)!;
+                        targetItem = this.items.get(currentPriceId)!;
                     }
                     // Get prices; set to appropriate location
                     const location = fixLocation(currentItem["location"]);

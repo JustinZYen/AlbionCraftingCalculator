@@ -1,11 +1,13 @@
-Priority Features
-- Add import map so that fetches can be done in a separate file from hardcoded values, then used as if they are all constants
-- Add calculation for crafted costs (as opposed to direct market costs)
-- Allow user override of crafting costs
-
-Other Features
+User Interface
 - Rectangular collision to recipe boxes
 - Draggable recipe boxes
 - Reorganize code so that autocomplete starts working faster upon page load
 - Look into preloading common item prices that are often used in recipes
 - In the future, exclude untradable items?
+- Add capability to shrink recipe boxes so that only the relevant price (lowest price) is displayed
+- Do not display entire tree for items of a lower tier (if you want to modify, you can just modify the recipe area for that item)
+- Add color coding for recipe types
+- Add description of how prices are calculated when hovering over items
+Internal
+- Migrate to using a server to reduce page startup times
+- Fix backend operation of storing paths to items and price updating

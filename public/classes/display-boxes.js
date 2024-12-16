@@ -85,7 +85,16 @@ class ItemBox {
         this.overrideInput = document.createElement("input");
         this.overrideInput.type = "number";
         this.overrideInput.addEventListener("change", (event) => {
-            this.item.overridePrice = parseFloat(event.currentTarget.value);
+            const overrideValue = parseFloat(event.currentTarget.value);
+            console.log("override value: " + overrideValue);
+            if (Number.isNaN(overrideValue)) {
+                console.log("1");
+                this.item.overridePrice = undefined;
+            }
+            else {
+                console.log("2");
+                this.item.overridePrice = overrideValue;
+            }
         });
         override.appendChild(this.overrideInput);
         this.currentBox.appendChild(override);

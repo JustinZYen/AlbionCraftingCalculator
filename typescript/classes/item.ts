@@ -61,8 +61,8 @@ class Item {
         [DateEnum.NEW,new PriceInfo()]
     ]);
     priceCalculated = new Map([ // Map to store cities for which prices 
-        [DateEnum.OLD,new Set<City>()],
-        [DateEnum.NEW,new Set<City>()],
+        [DateEnum.OLD,new Map<City,number>()],
+        [DateEnum.NEW,new Map<City,number>()],
     ])
     overridePrice = undefined;
     tier:number|undefined = undefined;
@@ -71,6 +71,10 @@ class Item {
     priceId;
     private itemValue:number|undefined = undefined;
     recipes:Recipe[] = [];
+    /**
+     * To be compared with priceCalculated to check to see if crafted prices are up-to-date
+     */
+    static mostRecent = 0;
     /*
     category:string;
     subcategory:string;
@@ -78,6 +82,11 @@ class Item {
     constructor(priceId:string,items:Map<string,Item>) {
         this.priceId = priceId;
         this.id = Item.getBaseId(priceId);
+        for (const [_,map] of this.priceCalculated) {
+            for (const city of Object.values(City)) {
+                map.set(city,Item.mostRecent-1); // Initially set all priceCalculated to invalid
+            }
+        }
         this.#setTier();
         this.#setEnchantment();
         this.#setRecipesAndCategories(items);
@@ -87,7 +96,7 @@ class Item {
         if (this.overridePrice != undefined) { // Return override price no matter what the other prices
             return this.overridePrice;
         } else {
-            if (!this.priceCalculated.get(timespan)!.has(city)) { // Check if the given timespan + city has already had its price calculated
+            if (this.priceCalculated.get(timespan)!.get(city)! != Item.mostRecent) { // Check if the given timespan + city has already had its price calculated
                 this.calculateCraftingCost(timespan,city,stationFees,productionBonuses);
             }
             const marketPrice = this.priceInfos.get(timespan)!.price.get(city);
@@ -121,7 +130,7 @@ class Item {
         if (minCraftingCost != -1) {
             this.craftedPriceInfos.get(timespan)!.price.set(city,minCraftingCost); // Set the crafting cost for this timespan + city combination
         }
-        this.priceCalculated.get(timespan)!.add(city); // Mark this timespan + city combination as calculated
+        this.priceCalculated.get(timespan)!.set(city,Item.mostRecent); // Mark this timespan + city combination as calculated
     }
 
     #setTier() {

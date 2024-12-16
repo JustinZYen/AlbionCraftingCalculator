@@ -1,6 +1,7 @@
 import { ItemBox, RecipeBox } from "./classes/display-boxes.js";
 import { idToName } from "./external-data.js";
-import { Item } from "./classes/item.js";
+import { DateEnum, Item } from "./classes/item.js";
+import { City } from "./globals/constants.js";
 
 /**
  * Displays item boxes
@@ -49,9 +50,9 @@ function displayBoxes(items:Map<string,Item>, ids:string[]):ItemBox[] {
  * @param stationFees 
  * @param productionBonuses 
  */
-function displayPrices(itemBoxes:ItemBox[], stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+function displayPrices(itemBoxes:ItemBox[], timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
     for (const itemBox of itemBoxes) {
-        itemBox.loadItemData(stationFees,productionBonuses);
+        itemBox.loadItemData(timespan,city,stationFees,productionBonuses);
     }
 }
 

@@ -1,4 +1,4 @@
-import { reverseCity } from "../globals/constants.js";
+import { City, reverseCity } from "../globals/constants.js";
 import { idToName } from "../external-data.js";
 import { DateEnum, Item } from "./item.js";
 class RecipeBox {
@@ -100,29 +100,19 @@ class ItemBox {
         this.currentBox.appendChild(override);
     }
 
-    loadItemData(stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
-        let timespan;
-        if ($("#date-selector").is(":checked")) {
-            timespan = DateEnum.NEW;
-        } else {
-            timespan = DateEnum.OLD;
-        }
-
-        const currentCity = reverseCity[(<HTMLInputElement>document.getElementById("city-selector"))!.value];
-
-        
-        if (currentCity != undefined) {
-            this.item.calculateCraftingCost(timespan,currentCity,stationFees,productionBonuses);
+    loadItemData(timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+        if (city != undefined) {
+            this.item.calculateCraftingCost(timespan,city,stationFees,productionBonuses);
             const numberFormat = Intl.NumberFormat("en-US",{
                 maximumFractionDigits: 2
             })
-            const craftingCost = this.item.craftedPriceInfos.get(timespan)!.price.get(currentCity);
+            const craftingCost = this.item.craftedPriceInfos.get(timespan)!.price.get(city);
             if (craftingCost != undefined) {
                 this.craftingCostSpan.innerText = numberFormat.format(craftingCost);
             } else {
                 this.craftingCostSpan.innerText = "N/A";
             }
-            const marketPrice = this.item.priceInfos.get(timespan)!.price.get(currentCity);
+            const marketPrice = this.item.priceInfos.get(timespan)!.price.get(city);
             if (marketPrice != undefined) {
                 this.marketPriceSpan.innerText = numberFormat.format(marketPrice);
             } else {

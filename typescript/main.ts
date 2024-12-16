@@ -1,7 +1,9 @@
 "use strict";
 import { ItemData } from "./item-data.js";
-import { displayBoxes,displayPrices } from "./display.js";
-import {itemNameTrie} from "./globals/preload.js";
+import { displayBoxes, displayPrices } from "./display.js";
+import { itemNameTrie } from "./globals/preload.js";
+import { DateEnum } from "./classes/item.js";
+import { reverseCity } from "./globals/constants.js";
 
 const itemData = new ItemData();
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
@@ -28,7 +30,7 @@ $("#recipes-area").on("click", "div", function () {
 });
 
 // Event listener for changes in the item name input field
-document.getElementById("item-name")!.addEventListener("input",async ()=>{
+document.getElementById("item-name")!.addEventListener("input", async () => {
     const enteredName = (<HTMLInputElement>document.getElementById("item-name"))?.value;
     document.getElementById("item-name-autocomplete")!.innerHTML = "";
     const matchingWords = itemNameTrie.wordsThatMatch(enteredName);
@@ -40,21 +42,23 @@ document.getElementById("item-name")!.addEventListener("input",async ()=>{
 });
 
 // Event listener for clicks on the options in the autocomplete dropdown
-document.getElementById("item-name-autocomplete")!.addEventListener("click",(e)=>{
+document.getElementById("item-name-autocomplete")!.addEventListener("click", (e) => {
     (<HTMLInputElement>document.getElementById("item-name"))!.value = (<HTMLElement>e.target).innerText;
 })
 
-document.getElementById("sidebar-buttons")!.addEventListener("click",(e)=>{
+document.getElementById("sidebar-buttons")!.addEventListener("click", (e) => {
     if ((<HTMLElement>e.target).tagName == "BUTTON") {
         const [sidebarClass] = (<HTMLElement>e.target).classList;
         console.log(sidebarClass);
-        const sidebarElement = (<HTMLElement>document.querySelector("#sidebars ."+sidebarClass));
+        const sidebarElement = (<HTMLElement>document.querySelector("#sidebars ." + sidebarClass));
         if (sidebarElement.classList.contains("display")) { // Turn off sidebar
             sidebarElement.classList.remove("display");
         } else { // Turn off current sidebar and add targeted sidebar
-            for (const sidebar of document.querySelectorAll(".sidebar")) {{
-                (sidebar).classList.remove("display");
-            }}
+            for (const sidebar of document.querySelectorAll(".sidebar")) {
+                {
+                    (sidebar).classList.remove("display");
+                }
+            }
             sidebarElement.classList.add("display");
         }
     }
@@ -66,12 +70,19 @@ async function loadPriceProcedure() {
         const input: string = ($("#item-name").val()) as string;
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
-        
+
         const itemBoxes = displayBoxes(itemData.items, itemIds);
         // Snapshot user inputs 
+        let timespan = (<HTMLInputElement>document.getElementById("date-selector")).checked ?
+            DateEnum.NEW
+            :
+            DateEnum.OLD;
+        const city = reverseCity[(<HTMLInputElement>document.getElementById("city-selector"))!.value];
         const stationFees = getStationFees();
         const productionBonuses = getProductionBonuses();
-        displayPrices(itemBoxes,stationFees,productionBonuses);
+        if (city != undefined) { // If city is undefined, we can't really display prices
+            displayPrices(itemBoxes, timespan, city, stationFees, productionBonuses);
+        }
     } catch (error) {
         console.error(error);
         console.trace()
@@ -82,14 +93,14 @@ async function loadPriceProcedure() {
 /**
  * Returns a Map mapping crafting station names (binary file names) to their fee per 100 nutrition
  */
-function getStationFees():Map<string,number> {
-    const stationFees = new Map<string,number>();
+function getStationFees(): Map<string, number> {
+    const stationFees = new Map<string, number>();
     const stationFeeDivs = document.querySelectorAll(".sidebar.crafting-fees > div")
     for (const stationFeeDiv of stationFeeDivs) {
         const currentId = stationFeeDiv.id;
         const currentInputBox = stationFeeDiv.querySelector("input")!;
         const currentFee = parseFloat(currentInputBox.value);
-        stationFees.set(currentId,currentFee);
+        stationFees.set(currentId, currentFee);
     }
     console.log(stationFees);
     return stationFees;
@@ -98,17 +109,17 @@ function getStationFees():Map<string,number> {
 /**
  * Returns a Map mapping crafting categories to their production bonus value (as a percentage)
  */
-function getProductionBonuses():Map<string,number> {
-    const productionBonuses = new Map<string,number>();
+function getProductionBonuses(): Map<string, number> {
+    const productionBonuses = new Map<string, number>();
     const productionBonusDivs = document.querySelectorAll(".sidebar.crafting-bonuses > div");
     for (const productionBonusDiv of productionBonusDivs) {
         const selectedCraftingCategory = productionBonusDiv.querySelector("select")!.value;
         const currentProductionBonus = parseFloat(productionBonusDiv.querySelector("input")!.value);
         if (productionBonuses.has(selectedCraftingCategory)) {
             const prevProductionBonuses = productionBonuses.get(selectedCraftingCategory)!;
-            productionBonuses.set(selectedCraftingCategory,prevProductionBonuses+currentProductionBonus)
+            productionBonuses.set(selectedCraftingCategory, prevProductionBonuses + currentProductionBonus)
         } else {
-            productionBonuses.set(selectedCraftingCategory,currentProductionBonus)
+            productionBonuses.set(selectedCraftingCategory, currentProductionBonus)
         }
     }
     console.log(productionBonuses);
@@ -119,14 +130,14 @@ function displayLoadIcon() {
     const loadIcon = document.getElementById("load-icon")!;
     loadIcon.style.display = "block";
     let numPeriods = 1;
-    return setInterval(()=>{
+    return setInterval(() => {
         let loadMessage = "Loading";
-        for (let i = 0;i < numPeriods; i++) {
+        for (let i = 0; i < numPeriods; i++) {
             loadMessage += ".";
         }
         loadIcon.innerText = loadMessage;
         numPeriods = numPeriods % 3 + 1;
-    },500);
+    }, 500);
 }
 
 function hideLoadIcon(loadingInterval: NodeJS.Timeout) {

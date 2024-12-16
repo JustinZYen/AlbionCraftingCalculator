@@ -36,8 +36,6 @@ function displayBoxes(items, ids) {
         const currentItemBoxes = createAndLinkBoxes(currentItem, displayBox, boxLines);
         itemBoxes.push(...currentItemBoxes);
     }
-    console.log("item boxes:");
-    console.log(itemBoxes);
     return itemBoxes;
 }
 /**
@@ -46,9 +44,9 @@ function displayBoxes(items, ids) {
  * @param stationFees
  * @param productionBonuses
  */
-function displayPrices(itemBoxes, stationFees, productionBonuses) {
+function displayPrices(itemBoxes, timespan, city, stationFees, productionBonuses) {
     for (const itemBox of itemBoxes) {
-        itemBox.loadItemData(stationFees, productionBonuses);
+        itemBox.loadItemData(timespan, city, stationFees, productionBonuses);
     }
 }
 function createAndLinkBoxes(baseItem, displayBox, boxLines) {

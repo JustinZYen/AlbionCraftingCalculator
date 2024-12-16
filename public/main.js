@@ -2,6 +2,8 @@
 import { ItemData } from "./item-data.js";
 import { displayBoxes, displayPrices } from "./display.js";
 import { itemNameTrie } from "./globals/preload.js";
+import { DateEnum } from "./classes/item.js";
+import { reverseCity } from "./globals/constants.js";
 const itemData = new ItemData();
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
 $("#city-selector").on("change", async () => {
@@ -62,9 +64,16 @@ async function loadPriceProcedure() {
         await itemData.getProfits(itemIds);
         const itemBoxes = displayBoxes(itemData.items, itemIds);
         // Snapshot user inputs 
+        let timespan = document.getElementById("date-selector").checked ?
+            DateEnum.NEW
+            :
+                DateEnum.OLD;
+        const city = reverseCity[document.getElementById("city-selector").value];
         const stationFees = getStationFees();
         const productionBonuses = getProductionBonuses();
-        displayPrices(itemBoxes, stationFees, productionBonuses);
+        if (city != undefined) { // If city is undefined, we can't really display prices
+            displayPrices(itemBoxes, timespan, city, stationFees, productionBonuses);
+        }
     }
     catch (error) {
         console.error(error);

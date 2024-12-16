@@ -79,6 +79,11 @@ document.querySelector(".sidebar.crafting-bonuses")!.addEventListener("change",f
     makePricesUpdate();
 })
 
+document.getElementById("recipes-area")!.addEventListener("change",function(){
+    Item.invalidatePrices();
+    makePricesUpdate();
+})
+
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     try {

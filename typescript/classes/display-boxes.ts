@@ -95,7 +95,10 @@ class ItemBox {
         const override = document.createElement("p");
         override.innerText = "Override: ";
         this.overrideInput= document.createElement("input");
-        this.overrideInput.type = "text";
+        this.overrideInput.type = "number";
+        this.overrideInput.addEventListener("change",(event)=> {
+            this.item.overridePrice = parseFloat((<HTMLInputElement>event.currentTarget).value);
+        })
         override.appendChild(this.overrideInput)
         this.currentBox.appendChild(override);
     }
@@ -117,6 +120,10 @@ class ItemBox {
                 this.marketPriceSpan.innerText = numberFormat.format(marketPrice);
             } else {
                 this.marketPriceSpan.innerText = "N/A";
+            }
+            const overridePrice = this.item.overridePrice;
+            if (overridePrice != undefined) {
+                this.overrideInput.value = overridePrice.toString();
             }
         }
     }

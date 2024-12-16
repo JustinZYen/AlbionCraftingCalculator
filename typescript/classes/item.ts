@@ -64,7 +64,7 @@ class Item {
         [DateEnum.OLD,new Map<City,number>()],
         [DateEnum.NEW,new Map<City,number>()],
     ])
-    overridePrice = undefined;
+    overridePrice:number|undefined = undefined;
     tier:number|undefined = undefined;
     enchantment = 0;
     id;

@@ -74,7 +74,7 @@ class Item {
     /**
      * To be compared with priceCalculated to check to see if crafted prices are up-to-date
      */
-    static mostRecent = 0;
+    private static mostRecent = 0;
     /*
     category:string;
     subcategory:string;
@@ -90,6 +90,13 @@ class Item {
         this.#setTier();
         this.#setEnchantment();
         this.#setRecipesAndCategories(items);
+    }
+
+    /**
+     * Invalidates all currently stored calculated prices for all items
+     */
+    static invalidatePrices() {
+        Item.mostRecent++;
     }
 
     getCost(timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {

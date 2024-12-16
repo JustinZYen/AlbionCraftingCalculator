@@ -2,9 +2,10 @@
 import { ItemData } from "./item-data.js";
 import { displayBoxes, displayPrices } from "./display.js";
 import { itemNameTrie } from "./globals/preload.js";
-import { DateEnum } from "./classes/item.js";
+import { DateEnum, Item } from "./classes/item.js";
 import { reverseCity } from "./globals/constants.js";
 const itemData = new ItemData();
+let itemBoxes = [];
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
 $("#city-selector").on("change", async () => {
     await loadPriceProcedure();
@@ -14,6 +15,7 @@ $("#date-selector").on("change", async () => {
     await loadPriceProcedure();
     console.log($("#date-selector").is(":checked"));
 });
+// Using jQuery because standard event listener may have issues due to element not existing when code is run    
 $("#recipes-area").on("click", "div figure", function (event) {
     console.log("click");
     event.stopPropagation();
@@ -56,30 +58,41 @@ document.getElementById("sidebar-buttons").addEventListener("click", (e) => {
         }
     }
 });
+document.querySelector(".sidebar.crafting-fees").addEventListener("change", function () {
+    Item.invalidatePrices();
+    makePricesUpdate();
+});
+document.querySelector(".sidebar.crafting-bonuses").addEventListener("change", function () {
+    Item.invalidatePrices();
+    makePricesUpdate();
+});
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     try {
         const input = ($("#item-name").val());
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
-        const itemBoxes = displayBoxes(itemData.items, itemIds);
+        itemBoxes = displayBoxes(itemData.items, itemIds);
         // Snapshot user inputs 
-        const timespan = document.getElementById("date-selector").checked ?
-            DateEnum.NEW
-            :
-                DateEnum.OLD;
-        const city = reverseCity[document.getElementById("city-selector").value];
-        const stationFees = getStationFees();
-        const productionBonuses = getProductionBonuses();
-        if (city != undefined) { // If city is undefined, we can't really display prices
-            displayPrices(itemBoxes, timespan, city, stationFees, productionBonuses);
-        }
+        makePricesUpdate();
     }
     catch (error) {
         console.error(error);
         console.trace();
     }
     hideLoadIcon(loadingInterval);
+}
+function makePricesUpdate() {
+    const timespan = document.getElementById("date-selector").checked ?
+        DateEnum.NEW
+        :
+            DateEnum.OLD;
+    const city = reverseCity[document.getElementById("city-selector").value];
+    const stationFees = getStationFees();
+    const productionBonuses = getProductionBonuses();
+    if (city != undefined) { // If city is undefined, we can't really display prices
+        displayPrices(itemBoxes, timespan, city, stationFees, productionBonuses);
+    }
 }
 /**
  * Returns a Map mapping crafting station names (binary file names) to their fee per 100 nutrition

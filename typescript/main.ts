@@ -2,10 +2,12 @@
 import { ItemData } from "./item-data.js";
 import { displayBoxes, displayPrices } from "./display.js";
 import { itemNameTrie } from "./globals/preload.js";
-import { DateEnum } from "./classes/item.js";
+import { DateEnum, Item } from "./classes/item.js";
 import { reverseCity } from "./globals/constants.js";
+import { ItemBox } from "./classes/display-boxes.js";
 
 const itemData = new ItemData();
+let itemBoxes: ItemBox[] = [];
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
 
 $("#city-selector").on("change", async () => {
@@ -18,6 +20,7 @@ $("#date-selector").on("change", async () => {
     console.log($("#date-selector").is(":checked"));
 });
 
+// Using jQuery because standard event listener may have issues due to element not existing when code is run    
 $("#recipes-area").on("click", "div figure", function (event) {
     console.log("click");
     event.stopPropagation();
@@ -28,6 +31,8 @@ $("#recipes-area").on("click", "div", function () {
     $(this).find("figure").slideToggle("slow");
     $(this).find("svg").slideToggle("slow");
 });
+
+
 
 // Event listener for changes in the item name input field
 document.getElementById("item-name")!.addEventListener("input", async () => {
@@ -64,6 +69,16 @@ document.getElementById("sidebar-buttons")!.addEventListener("click", (e) => {
     }
 })
 
+document.querySelector(".sidebar.crafting-fees")!.addEventListener("change",function(){
+    Item.invalidatePrices();
+    makePricesUpdate();
+})
+
+document.querySelector(".sidebar.crafting-bonuses")!.addEventListener("change",function(){
+    Item.invalidatePrices();
+    makePricesUpdate();
+})
+
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     try {
@@ -71,23 +86,27 @@ async function loadPriceProcedure() {
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
 
-        const itemBoxes = displayBoxes(itemData.items, itemIds);
+        itemBoxes = displayBoxes(itemData.items, itemIds);
         // Snapshot user inputs 
-        const timespan = (<HTMLInputElement>document.getElementById("date-selector")).checked ?
-            DateEnum.NEW
-            :
-            DateEnum.OLD;
-        const city = reverseCity[(<HTMLInputElement>document.getElementById("city-selector"))!.value];
-        const stationFees = getStationFees();
-        const productionBonuses = getProductionBonuses();
-        if (city != undefined) { // If city is undefined, we can't really display prices
-            displayPrices(itemBoxes, timespan, city, stationFees, productionBonuses);
-        }
+        makePricesUpdate();
     } catch (error) {
         console.error(error);
         console.trace()
     }
     hideLoadIcon(loadingInterval);
+}
+
+function makePricesUpdate() {
+    const timespan = (<HTMLInputElement>document.getElementById("date-selector")).checked ?
+        DateEnum.NEW
+        :
+        DateEnum.OLD;
+    const city = reverseCity[(<HTMLInputElement>document.getElementById("city-selector"))!.value];
+    const stationFees = getStationFees();
+    const productionBonuses = getProductionBonuses();
+    if (city != undefined) { // If city is undefined, we can't really display prices
+        displayPrices(itemBoxes, timespan, city, stationFees, productionBonuses);
+    }
 }
 
 /**

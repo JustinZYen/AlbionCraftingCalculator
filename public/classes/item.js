@@ -46,6 +46,12 @@ class Item {
         this.#setEnchantment();
         this.#setRecipesAndCategories(items);
     }
+    /**
+     * Invalidates all currently stored calculated prices for all items
+     */
+    static invalidatePrices() {
+        Item.mostRecent++;
+    }
     getCost(timespan, city, stationFees, productionBonuses) {
         if (this.overridePrice != undefined) { // Return override price no matter what the other prices
             return this.overridePrice;

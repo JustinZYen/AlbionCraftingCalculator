@@ -47,11 +47,11 @@ function displayRecipes(checkedItems: Map<string, Item>, ids: string[],stationFe
         */
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
-        createAndLinkBoxes(currentItem,checkedItems,displayBox,boxLines,stationFees,productionBonuses);
+        createAndLinkBoxes(currentItem,displayBox,boxLines,stationFees,productionBonuses);
     }
 }
 
-function createAndLinkBoxes(baseItem:Item,checkedItems: Map<string,Item>, displayBox:HTMLElement,boxLines:SVGSVGElement,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+function createAndLinkBoxes(baseItem:Item,displayBox:HTMLElement,boxLines:SVGSVGElement,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
 
     // START CREATING BOXES TO DISPLAY INSIDE DISPLAY BOX
     // Set up nodes and links to connect using d3
@@ -78,7 +78,7 @@ function createAndLinkBoxes(baseItem:Item,checkedItems: Map<string,Item>, displa
     // Create the head box
     const headBox = new RecipeBox(null);
     headBox.index = 0;
-    const itemBox = new ItemBox(headBox, baseItem, checkedItems, 0, 1,stationFees,productionBonuses);
+    const itemBox = new ItemBox(headBox, baseItem, 0, 1,stationFees,productionBonuses);
     headBox.setWidth(ItemBox.BOX_WIDTH + 4.8); //4.8 to account for border width
     itemBox.currentBox.style.backgroundColor = "gold";
     headBox.currentBox.appendChild(itemBox.currentBox);
@@ -130,7 +130,7 @@ function createAndLinkBoxes(baseItem:Item,checkedItems: Map<string,Item>, displa
                     const offset = ItemBox.BOX_WIDTH * i;
                     const newItem = recipe.resources[i]!.item;
                     const newItemCount = recipe.resources[i]!.count;
-                    const currentItemBox = new ItemBox(recipeBox, newItem, checkedItems, offset, newItemCount,stationFees,productionBonuses);
+                    const currentItemBox = new ItemBox(recipeBox, newItem, offset, newItemCount,stationFees,productionBonuses);
                     recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                     itemBoxStack.push(currentItemBox);
                 }

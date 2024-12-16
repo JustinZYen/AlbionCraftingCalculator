@@ -52,7 +52,7 @@ class ItemBox {
     count;
     static BOX_WIDTH = 200;
     static BOX_HEIGHT = 100;
-    constructor(boundingRecipe, item, items, offset, count, stationFees, productionBonuses) {
+    constructor(boundingRecipe, item, offset, count, stationFees, productionBonuses) {
         this.boundingRecipe = boundingRecipe;
         this.boundingRecipe.boundedItems.push(this);
         this.currentBox = document.createElement("div");
@@ -79,7 +79,7 @@ class ItemBox {
         craftCost.innerText = "Crafting cost: ";
         this.craftingCostSpan = document.createElement("span");
         if (currentCity != undefined) {
-            item.calculateCraftingCost(items, timespan, currentCity, stationFees, productionBonuses);
+            item.calculateCraftingCost(timespan, currentCity, stationFees, productionBonuses);
             const craftingCost = item.craftedPriceInfos.get(timespan).price.get(currentCity);
             if (craftingCost) {
                 this.craftingCostSpan.innerText = craftingCost.toString();

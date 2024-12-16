@@ -43,10 +43,10 @@ function displayRecipes(checkedItems, ids, stationFees, productionBonuses) {
         */
         displayBox.appendChild(boxLines);
         currentBox.appendChild(displayBox);
-        createAndLinkBoxes(currentItem, checkedItems, displayBox, boxLines, stationFees, productionBonuses);
+        createAndLinkBoxes(currentItem, displayBox, boxLines, stationFees, productionBonuses);
     }
 }
-function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines, stationFees, productionBonuses) {
+function createAndLinkBoxes(baseItem, displayBox, boxLines, stationFees, productionBonuses) {
     const nodes = []; // Recipe boxes
     const links = []; // Links between recipe boxes that also contain information for which item is actually linked
     // Set of item IDs that have been visited already mapped to an array of recipe link indexes (do not need to create associated recipes again)
@@ -56,7 +56,7 @@ function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines, statio
     // Create the head box
     const headBox = new RecipeBox(null);
     headBox.index = 0;
-    const itemBox = new ItemBox(headBox, baseItem, checkedItems, 0, 1, stationFees, productionBonuses);
+    const itemBox = new ItemBox(headBox, baseItem, 0, 1, stationFees, productionBonuses);
     headBox.setWidth(ItemBox.BOX_WIDTH + 4.8); //4.8 to account for border width
     itemBox.currentBox.style.backgroundColor = "gold";
     headBox.currentBox.appendChild(itemBox.currentBox);
@@ -108,7 +108,7 @@ function createAndLinkBoxes(baseItem, checkedItems, displayBox, boxLines, statio
                     const offset = ItemBox.BOX_WIDTH * i;
                     const newItem = recipe.resources[i].item;
                     const newItemCount = recipe.resources[i].count;
-                    const currentItemBox = new ItemBox(recipeBox, newItem, checkedItems, offset, newItemCount, stationFees, productionBonuses);
+                    const currentItemBox = new ItemBox(recipeBox, newItem, offset, newItemCount, stationFees, productionBonuses);
                     recipeBox.currentBox.appendChild(currentItemBox.currentBox);
                     itemBoxStack.push(currentItemBox);
                 }

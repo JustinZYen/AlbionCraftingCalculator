@@ -37,12 +37,12 @@ abstract class Recipe {
      * @param city 
      * @returns 
      */
-    getCraftingCost(items:Map<string,Item>,timespan:DateEnum, city:City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+    getCraftingCost(timespan:DateEnum, city:City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let totalCost = this.silver;
         if (Number.isNaN(totalCost)) {
             console.log("silver for base recipe NaN, for some reason")
         }
-        const materialsCost = this.getMaterialsCost(items,timespan,city,stationFees,productionBonuses);
+        const materialsCost = this.getMaterialsCost(timespan,city,stationFees,productionBonuses);
         if (materialsCost == undefined) {
             return undefined;
         }
@@ -50,10 +50,10 @@ abstract class Recipe {
         return totalCost;
     }
 
-    protected getMaterialsCost(items:Map<string,Item>,timespan:DateEnum, city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+    protected getMaterialsCost(timespan:DateEnum, city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = resource.item.getCost(items,timespan,city,stationFees,productionBonuses);
+            const resourceCost = resource.item.getCost(timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -73,10 +73,10 @@ abstract class Recipe {
         return this.resources;
     }
 
-    protected getItemValue(items:Map<string,Item>) {
+    protected getItemValue() {
         let itemValue = 0;
         for (const resource of this.resources) {
-            itemValue += resource.item.getItemValue(items) * resource.count;
+            itemValue += resource.item.getItemValue() * resource.count;
         }
         return itemValue;
     }
@@ -113,12 +113,12 @@ abstract class CraftingStationRecipe extends Recipe {
      * @param city 
      * @returns 
      */
-    override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
-        let totalCost = super.getCraftingCost(items,timespan,city,stationFees,productionBonuses);
+    override getCraftingCost(timespan: DateEnum, city: City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+        let totalCost = super.getCraftingCost(timespan,city,stationFees,productionBonuses);
         if (totalCost == undefined) {
             return undefined;
         }
-        totalCost += this.getCraftingStationCost(items, stationFees);
+        totalCost += this.getCraftingStationCost(stationFees);
         return totalCost;
     }
 
@@ -136,12 +136,12 @@ abstract class CraftingStationRecipe extends Recipe {
         return CraftingStationRecipe.TO_RETURN_RATE(productionBonus);
     }
 
-    protected getCraftingStationCost(items: Map<string, Item>, stationFees:Map<string,number>) {
+    protected getCraftingStationCost(stationFees:Map<string,number>) {
         if (stationFees.has(this.stationName)) {
             // Get total item value
             let itemValue = 0;
             for (const resource of this.resources) {
-                const currentItemValue = resource.item.getItemValue(items);
+                const currentItemValue = resource.item.getItemValue();
                 itemValue += currentItemValue * resource.count;
             }
             const nutritionCost = itemValue * 0.1125; // Amount of nutrition needed
@@ -153,11 +153,11 @@ abstract class CraftingStationRecipe extends Recipe {
         }
     }
 
-    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+    override getMaterialsCost(timespan: DateEnum, city: City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
         const returnRate = this.getReturnRate(city,productionBonuses);
         for (const resource of this.resources) {
-            const resourceCost = resource.item.getCost(items,timespan,city,stationFees,productionBonuses);
+            const resourceCost = resource.item.getCost(timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }
@@ -257,8 +257,8 @@ class MultiRecipe extends CityBonusRecipe {
      * @param city 
      * @returns 
      */
-    override getCraftingCost(items: Map<string, Item>, timespan: DateEnum, city: City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
-        const batchCost = super.getCraftingCost(items,timespan,city,stationFees,productionBonuses);
+    override getCraftingCost(timespan: DateEnum, city: City, stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+        const batchCost = super.getCraftingCost(timespan,city,stationFees,productionBonuses);
         if (batchCost == undefined) {
             return undefined;
         } else {
@@ -283,10 +283,10 @@ class ButcherRecipe extends MultiRecipe {
      * @param city 
      * @returns 
      */
-    override getMaterialsCost(items: Map<string, Item>, timespan: DateEnum, city: City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+    override getMaterialsCost(timespan: DateEnum, city: City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let materialsCost = 0;
         for (const resource of this.resources) {
-            const resourceCost = resource.item.getCost(items,timespan,city,stationFees,productionBonuses);
+            const resourceCost = resource.item.getCost(timespan,city,stationFees,productionBonuses);
             if (resourceCost == undefined) { // One of the resources doesn't have a cost
                 return undefined;
             }

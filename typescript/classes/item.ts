@@ -83,12 +83,12 @@ class Item {
         this.#setRecipesAndCategories(items);
     }
 
-    getCost(items:Map<string,Item>,timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+    getCost(timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         if (this.overridePrice != undefined) { // Return override price no matter what the other prices
             return this.overridePrice;
         } else {
             if (!this.priceCalculated.get(timespan)!.has(city)) { // Check if the given timespan + city has already had its price calculated
-                this.calculateCraftingCost(items,timespan,city,stationFees,productionBonuses);
+                this.calculateCraftingCost(timespan,city,stationFees,productionBonuses);
             }
             const marketPrice = this.priceInfos.get(timespan)!.price.get(city);
             const craftedPrice = this.craftedPriceInfos.get(timespan)!.price.get(city);
@@ -104,12 +104,12 @@ class Item {
         }
     }
 
-    calculateCraftingCost(items:Map<string,Item>,timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
+    calculateCraftingCost(timespan:DateEnum,city:City,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let minCraftingCost = -1;
         for (const recipe of this.recipes) {
             // For each item in the recipe, if crafting cost is not yet determined, determine its crafting cost first
             //recipe.calculateCraftingCost(items,????);
-            const currentCraftingCost = recipe.getCraftingCost(items,timespan,city,stationFees,productionBonuses);
+            const currentCraftingCost = recipe.getCraftingCost(timespan,city,stationFees,productionBonuses);
             if (currentCraftingCost != undefined) {
                 if (minCraftingCost == -1) {
                     minCraftingCost = currentCraftingCost;
@@ -351,7 +351,7 @@ class Item {
     /**
      * Gets the item value of this item. If there is no item value calculated yet, calculates item value based off of item values of recipe
      */
-    getItemValue(items:Map<string,Item>):number {
+    getItemValue():number {
         if (this.itemValue != undefined) {
             return this.itemValue;
         }
@@ -359,7 +359,7 @@ class Item {
             if (recipe instanceof CityBonusRecipe) {
                 let calculatedValue = 0;
                 for (const resource of recipe.resources) {
-                    const resourceValue = resource.item.getItemValue(items) 
+                    const resourceValue = resource.item.getItemValue() 
                     calculatedValue += resourceValue* resource.count;
                 }
                 this.itemValue = calculatedValue;

@@ -115,15 +115,18 @@ class ItemBox {
         
         if (currentCity != undefined) {
             this.item.calculateCraftingCost(timespan,currentCity,stationFees,productionBonuses);
+            const numberFormat = Intl.NumberFormat("en-US",{
+                maximumFractionDigits: 2
+            })
             const craftingCost = this.item.craftedPriceInfos.get(timespan)!.price.get(currentCity);
             if (craftingCost != undefined) {
-                this.craftingCostSpan.innerText = craftingCost.toString();
+                this.craftingCostSpan.innerText = numberFormat.format(craftingCost);
             } else {
                 this.craftingCostSpan.innerText = "N/A";
             }
             const marketPrice = this.item.priceInfos.get(timespan)!.price.get(currentCity);
             if (marketPrice != undefined) {
-                this.marketPriceSpan.innerText = marketPrice.toString();
+                this.marketPriceSpan.innerText = numberFormat.format(marketPrice);
             } else {
                 this.marketPriceSpan.innerText = "N/A";
             }

@@ -205,13 +205,22 @@ class Item {
             const enchantmentInfo = itemInfo.enchantments.enchantment[this.enchantment - 1];
             // Add crafting requirements (using enchanted materials)
             const craftingRequirements = enchantmentInfo.craftingrequirements;
+            let category = itemInfo["@craftingcategory"];
+            let addingFunction;
+            if (category == "offhand") {
+                addingFunction = addOffhandRecipe;
+                category = itemInfo["@shopsubcategory1"];
+            }
+            else {
+                addingFunction = addCraftingBonusRecipe;
+            }
             if (Array.isArray(craftingRequirements)) {
                 for (const craftingRequirement of craftingRequirements) {
-                    addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirement);
+                    addingFunction(category, craftingRequirement);
                 }
             }
             else {
-                addCraftingBonusRecipe(itemInfo["@craftingcategory"], craftingRequirements);
+                addingFunction(category, craftingRequirements);
             }
             // Add upgrade requirements, if they exist
             if (Object.hasOwn(enchantmentInfo, "upgraderequirements")) {

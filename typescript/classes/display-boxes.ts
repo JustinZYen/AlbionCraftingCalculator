@@ -45,12 +45,14 @@ class RecipeBox {
 
 class ItemBox {
     boundingRecipe:RecipeBox; // The box that contains this item (RecipeBox)
-    currentBox; // The box corresponding to this item
+    currentBox:HTMLDivElement; // The box corresponding to this item
     item; // Item object
     craftingRecipes = [];
     offset;
     craftingCost:number;
-    craftingCostSpan;
+    private craftingCostSpan:HTMLSpanElement;
+    private marketPriceSpan:HTMLSpanElement;
+    private overrideInput:HTMLInputElement;
     links = new Map(); 
     count;
     static BOX_WIDTH = 200;
@@ -59,19 +61,48 @@ class ItemBox {
     constructor(boundingRecipe:RecipeBox, item:Item, offset:number,count:number,stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         this.boundingRecipe = boundingRecipe;
         this.boundingRecipe.boundedItems.push(this);
+        
+        this.item = item;
+        this.offset = offset;
+        this.count = count;
+        // Create box sections
+        this.intializeItemBox(offset,count);
+        this.loadItemData(stationFees,productionBonuses);
+        
+    }
+
+    private intializeItemBox(offset:number,count:number) {
         this.currentBox = document.createElement("div");
         this.currentBox.classList.add("item-box");
         this.currentBox.style.left = offset+"px";
         this.currentBox.style.width = ItemBox.BOX_WIDTH+"px";
         this.currentBox.style.height = ItemBox.BOX_HEIGHT+"px";
-        this.item = item;
-        this.offset = offset;
-        this.count = count;
-        // Create box sections
+
         const descriptor = document.createElement("p");
         descriptor.innerText = `${idToName[this.item.priceId]} (${this.item.tier}.${this.item.enchantment}) (x${count})`;
         this.currentBox.appendChild(descriptor);
 
+        const craftCost = document.createElement("p");
+        craftCost.innerText = "Crafting cost: ";
+        this.craftingCostSpan = document.createElement("span");
+        craftCost.appendChild(this.craftingCostSpan);
+        this.currentBox.appendChild(craftCost);
+
+        const buyCost = document.createElement("p");
+        buyCost.innerText = "Market price: ";
+        this.marketPriceSpan = document.createElement("span");
+        buyCost.appendChild(this.marketPriceSpan);
+        this.currentBox.appendChild(buyCost);
+
+        const override = document.createElement("p");
+        override.innerText = "Override: ";
+        this.overrideInput= document.createElement("input");
+        this.overrideInput.type = "text";
+        override.appendChild(this.overrideInput)
+        this.currentBox.appendChild(override);
+    }
+
+    loadItemData(stationFees:Map<string,number>, productionBonuses:Map<string,number>) {
         let timespan;
         if ($("#date-selector").is(":checked")) {
             timespan = DateEnum.NEW;
@@ -81,35 +112,22 @@ class ItemBox {
 
         const currentCity = reverseCity[(<HTMLInputElement>document.getElementById("city-selector"))!.value];
 
-        const craftCost = document.createElement("p");
-        craftCost.innerText = "Crafting cost: ";
-        this.craftingCostSpan = document.createElement("span");
+        
         if (currentCity != undefined) {
-            item.calculateCraftingCost(timespan,currentCity,stationFees,productionBonuses);
-            const craftingCost = item.craftedPriceInfos.get(timespan)!.price.get(currentCity);
-            if (craftingCost) {
+            this.item.calculateCraftingCost(timespan,currentCity,stationFees,productionBonuses);
+            const craftingCost = this.item.craftedPriceInfos.get(timespan)!.price.get(currentCity);
+            if (craftingCost != undefined) {
                 this.craftingCostSpan.innerText = craftingCost.toString();
             } else {
                 this.craftingCostSpan.innerText = "N/A";
             }
-        }
-        craftCost.appendChild(this.craftingCostSpan);
-        this.currentBox.appendChild(craftCost);
-
-        const buyCost = document.createElement("p");
-        buyCost.innerText = "Market price: ";
-        const inputBox = document.createElement("input");
-        inputBox.type = "text";
-        if (currentCity != undefined) {
-            const cityPrice = item.priceInfos.get(timespan)!.price.get(currentCity);
-            if (cityPrice) {
-                inputBox.placeholder = cityPrice.toString();
+            const marketPrice = this.item.priceInfos.get(timespan)!.price.get(currentCity);
+            if (marketPrice != undefined) {
+                this.marketPriceSpan.innerText = marketPrice.toString();
             } else {
-                inputBox.placeholder = "Undefined";
+                this.marketPriceSpan.innerText = "N/A";
             }
         }
-        buyCost.appendChild(inputBox)
-        this.currentBox.appendChild(buyCost);
     }
 
     setCraftingCost(newCost:number) {

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-      "outDir": "./public", // .js (as well as .d.ts, .js.map, etc.) files will be emitted into this directory.,
+      "outDir": "./", // .js (as well as .d.ts, .js.map, etc.) files will be emitted into this directory.,
       "target": "ESNext", 
       "module": "ESNext",
       // Module resolution

@@ -18,7 +18,14 @@
 <body>
     <div id="sidebars">
         <aside class="sidebar crafting-fees">
-            
+            <% Object.entries(stationNames).forEach(function(station){ %>
+                <div id=<%= station[0] %>>
+                    <div>
+                        <%= station[1] %>
+                    </div>
+                    <input type="number" value="400">
+                </div>
+            <% }) %>
         </aside>
         <aside class="sidebar crafting-bonuses">
 

@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script type="module" src="javascripts/globals/firebaseScripts.js" async></script>
     <script type="module" src="javascripts/globals/preload.js" async></script>
-    <script type="module" src="javascripts/page-dynamic.js" defer></script>
     <script type="module" src="javascripts/main.js" defer></script>
 </head>
 
@@ -19,7 +18,7 @@
     <div id="sidebars">
         <aside class="sidebar crafting-fees">
             <% for (const[binDumpName,ingameName] of Object.entries(stationNames)) {%>
-                <div id=<%= binDumpName %>>
+                <div id=<%=binDumpName %>>
                     <div>
                         <%= ingameName %>
                     </div>
@@ -28,7 +27,22 @@
             <% } %>
         </aside>
         <aside class="sidebar crafting-bonuses">
-
+            <% for (let i=0; i < 5; i++) { %>
+                <div>
+                    <select>
+                        <option value="">Select an item category</option>
+                        <% for (const cityBonusItem of Object.values(cityBonuses)) { %>
+                            <% for (const itemCategory of Object.keys(cityBonusItem)) { %>
+                                <option value=<%= itemCategory %>><%= itemCategory %></option>
+                            <% }%>
+                        <%}%>
+                    </select>
+                    <div>
+                        <input type="number" value="0">
+                        <span>%</span>
+                    </div>
+                </div>
+            <% } %>
         </aside>
         <aside class="sidebar legend">
             To Be Added
@@ -76,7 +90,7 @@
         <div id="recipes-area">
         </div>
     </div>
-    
+
 </body>
 
 </html>

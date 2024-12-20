@@ -18,14 +18,14 @@
 <body>
     <div id="sidebars">
         <aside class="sidebar crafting-fees">
-            <% Object.entries(stationNames).forEach(function(station){ %>
-                <div id=<%= station[0] %>>
+            <% for (const[binDumpName,ingameName] of Object.entries(stationNames)) {%>
+                <div id=<%= binDumpName %>>
                     <div>
-                        <%= station[1] %>
+                        <%= ingameName %>
                     </div>
                     <input type="number" value="400">
                 </div>
-            <% }) %>
+            <% } %>
         </aside>
         <aside class="sidebar crafting-bonuses">
 

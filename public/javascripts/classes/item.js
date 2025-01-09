@@ -1,5 +1,5 @@
 import { City } from "../globals/constants.js";
-import { recipesWithT, recipesWithoutT, itemsJSON } from "../external-data.js";
+import { processedItemsJSON } from "../external-data.js";
 import { MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe, OffhandRecipe, MountRecipe, CityBonusRecipe } from "./recipe.js";
 var DateEnum;
 (function (DateEnum) {
@@ -116,21 +116,7 @@ class Item {
      * @returns
      */
     #setRecipesAndCategories(items) {
-        let path;
-        if (this.id.charAt(0) == "T") {
-            path = recipesWithT[this.id];
-        }
-        else {
-            path = recipesWithoutT[this.id];
-        }
-        if (path == null) {
-            console.log(`No path found for id ${this.id}`);
-            return;
-        }
-        let current = itemsJSON;
-        for (const pathElement of path) {
-            current = current[pathElement];
-        }
+        const current = processedItemsJSON[this.id];
         /**
          * Adds a recipe for an item that receives a city bonus (decides which type of CraftingBonusRecipe internally)
          * @param craftingCategory

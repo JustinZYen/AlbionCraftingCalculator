@@ -1,5 +1,5 @@
 import { City } from "../globals/constants.js";
-import { recipesWithT,recipesWithoutT,itemsJSON} from "../external-data.js";
+import { processedItemsJSON} from "../external-data.js";
 import {Recipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe, MerchantRecipe,OffhandRecipe,MountRecipe, CityBonusRecipe} from "./recipe.js";
 enum DateEnum {
     OLD,
@@ -161,20 +161,7 @@ class Item {
      * @returns 
      */
     #setRecipesAndCategories(items:Map<string,Item>) {
-        let path;
-        if (this.id.charAt(0)=="T") {
-            path = recipesWithT[this.id];
-        } else {
-            path = recipesWithoutT[this.id];
-        }
-        if (path == null) {
-            console.log(`No path found for id ${this.id}`);
-            return;
-        }
-        let current = itemsJSON;
-        for (const pathElement of path) {
-            current = current[pathElement];
-        }
+        const current = processedItemsJSON[this.id]!;
         /**
          * Adds a recipe for an item that receives a city bonus (decides which type of CraftingBonusRecipe internally)
          * @param craftingCategory 
@@ -504,3 +491,4 @@ class ExtendedPriceInfo extends PriceInfo{
 
 
 export {DateEnum,Item,CraftResource};
+export type {ItemData};

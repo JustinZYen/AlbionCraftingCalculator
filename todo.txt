@@ -9,5 +9,5 @@ User Interface
 - Add color coding for recipe types
 - Add description of how prices are calculated when hovering over items
 Internal
-- Migrate to using a server to reduce page startup times
 - Fix backend operation of storing paths to items and price updating
+- Move id -> name and name -> id to querying backend to reduce memory load on client

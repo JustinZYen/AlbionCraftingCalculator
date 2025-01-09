@@ -26,7 +26,7 @@ function displayBoxes(items:Map<string,Item>, ids:string[]):ItemBox[] {
 
         // Item description bar (shows up before slide toggling)
         const itemDescriptor = document.createElement("div");
-        itemDescriptor.innerText = idToName[currentPriceId];
+        itemDescriptor.innerText = idToName[currentPriceId]!;
         itemDescriptor.innerText += ` (${currentItem.tier}.${currentItem.enchantment})`;
         currentBox.appendChild(itemDescriptor);
 

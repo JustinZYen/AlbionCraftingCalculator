@@ -1,17 +1,6 @@
-import {doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
-import {db} from "./globals/firebaseScripts.js";
 import { ItemData } from "./classes/item.js";
 
-const nameToIDPromise:Promise<any> = getDoc(doc(db,"General/Item Data/Name Conversions/Name To ID")).then((content: { data: () => any; })=>{
-    return content.data();
-})
-const idToName = (await getDoc(doc(db,"General/Item Data/Name Conversions/ID To Name"))).data();
 const itemsJSON = await (await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json")).json();
-const namesPromise = nameToIDPromise.then((namesToID)=>{
-    return Object.keys(namesToID)
-});
-
-export {nameToIDPromise,idToName,namesPromise};
 
 const processedItemsJSON:{[key:string]:ItemData} = {};
 (function extractItems(currentValue:{}|[]|string) {
@@ -26,4 +15,27 @@ const processedItemsJSON:{[key:string]:ItemData} = {};
         extractItems(value);
     }
 })(itemsJSON.items);
-export {processedItemsJSON};
+
+const nameToId:{[key:string]:string[]} = Object.create(null); // Null-prototype to minimize possible issues
+const idToName:{[key:string]:string} = Object.create(null);
+const localizationJSON:{ // More fields exist, but these are the only ones I care about
+    LocalizationNameVariable:string
+    LocalizedNames:{
+        "EN-US":string
+    } | null
+}[] = await (await fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/formatted/items.json")).json();
+for (const localizationInfo of localizationJSON) {
+    if (localizationInfo.LocalizedNames == null) {
+        // Items like @ITEMS_QUESTITEM_TUTORIAL_HERETIC_PLANS have their LocalizedNames property set to null
+        continue;
+    }
+    const itemId = localizationInfo.LocalizationNameVariable;
+    const itemName = localizationInfo.LocalizedNames["EN-US"]
+    idToName[itemId] = itemName;
+    if (Object.hasOwn(nameToId,itemName)) {
+        nameToId[itemName]!.push(itemId);
+    } else {
+        nameToId[itemName] = [itemId];
+    }
+}
+export {processedItemsJSON,nameToId,idToName};

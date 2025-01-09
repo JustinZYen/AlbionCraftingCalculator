@@ -1,8 +1,8 @@
-import { nameToIDPromise } from "./external-data.js";
 import { db } from "./globals/firebaseScripts.js";
 import { DateEnum, Item } from "./classes/item.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { City, reverseCity } from "./globals/constants.js";
+import { nameToId } from "./external-data.js";
 class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
@@ -204,14 +204,13 @@ class ItemData {
 
     /**
      * 
-     * @param {String} itemId 
+     * @param {String} itemName 
      * @returns An array containing item ids of all weapons that share the name in the tree
      */
-    static async getItemIds(itemId: string) {
-        const nameToID = await nameToIDPromise;
+    static async getItemIds(itemName: string) {
         const MIN_TIER = 4;
         const MAX_TIER = 8;
-        let ids: string[] = structuredClone(nameToID[itemId]);
+        let ids: string[] = structuredClone(nameToId[itemName]!);
         ids.forEach((element, _, array) => {
             const secondValue = parseInt(element.charAt(1));
             if (element.charAt(0) === "T" && !Number.isNaN(secondValue)) {

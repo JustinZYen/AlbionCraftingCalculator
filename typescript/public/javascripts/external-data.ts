@@ -19,7 +19,7 @@ const processedItemsJSON:{[key:string]:ItemData} = {};
 const nameToId:{[key:string]:string[]} = Object.create(null); // Null-prototype to minimize possible issues
 const idToName:{[key:string]:string} = Object.create(null);
 const localizationJSON:{ // More fields exist, but these are the only ones I care about
-    LocalizationNameVariable:string
+    UniqueName:string
     LocalizedNames:{
         "EN-US":string
     } | null
@@ -29,7 +29,7 @@ for (const localizationInfo of localizationJSON) {
         // Items like @ITEMS_QUESTITEM_TUTORIAL_HERETIC_PLANS have their LocalizedNames property set to null
         continue;
     }
-    const itemId = localizationInfo.LocalizationNameVariable;
+    const itemId = localizationInfo.UniqueName;
     const itemName = localizationInfo.LocalizedNames["EN-US"]
     idToName[itemId] = itemName;
     if (Object.hasOwn(nameToId,itemName)) {

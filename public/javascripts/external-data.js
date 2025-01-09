@@ -20,7 +20,7 @@ for (const localizationInfo of localizationJSON) {
         // Items like @ITEMS_QUESTITEM_TUTORIAL_HERETIC_PLANS have their LocalizedNames property set to null
         continue;
     }
-    const itemId = localizationInfo.LocalizationNameVariable;
+    const itemId = localizationInfo.UniqueName;
     const itemName = localizationInfo.LocalizedNames["EN-US"];
     idToName[itemId] = itemName;
     if (Object.hasOwn(nameToId, itemName)) {
@@ -30,6 +30,4 @@ for (const localizationInfo of localizationJSON) {
         nameToId[itemName] = [itemId];
     }
 }
-console.log(nameToId);
-console.log(idToName);
 export { processedItemsJSON, nameToId, idToName };

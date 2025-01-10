@@ -1,13 +1,11 @@
-import { db } from "./globals/firebaseScripts.js";
 import { DateEnum, Item } from "./classes/item.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { City, reverseCity } from "./globals/constants.js";
-import { nameToId } from "./external-data.js";
+import { nameToId, patchData } from "./external-data.js";
 class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
     checkedItems = new Set<Item>();
-    items = new Map<string,Item>();
+    items = new Map<string, Item>();
     /**
      * Loads prices for items that have not had their prices loaded yet
      * @param ids 
@@ -19,7 +17,7 @@ class ItemData {
         let itemStack: Item[] = [];
         // Set up stack with all items in ids array
         for (const priceId of ids) {
-            itemStack.push(new Item(priceId,this.items));
+            itemStack.push(new Item(priceId, this.items));
         }
         while (itemStack.length > 0) {
             const currentItem = itemStack.pop()!;
@@ -82,17 +80,17 @@ class ItemData {
         uncheckedItems.clear();
     }
 
-   /**
-    * 
-    * @param priceURL URL needed for api, not including timescale
-    * @param timeSpan OLD or NEW, representing previous patch or current patch, respectively
-    * @returns An array of Promises representing each currently active price fetch
-    */
+    /**
+     * 
+     * @param priceURL URL needed for api, not including timescale
+     * @param timeSpan OLD or NEW, representing previous patch or current patch, respectively
+     * @returns An array of Promises representing each currently active price fetch
+     */
     #getPrices(priceURL: string, timeSpan: DateEnum) {
-        function fixLocation(initialLocation: string):City {
+        function fixLocation(initialLocation: string): City {
             let cityString;
             if (initialLocation == "5003") {
-                cityString =  "Brecilien";
+                cityString = "Brecilien";
             } else {
                 cityString = initialLocation;
             }
@@ -107,26 +105,26 @@ class ItemData {
         const timescales = [1, 6, 24]
         const promises: Promise<void>[] = [];
         type PriceContentsJSON = {
-            location:string,
-            item_id:string,
-            quality:number,
-            data:{
-                item_count:number
-                avg_price:number
-                timestamp:string // Ex. "2024-10-28T00:00:00"
+            location: string,
+            item_id: string,
+            quality: number,
+            data: {
+                item_count: number
+                avg_price: number
+                timestamp: string // Ex. "2024-10-28T00:00:00"
             }[]
         }[];
         for (const timescale of timescales) {
             const priceContents: Promise<void> = fetch(priceURL + timescale).then((response) => {
                 return response.json();
-            }).then((priceContentsJSON:PriceContentsJSON) => {
+            }).then((priceContentsJSON: PriceContentsJSON) => {
                 // Check timescale and update prices if timescale is higher
                 for (const currentItem of priceContentsJSON) {
                     const currentPriceId = currentItem.item_id;
-                    let targetItem:Item;
+                    let targetItem: Item;
                     if (!this.items.has(currentPriceId)) {
                         console.log("priceId " + currentPriceId + " was not added to checkedItems");
-                        targetItem = new Item(currentPriceId,this.items);
+                        targetItem = new Item(currentPriceId, this.items);
                         this.items.set(currentPriceId, targetItem);
                     } else {
                         targetItem = this.items.get(currentPriceId)!;
@@ -168,33 +166,29 @@ class ItemData {
         return promises;
     }
 
-    
+
     async #previousDateString() {
-        const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
-        const patchDates = await patchDateDoc.data();
-        const previousPatchDateDate = new Date(patchDates["Previous Date"]);
+        const previousPatchDateDate = new Date(patchData.previousPatchDate);
         const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
             (previousPatchDateDate.getUTCMonth() + 1) + "-" +
             (previousPatchDateDate.getUTCDate());
-        const patchDateDate = new Date(patchDates["Date"]);
-        const patchDateString = patchDateDate.getUTCFullYear() + "-" +
-            (patchDateDate.getUTCMonth() + 1) + "-" +
-            (patchDateDate.getUTCDate());
+        const currentPatchDate = new Date(patchData.currentPatchDate);
+        const patchDateString = currentPatchDate.getUTCFullYear() + "-" +
+            (currentPatchDate.getUTCMonth() + 1) + "-" +
+            (currentPatchDate.getUTCDate());
         return this.#dateString(previousPatchDateString, patchDateString);
     }
 
     async #currentDateString() {
-        const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
-        const patchDates = await patchDateDoc.data();
-        const previousPatchDateDate = new Date(patchDates["Date"]);
-        const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
-            (previousPatchDateDate.getUTCMonth() + 1) + "-" +
-            (previousPatchDateDate.getUTCDate());
+        const currentPatchDate = new Date(patchData.currentPatchDate);
+        const patchDateString = currentPatchDate.getUTCFullYear() + "-" +
+            (currentPatchDate.getUTCMonth() + 1) + "-" +
+            (currentPatchDate.getUTCDate());
         const currentDateDate = new Date();
         const currentDateString = currentDateDate.getUTCFullYear() + "-" +
             (currentDateDate.getUTCMonth() + 1) + "-" +
             (currentDateDate.getUTCDate());
-        return this.#dateString(previousPatchDateString, currentDateString);
+        return this.#dateString(patchDateString, currentDateString);
 
     }
 

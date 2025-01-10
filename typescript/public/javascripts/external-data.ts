@@ -38,4 +38,9 @@ for (const localizationInfo of localizationJSON) {
         nameToId[itemName] = [itemId];
     }
 }
-export {processedItemsJSON,nameToId,idToName};
+
+const patchData:{
+    currentPatchDate:string,
+    previousPatchDate:string
+} = await (await fetch("data/patch-data")).json();
+export {processedItemsJSON,nameToId,idToName,patchData};

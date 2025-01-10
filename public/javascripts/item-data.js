@@ -1,8 +1,6 @@
-import { db } from "./globals/firebaseScripts.js";
 import { DateEnum, Item } from "./classes/item.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { reverseCity } from "./globals/constants.js";
-import { nameToId } from "./external-data.js";
+import { nameToId, patchData } from "./external-data.js";
 class ItemData {
     // HashMap of all Items so far (for saving prices)
     // Uses priceIds as keys
@@ -159,30 +157,26 @@ class ItemData {
         return promises;
     }
     async #previousDateString() {
-        const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
-        const patchDates = await patchDateDoc.data();
-        const previousPatchDateDate = new Date(patchDates["Previous Date"]);
+        const previousPatchDateDate = new Date(patchData.previousPatchDate);
         const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
             (previousPatchDateDate.getUTCMonth() + 1) + "-" +
             (previousPatchDateDate.getUTCDate());
-        const patchDateDate = new Date(patchDates["Date"]);
-        const patchDateString = patchDateDate.getUTCFullYear() + "-" +
-            (patchDateDate.getUTCMonth() + 1) + "-" +
-            (patchDateDate.getUTCDate());
+        const currentPatchDate = new Date(patchData.currentPatchDate);
+        const patchDateString = currentPatchDate.getUTCFullYear() + "-" +
+            (currentPatchDate.getUTCMonth() + 1) + "-" +
+            (currentPatchDate.getUTCDate());
         return this.#dateString(previousPatchDateString, patchDateString);
     }
     async #currentDateString() {
-        const patchDateDoc = await getDoc(doc(db, "General/Patch Data"));
-        const patchDates = await patchDateDoc.data();
-        const previousPatchDateDate = new Date(patchDates["Date"]);
-        const previousPatchDateString = previousPatchDateDate.getUTCFullYear() + "-" +
-            (previousPatchDateDate.getUTCMonth() + 1) + "-" +
-            (previousPatchDateDate.getUTCDate());
+        const currentPatchDate = new Date(patchData.currentPatchDate);
+        const patchDateString = currentPatchDate.getUTCFullYear() + "-" +
+            (currentPatchDate.getUTCMonth() + 1) + "-" +
+            (currentPatchDate.getUTCDate());
         const currentDateDate = new Date();
         const currentDateString = currentDateDate.getUTCFullYear() + "-" +
             (currentDateDate.getUTCMonth() + 1) + "-" +
             (currentDateDate.getUTCDate());
-        return this.#dateString(previousPatchDateString, currentDateString);
+        return this.#dateString(patchDateString, currentDateString);
     }
     #dateString(startDate, endDate) {
         return "?date=" + startDate + "&end_date=" + endDate;

@@ -5,7 +5,9 @@ import { join, dirname } from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import helmet from "helmet";
-import indexRouter from './routes/index.js';
+import { indexRouter } from './routes/index.js';
+import { MongoClient, ServerApiVersion } from 'mongodb';
+import { dataRouter } from './routes/data.js';
 var app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // view engine setup
@@ -33,8 +35,19 @@ app.use(urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(join(__dirname, 'public')));
 app.use('/', indexRouter);
+app.use("/data", dataRouter);
 // catch 404 and forward to error handler
 app.use(function (_req, _res, next) {
     next(createError(404));
 });
+const uri = `mongodb+srv://justzyen:${process.env.MONGODB_PASS}@cluster0.mlg66.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const client = new MongoClient(uri, {
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
+});
+await client.connect();
+app.locals.db = client.db("AlbionOnline");
 export default app;

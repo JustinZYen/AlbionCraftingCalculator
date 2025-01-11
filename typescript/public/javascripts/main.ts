@@ -33,7 +33,6 @@ $("#recipes-area").on("click", "div", function () {
 });
 
 
-
 // Event listener for changes in the item name input field
 document.getElementById("item-name")!.addEventListener("input", async () => {
     const enteredName = (<HTMLInputElement>document.getElementById("item-name"))?.value;

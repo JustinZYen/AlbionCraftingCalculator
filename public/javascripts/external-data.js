@@ -43,5 +43,21 @@ fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/formatted/i
         itemNameTrie.insert(itemName);
     }
 });
-const patchData = await (await fetch("data/patch-data")).json();
+const dummyCurrentPatch = new Date();
+dummyCurrentPatch.setHours(0, 0, 0, 0);
+dummyCurrentPatch.setDate(dummyCurrentPatch.getDate() - 1);
+const dummyPrevPatch = new Date(dummyCurrentPatch);
+dummyPrevPatch.setDate(dummyPrevPatch.getDate() - 1);
+const patchData = {
+    currentPatchDate: dummyCurrentPatch.toISOString(),
+    previousPatchDate: dummyPrevPatch.toISOString()
+};
+fetch("data/patch-data")
+    .then(response => {
+    return response.json();
+})
+    .then((json) => {
+    patchData.currentPatchDate = json.currentPatchDate;
+    patchData.previousPatchDate = json.previousPatchDate;
+});
 export { processedItemsJSON, nameToId, idToName, patchData, itemNameTrie };

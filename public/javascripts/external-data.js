@@ -59,5 +59,7 @@ fetch("data/patch-data")
     .then((json) => {
     patchData.currentPatchDate = json.currentPatchDate;
     patchData.previousPatchDate = json.previousPatchDate;
+    console.log(`Previous patch date: ${json.previousPatchDate}`);
+    console.log(`Current patch date: ${json.currentPatchDate}`);
 });
 export { processedItemsJSON, nameToId, idToName, patchData, itemNameTrie };

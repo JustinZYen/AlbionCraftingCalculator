@@ -22,8 +22,6 @@ app.use(helmet({
                 "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js",
                 "https://code.jquery.com/ui/1.13.2/jquery-ui.js",
                 "https://cdn.jsdelivr.net/npm/d3@7",
-                "https://www.gstatic.com/firebasejs/10.8.0/",
-                'https://www.googletagmanager.com/gtag/'
             ],
             defaultSrc: helmet.contentSecurityPolicy.dangerouslyDisableDefaultSrc // Didn't want to deal with inputting all the firebase urls as I am planning on removing the firebase component
         }

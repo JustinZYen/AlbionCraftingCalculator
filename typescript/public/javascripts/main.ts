@@ -1,10 +1,10 @@
 "use strict";
 import { ItemData } from "./item-data.js";
 import { displayBoxes, displayPrices } from "./display.js";
-import { itemNameTrie } from "./globals/preload.js";
 import { DateEnum, Item } from "./classes/item.js";
 import { reverseCity } from "./globals/constants.js";
 import { ItemBox } from "./classes/display-boxes.js";
+import { itemNameTrie } from "./external-data.js";
 
 const itemData = new ItemData();
 let itemBoxes: ItemBox[] = [];

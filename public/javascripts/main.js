@@ -1,9 +1,9 @@
 "use strict";
 import { ItemData } from "./item-data.js";
 import { displayBoxes, displayPrices } from "./display.js";
-import { itemNameTrie } from "./globals/preload.js";
 import { DateEnum, Item } from "./classes/item.js";
 import { reverseCity } from "./globals/constants.js";
+import { itemNameTrie } from "./external-data.js";
 const itemData = new ItemData();
 let itemBoxes = [];
 document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);

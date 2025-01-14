@@ -1,7 +1,8 @@
-import { ItemBox, RecipeBox } from "./classes/display-boxes.js";
 import { idToName } from "./external-data.js";
-import { DateEnum, Item } from "./classes/item.js";
+import { DateEnum, Item } from "./classes/Item.js";
 import { City } from "./globals/constants.js";
+import { ItemBox } from "./classes/ItemBox.js";
+import { RecipeBox } from "./classes/RecipeBox.js";
 
 /**
  * Displays item boxes

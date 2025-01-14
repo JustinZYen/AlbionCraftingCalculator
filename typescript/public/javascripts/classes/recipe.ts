@@ -1,4 +1,4 @@
-import { CraftResource, DateEnum, Item } from "./item.js";
+import { CraftResource, DateEnum, Item } from "./Item.js";
 import {baseCityBonus, City, cityBonuses, reverseCityBonuses, reverseStation} from "../globals/constants.js";
 
 abstract class Recipe {

@@ -1,4 +1,4 @@
-import { ItemNameTrie } from "./classes/trie.js";
+import { ItemNameTrie } from "./classes/Trie.js";
 const processedItemsJSON = {};
 fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json")
     .then((response) => {

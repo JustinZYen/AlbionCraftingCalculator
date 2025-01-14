@@ -1,6 +1,6 @@
 import { City } from "../globals/constants.js";
 import { processedItemsJSON } from "../external-data.js";
-import { MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe, OffhandRecipe, MountRecipe, CityBonusRecipe } from "./recipe.js";
+import { MultiRecipe, ButcherRecipe, EnchantmentRecipe, MerchantRecipe, OffhandRecipe, MountRecipe, CityBonusRecipe } from "./Recipe.js";
 var DateEnum;
 (function (DateEnum) {
     DateEnum[DateEnum["OLD"] = 0] = "OLD";

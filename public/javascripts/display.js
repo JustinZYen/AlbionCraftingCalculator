@@ -1,5 +1,6 @@
-import { ItemBox, RecipeBox } from "./classes/display-boxes.js";
 import { idToName } from "./external-data.js";
+import { ItemBox } from "./classes/ItemBox.js";
+import { RecipeBox } from "./classes/RecipeBox.js";
 /**
  * Displays item boxes
  * @param items

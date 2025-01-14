@@ -1,6 +1,6 @@
 import { City } from "../globals/constants.js";
 import { processedItemsJSON} from "../external-data.js";
-import {Recipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe, MerchantRecipe,OffhandRecipe,MountRecipe, CityBonusRecipe} from "./recipe.js";
+import {Recipe,MultiRecipe,ButcherRecipe,EnchantmentRecipe, MerchantRecipe,OffhandRecipe,MountRecipe, CityBonusRecipe} from "./Recipe.js";
 enum DateEnum {
     OLD,
     NEW

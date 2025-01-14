@@ -1,7 +1,7 @@
 "use strict";
 import { ItemData } from "./item-data.js";
 import { displayBoxes, displayPrices } from "./display.js";
-import { DateEnum, Item } from "./classes/item.js";
+import { DateEnum, Item } from "./classes/Item.js";
 import { reverseCity } from "./globals/constants.js";
 import { itemNameTrie } from "./external-data.js";
 const itemData = new ItemData();

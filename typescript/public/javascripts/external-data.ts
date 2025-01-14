@@ -1,5 +1,5 @@
-import { type ItemData } from "./classes/item.js";
-import { ItemNameTrie } from "./classes/trie.js";
+import { type ItemData } from "./classes/Item.js";
+import { ItemNameTrie } from "./classes/Trie.js";
 
 const processedItemsJSON: { [key: string]: ItemData } = {};
 fetch("https://raw.githubusercontent.com/ao-data/ao-bin-dumps/master/items.json")

@@ -1,4 +1,4 @@
-import { Item } from "./item.js";
+import { Item } from "./Item.js";
 import { baseCityBonus, cityBonuses, reverseCityBonuses, reverseStation } from "../globals/constants.js";
 class Recipe {
     // Might be issue with results being strings

@@ -1,4 +1,4 @@
-import { DateEnum, Item } from "./classes/item.js";
+import { DateEnum, Item } from "./classes/Item.js";
 import { reverseCity } from "./globals/constants.js";
 import { nameToId, patchData } from "./external-data.js";
 class ItemData {

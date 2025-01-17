@@ -13,13 +13,20 @@ class RecipeBox {
      *
      * @param {Item} craftedItem
      */
-    constructor(craftedItem) {
+    constructor(craftedItem, container) {
         if (craftedItem != null) {
             this.craftedItems.push(craftedItem);
         }
         this.currentBox = document.createElement("div");
+        this.currentBox.classList.add("recipe-box");
+        container.appendChild(this.currentBox);
         this.setHeight(ItemBox.BOX_HEIGHT + 4.8);
+        this.setWidth(0);
         this.index = -1;
+    }
+    insertItem(itemBox) {
+        itemBox.addToRecipeBox(this.currentBox);
+        this.setWidth(this.width + ItemBox.BOX_WIDTH);
     }
     setX(x) {
         this.x = x;

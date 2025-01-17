@@ -59,16 +59,14 @@ function createAndLinkBoxes(baseItem, displayBox, boxLines) {
     // Stack of ItemBoxes whose recipes still need processing
     const itemBoxStack = [];
     // Create the head box
-    const headBox = new RecipeBox(null);
+    const headBox = new RecipeBox(null, displayBox);
     headBox.index = 0;
     const itemBox = new ItemBox(headBox, baseItem, 0, 1);
     itemBoxes.push(itemBox);
-    headBox.setWidth(ItemBox.BOX_WIDTH + 4.8); //4.8 to account for border width
-    itemBox.currentBox.style.backgroundColor = "gold";
-    headBox.currentBox.appendChild(itemBox.currentBox);
+    itemBox.makeMainItem();
+    headBox.insertItem(itemBox);
     nodes.push({ "box": headBox, x: 0, y: 0 });
     itemBoxStack.push(itemBox);
-    displayBox.appendChild(headBox.currentBox);
     // Iterate through all recipes, adding to nodes and links
     while (itemBoxStack.length > 0) {
         const activeItemBox = itemBoxStack.pop();
@@ -95,9 +93,7 @@ function createAndLinkBoxes(baseItem, displayBox, boxLines) {
                 const resourceCount = recipe.resources.length;
                 // Create recipe box for item
                 //console.log("recipe: "+recipe.resources[0]);
-                const recipeBox = new RecipeBox(activeItemBox);
-                displayBox.appendChild(recipeBox.currentBox);
-                recipeBox.setWidth(resourceCount * ItemBox.BOX_WIDTH + 4.8); // 4.8 to account for border width
+                const recipeBox = new RecipeBox(activeItemBox, displayBox);
                 recipeBox.index = nodes.length;
                 // add recipe box to nodes
                 nodes.push({ "box": recipeBox, x: 0, y: 0 });
@@ -116,7 +112,7 @@ function createAndLinkBoxes(baseItem, displayBox, boxLines) {
                     const newItemCount = recipe.resources[i].count;
                     const currentItemBox = new ItemBox(recipeBox, newItem, offset, newItemCount);
                     itemBoxes.push(currentItemBox);
-                    recipeBox.currentBox.appendChild(currentItemBox.currentBox);
+                    recipeBox.insertItem(currentItemBox);
                     itemBoxStack.push(currentItemBox);
                 }
             }

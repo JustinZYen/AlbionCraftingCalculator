@@ -5,7 +5,7 @@ import { RecipeBox } from "./RecipeBox.js";
 
 class ItemBox {
     boundingRecipe:RecipeBox; // The box that contains this item (RecipeBox)
-    currentBox:HTMLDivElement; // The box corresponding to this item
+    private currentBox:HTMLDivElement; // The box corresponding to this item
     item; // Item object
     craftingRecipes = [];
     offset;
@@ -27,6 +27,14 @@ class ItemBox {
         this.count = count;
         // Create box sections
         this.intializeItemBox(offset,count);        
+    }
+
+    /**
+     * Add this item box to a recipe box. This method should only be called by the RecipeBox object that will be containing this Itembox.
+     * @param container 
+     */
+    addToRecipeBox(container:HTMLElement) {
+        container.appendChild(this.currentBox);
     }
 
     private intializeItemBox(offset:number,count:number) {
@@ -96,6 +104,10 @@ class ItemBox {
     setCraftingCost(newCost:number) {
         this.craftingCost = newCost;
         this.craftingCostSpan.innerText = newCost.toString();
+    }
+
+    makeMainItem() {
+        this.currentBox.style.backgroundColor = "gold";
     }
 
     toString() {

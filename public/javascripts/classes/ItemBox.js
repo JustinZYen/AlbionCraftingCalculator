@@ -22,6 +22,13 @@ class ItemBox {
         // Create box sections
         this.intializeItemBox(offset, count);
     }
+    /**
+     * Add this item box to a recipe box. This method should only be called by the RecipeBox object that will be containing this Itembox.
+     * @param container
+     */
+    addToRecipeBox(container) {
+        container.appendChild(this.currentBox);
+    }
     intializeItemBox(offset, count) {
         this.currentBox = document.createElement("div");
         this.currentBox.classList.add("item-box");
@@ -86,6 +93,9 @@ class ItemBox {
     setCraftingCost(newCost) {
         this.craftingCost = newCost;
         this.craftingCostSpan.innerText = newCost.toString();
+    }
+    makeMainItem() {
+        this.currentBox.style.backgroundColor = "gold";
     }
     toString() {
         return "Item box for " + this.item;

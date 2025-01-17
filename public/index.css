@@ -146,12 +146,14 @@ h1 {
 
 
 /* The individual recipe boxes */
-#recipes-area div figure div {
+#recipes-area div figure .recipe-box {
     position: absolute;
     border: solid;
     background-color: green;
     padding: 0;
     border-radius: 0px;
+    display:flex;
+    flex-direction: row;
 }
 
 .item-box {

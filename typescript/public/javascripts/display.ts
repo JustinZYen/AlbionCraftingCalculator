@@ -130,7 +130,7 @@ function createAndLinkBoxes(baseItem:Item,displayBox:HTMLElement,boxLines:SVGSVG
                 activeItemBox.links.set(recipeBox, links[links.length - 1]);
                 sourceIndexes.push(recipeBox.index);
                 for (let i = 0; i < resourceCount; i++) {
-                    const offset = ItemBox.BOX_WIDTH * i;
+                    const offset = ItemBox.BOX_WIDTH_PX * i;
                     const newItem = recipe.resources[i]!.item;
                     const newItemCount = recipe.resources[i]!.count;
                     const currentItemBox = new ItemBox(recipeBox, newItem, offset, newItemCount);
@@ -167,16 +167,18 @@ function createAndLinkBoxes(baseItem:Item,displayBox:HTMLElement,boxLines:SVGSVG
         let maxX = 0;
         let maxY = 0;
         for (const node of nodes) {
-            minX = Math.min(minX, node.x - node.box.width / 2);
-            minY = Math.min(minY, node.y - node.box.height / 2);
-            maxX = Math.max(maxX, node.x + node.box.width / 2);
-            maxY = Math.max(maxY, node.y + node.box.height / 2);
+            const recipeWidth = node.box.getWidth();
+            const recipeHeight = node.box.getHeight();
+            minX = Math.min(minX, node.x - recipeWidth / 2);
+            minY = Math.min(minY, node.y - recipeHeight / 2);
+            maxX = Math.max(maxX, node.x + recipeWidth / 2);
+            maxY = Math.max(maxY, node.y + recipeHeight / 2);
         }
         boxLines.setAttribute("height", (maxY - minY).toString());
         boxLines.setAttribute("width", (maxX - minX).toString());
         for (const node of nodes) {
-            node.box.setX(node.x - minX - node.box.width / 2);
-            node.box.setY(node.y - minY - node.box.height / 2);
+            node.box.setX(node.x - minX - node.box.getWidth() / 2);
+            node.box.setY(node.y - minY - node.box.getHeight() / 2);
         }
         for (const link of links) {
             if (link.line != undefined && typeof link.source == "object" && typeof link.target == "object") { // d3 automatically messes with object types
@@ -186,11 +188,11 @@ function createAndLinkBoxes(baseItem:Item,displayBox:HTMLElement,boxLines:SVGSVG
                 line.setAttribute("y1", (link.source.y - minY).toString());
 
                 // Destination of line position (the item being crafted)
-                line.setAttribute("x2", (link.target.x - minX - link.target.box.width / 2 + link.itemBox.offset + ItemBox.BOX_WIDTH / 2).toString());
+                line.setAttribute("x2", (link.target.x - minX - link.target.box.getWidth() / 2 + link.itemBox.offset + ItemBox.BOX_WIDTH_PX / 2).toString());
                 if (link.target.y > link.source.y) {
-                    line.setAttribute("y2", (link.target.y - minY - link.target.box.height / 2).toString());
+                    line.setAttribute("y2", (link.target.y - minY - link.target.box.getHeight() / 2).toString());
                 } else {
-                    line.setAttribute("y2", (link.target.y - minY + link.target.box.height / 2).toString());
+                    line.setAttribute("y2", (link.target.y - minY + link.target.box.getHeight() / 2).toString());
                 }
             }
 

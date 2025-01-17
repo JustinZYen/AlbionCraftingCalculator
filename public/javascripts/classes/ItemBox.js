@@ -11,8 +11,8 @@ class ItemBox {
     overrideInput;
     links = new Map();
     count;
-    static BOX_WIDTH = 200;
-    static BOX_HEIGHT = 100;
+    static BOX_WIDTH_PX = 200;
+    static BOX_HEIGHT_PX = 100;
     constructor(boundingRecipe, item, offset, count) {
         this.boundingRecipe = boundingRecipe;
         this.boundingRecipe.boundedItems.push(this);
@@ -33,8 +33,8 @@ class ItemBox {
         this.currentBox = document.createElement("div");
         this.currentBox.classList.add("item-box");
         this.currentBox.style.left = offset + "px";
-        this.currentBox.style.width = ItemBox.BOX_WIDTH + "px";
-        this.currentBox.style.height = ItemBox.BOX_HEIGHT + "px";
+        this.currentBox.style.width = ItemBox.BOX_WIDTH_PX + "px";
+        this.currentBox.style.height = ItemBox.BOX_HEIGHT_PX + "px";
         const descriptor = document.createElement("p");
         descriptor.innerText = `${idToName[this.item.priceId]} (${this.item.tier}.${this.item.enchantment}) (x${count})`;
         this.currentBox.appendChild(descriptor);

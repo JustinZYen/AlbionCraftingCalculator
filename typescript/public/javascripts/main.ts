@@ -37,7 +37,7 @@ $("#recipes-area").on("click", "div", function () {
 document.getElementById("item-name")!.addEventListener("input", async () => {
     const enteredName = (<HTMLInputElement>document.getElementById("item-name"))?.value;
     document.getElementById("item-name-autocomplete")!.innerHTML = "";
-    const matchingWords = itemNameTrie.wordsThatMatch(enteredName);
+    const matchingWords = itemNameTrie.getMatchingWords(enteredName);
     for (const word of matchingWords) {
         const wordElement = document.createElement("li");
         wordElement.innerText = word;

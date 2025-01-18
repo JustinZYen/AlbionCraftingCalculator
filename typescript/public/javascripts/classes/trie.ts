@@ -21,26 +21,26 @@ class ItemNameTrie {
         current.words.add(fullName);
     }
 
-    wordsThatMatch(fullInput:string) {
+    getMatchingWords(fullInput:string) {
         let matchingWords = new Set<string>();
         const inputWords = fullInput.split(" ");
         let index = 0;
         for (;index < inputWords.length; index++) {
             if (inputWords[index]!.length > 0) {
-                matchingWords = this.#wordsThatMatchWord(inputWords[index]!);
+                matchingWords = this.getWordsMatchingWord(inputWords[index]!);
                 index++;
                 break;
             }
         }
         for (;index < inputWords.length; index++) {
             if (inputWords[index]!.length > 0) {
-                matchingWords = matchingWords.intersection(this.#wordsThatMatchWord(inputWords[index]!));
+                matchingWords = matchingWords.intersection(this.getWordsMatchingWord(inputWords[index]!));
             }
         }
         return matchingWords;
     }
 
-    #wordsThatMatchWord(nameWord:string) {
+    private getWordsMatchingWord(nameWord:string) {
         let current = this.root;
         for (const character of nameWord) {
             const c = character.toLowerCase();

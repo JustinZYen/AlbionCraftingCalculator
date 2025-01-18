@@ -18,25 +18,25 @@ class ItemNameTrie {
         }
         current.words.add(fullName);
     }
-    wordsThatMatch(fullInput) {
+    getMatchingWords(fullInput) {
         let matchingWords = new Set();
         const inputWords = fullInput.split(" ");
         let index = 0;
         for (; index < inputWords.length; index++) {
             if (inputWords[index].length > 0) {
-                matchingWords = this.#wordsThatMatchWord(inputWords[index]);
+                matchingWords = this.getWordsMatchingWord(inputWords[index]);
                 index++;
                 break;
             }
         }
         for (; index < inputWords.length; index++) {
             if (inputWords[index].length > 0) {
-                matchingWords = matchingWords.intersection(this.#wordsThatMatchWord(inputWords[index]));
+                matchingWords = matchingWords.intersection(this.getWordsMatchingWord(inputWords[index]));
             }
         }
         return matchingWords;
     }
-    #wordsThatMatchWord(nameWord) {
+    getWordsMatchingWord(nameWord) {
         let current = this.root;
         for (const character of nameWord) {
             const c = character.toLowerCase();

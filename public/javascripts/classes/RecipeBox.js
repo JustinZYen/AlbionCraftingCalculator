@@ -21,7 +21,6 @@ class RecipeBox {
         const boxStyles = getComputedStyle(this.currentBox);
         this.setHeight(ItemBox.BOX_HEIGHT_PX + this.parsePX(boxStyles.borderTopWidth) + this.parsePX(boxStyles.borderBottomWidth));
         this.setWidth(this.parsePX(boxStyles.borderLeftWidth) + this.parsePX(boxStyles.borderRightWidth));
-        console.log(`height: ${this.height}, width: ${this.width}`);
         this.index = -1;
     }
     insertItem(itemBox) {

@@ -28,9 +28,11 @@ document.getElementById("recipes-area").addEventListener("click", (e) => {
         const recipeDisplay = currentTarget.closest(".item-section").querySelector(".recipe-display");
         if (recipeDisplay.classList.contains("show")) { // Check if recipe display is currently enabled
             recipeDisplay.classList.remove("show");
+            recipeDisplay.querySelector("figure").classList.remove("show"); // Make figure inside recipedisplay disappear as well
         }
         else {
             recipeDisplay.classList.add("show");
+            recipeDisplay.querySelector("figure").classList.add("show");
         }
     }
 });

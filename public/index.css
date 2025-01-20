@@ -146,6 +146,12 @@ h1 {
     border: solid;
     overflow: auto;
     min-height: 400px;
+    display:none;
+}
+
+/*Figure containing all the recipe boxes*/
+#recipes-area div figure.show {
+    display:block;
 }
 
 /*Svg to display connection lines*/

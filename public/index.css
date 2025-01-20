@@ -66,7 +66,7 @@ h1 {
 }
 
 #sidebar-buttons button {
-    word-spacing: 999999rem;
+    word-spacing: 999999rem; /* Force line break for every word */
 }
 
 #main {
@@ -132,16 +132,16 @@ h1 {
     height:0px;
     overflow:hidden;
     padding:0;
-    transition: height 1s;
+    transition: height 1s, padding 1s;
 }
 
 #recipes-area div .recipe-display.show {
     height:500px;
     padding: 20px;
-    transition: height 1s;
+    transition: height 1s, padding 1s;
 }
 
-/*Figure containing all the recipe boxes*/
+/*Figure containing all the recipe boxes - display:none because javascript handles displaying it*/
 #recipes-area div figure {
     position: relative;
     border: solid;
@@ -151,10 +151,6 @@ h1 {
     display:none;
 }
 
-/*Figure containing all the recipe boxes*/
-#recipes-area div figure.show {
-    display:block;
-}
 
 /*Svg to display connection lines*/
 #recipes-area div figure svg {

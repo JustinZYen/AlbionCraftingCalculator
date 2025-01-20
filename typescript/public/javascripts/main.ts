@@ -28,17 +28,18 @@ $("#recipes-area").on("click", "div", function () {
 });
 */
 
-document.getElementById("recipes-area")!.addEventListener("click",(e)=>{
+document.getElementById("recipes-area")!.addEventListener("click", (e) => {
     const currentTarget = (<Element>e.target);
-    if (currentTarget.matches(".item-section, .item-section *")) {
+    if (currentTarget.matches(".item-section, .item-section *") &&
+        !currentTarget.matches(".recipe-display figure, .recipe-display figure *")) {
         const recipeDisplay = currentTarget.closest(".item-section")!.querySelector(".recipe-display")!;
         if (recipeDisplay.classList.contains("show")) { // Check if recipe display is currently enabled
             recipeDisplay.classList.remove("show");
-            setTimeout(()=>{
+            setTimeout(() => {
                 if (!recipeDisplay.classList.contains("show")) {
                     recipeDisplay.querySelector("figure")!.style.removeProperty("display");
                 }
-            },1000);
+            }, 1000);
         } else {
             recipeDisplay.classList.add("show");
             recipeDisplay.querySelector("figure")!.style.display = "block";
@@ -81,17 +82,17 @@ document.getElementById("sidebar-buttons")!.addEventListener("click", (e) => {
     }
 })
 
-document.querySelector(".sidebar.crafting-fees")!.addEventListener("change",function(){
+document.querySelector(".sidebar.crafting-fees")!.addEventListener("change", function () {
     Item.invalidatePrices();
     makePricesUpdate();
 })
 
-document.querySelector(".sidebar.crafting-bonuses")!.addEventListener("change",function(){
+document.querySelector(".sidebar.crafting-bonuses")!.addEventListener("change", function () {
     Item.invalidatePrices();
     makePricesUpdate();
 })
 
-document.getElementById("recipes-area")!.addEventListener("change",function(){
+document.getElementById("recipes-area")!.addEventListener("change", function () {
     Item.invalidatePrices();
     makePricesUpdate();
 })

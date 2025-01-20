@@ -112,37 +112,37 @@ h1 {
 }
 
 
-#recipes-area>div {
+#recipes-area .item-section {
     border: solid;
     margin: 0.5%;
     border-radius: 10px;
 }
 
 /**/
-#recipes-area div div {
+#recipes-area .item-section .description-bar {
     padding: 10px;
     border-radius: 10px;
 }
 
-#recipes-area div div:hover {
+#recipes-area .item-section .description-bar:hover {
     background-color: yellow;
 }
 
-#recipes-area div .recipe-display {
+#recipes-area .item-section .recipe-display {
     height:0px;
     overflow:hidden;
     padding:0;
     transition: height 1s, padding 1s;
 }
 
-#recipes-area div .recipe-display.show {
+#recipes-area .item-section .recipe-display.show {
     height:500px;
     padding: 20px;
     transition: height 1s, padding 1s;
 }
 
 /*Figure containing all the recipe boxes - display:none because javascript handles displaying it*/
-#recipes-area div figure {
+#recipes-area .item-section figure {
     position: relative;
     border: solid;
     overflow: auto;
@@ -153,14 +153,14 @@ h1 {
 
 
 /*Svg to display connection lines*/
-#recipes-area div figure svg {
+#recipes-area .item-section figure svg {
     position: absolute;
     border: none;
 }
 
 
 /* The individual recipe boxes */
-#recipes-area div figure .recipe-box {
+#recipes-area .item-section figure .recipe-box {
     position: absolute;
     border: solid;
     background-color: green;

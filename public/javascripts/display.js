@@ -23,10 +23,13 @@ function displayBoxes(items, ids) {
         currentBox.classList.add("item-section");
         document.getElementById("recipes-area").appendChild(currentBox);
         // Item description bar (shows up before slide toggling)
+        const descriptionBar = document.createElement("div");
+        descriptionBar.classList.add("description-bar");
         const itemDescriptor = document.createElement("div");
         itemDescriptor.innerText = idToName[currentPriceId];
         itemDescriptor.innerText += ` (${currentItem.tier}.${currentItem.enchantment})`;
-        currentBox.appendChild(itemDescriptor);
+        descriptionBar.appendChild(itemDescriptor);
+        currentBox.appendChild(descriptionBar);
         // Display area for items
         const recipeDisplay = document.createElement("div");
         recipeDisplay.classList.add("recipe-display");

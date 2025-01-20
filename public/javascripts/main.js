@@ -24,7 +24,8 @@ $("#recipes-area").on("click", "div", function () {
 */
 document.getElementById("recipes-area").addEventListener("click", (e) => {
     const currentTarget = e.target;
-    if (currentTarget.matches(".item-section, .item-section *")) {
+    if (currentTarget.matches(".item-section, .item-section *") &&
+        !currentTarget.matches(".recipe-display figure, .recipe-display figure *")) {
         const recipeDisplay = currentTarget.closest(".item-section").querySelector(".recipe-display");
         if (recipeDisplay.classList.contains("show")) { // Check if recipe display is currently enabled
             recipeDisplay.classList.remove("show");

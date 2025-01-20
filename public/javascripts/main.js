@@ -27,16 +27,19 @@ document.getElementById("recipes-area").addEventListener("click", (e) => {
     if (currentTarget.matches(".item-section, .item-section *") &&
         !currentTarget.matches(".recipe-display figure, .recipe-display figure *")) {
         const recipeDisplay = currentTarget.closest(".item-section").querySelector(".recipe-display");
+        const toggleIcon = currentTarget.closest(".item-section").querySelector(".toggle-icon");
         if (recipeDisplay.classList.contains("show")) { // Check if recipe display is currently enabled
             recipeDisplay.classList.remove("show");
+            toggleIcon.innerHTML = "▲";
             setTimeout(() => {
-                if (!recipeDisplay.classList.contains("show")) {
+                if (!recipeDisplay.classList.contains("show")) { // Prevent issues with fast double clicking
                     recipeDisplay.querySelector("figure").style.removeProperty("display");
                 }
             }, 1000);
         }
         else {
             recipeDisplay.classList.add("show");
+            toggleIcon.innerHTML = "▼";
             recipeDisplay.querySelector("figure").style.display = "block";
         }
     }

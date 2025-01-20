@@ -29,6 +29,10 @@ function displayBoxes(items, ids) {
         itemDescriptor.innerText = idToName[currentPriceId];
         itemDescriptor.innerText += ` (${currentItem.tier}.${currentItem.enchantment})`;
         descriptionBar.appendChild(itemDescriptor);
+        const toggleIcon = document.createElement("div");
+        toggleIcon.classList.add("toggle-icon");
+        toggleIcon.innerText = "▲";
+        descriptionBar.appendChild(toggleIcon);
         currentBox.appendChild(descriptionBar);
         // Display area for items
         const recipeDisplay = document.createElement("div");

@@ -122,6 +122,8 @@ h1 {
 #recipes-area .item-section .description-bar {
     padding: 10px;
     border-radius: 10px;
+    display:flex;
+    justify-content: space-between;
 }
 
 #recipes-area .item-section .description-bar:hover {

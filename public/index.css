@@ -137,6 +137,7 @@ h1 {
 
 #recipes-area div .recipe-display.show {
     height:500px;
+    padding: 20px;
     transition: height 1s;
 }
 
@@ -145,7 +146,8 @@ h1 {
     position: relative;
     border: solid;
     overflow: auto;
-    min-height: 400px;
+    height: 100%;
+    margin: 0;
     display:none;
 }
 

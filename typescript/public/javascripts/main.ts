@@ -14,6 +14,7 @@ document.getElementById("city-selector")!.addEventListener("change", loadPricePr
 
 document.getElementById("date-selector")!.addEventListener("change", loadPriceProcedure);
 
+/*
 // Using jQuery because standard event listener may have issues due to element not existing when code is run    
 $("#recipes-area").on("click", "div figure", function (event) {
     console.log("click");
@@ -25,7 +26,19 @@ $("#recipes-area").on("click", "div", function () {
     $(this).find("figure").slideToggle("slow");
     $(this).find("svg").slideToggle("slow");
 });
+*/
 
+document.getElementById("recipes-area")!.addEventListener("click",(e)=>{
+    const currentTarget = (<Element>e.target);
+    if (currentTarget.matches(".item-section, .item-section *")) {
+        const recipeDisplay = currentTarget.closest(".item-section")!.querySelector(".recipe-display")!;
+        if (recipeDisplay.classList.contains("show")) { // Check if recipe display is currently enabled
+            recipeDisplay.classList.remove("show");
+        } else {
+            recipeDisplay.classList.add("show");
+        }
+    }
+})
 
 // Event listener for changes in the item name input field
 document.getElementById("item-name")!.addEventListener("input", async () => {

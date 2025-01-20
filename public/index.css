@@ -128,10 +128,21 @@ h1 {
     background-color: yellow;
 }
 
+#recipes-area div .recipe-display {
+    height:0px;
+    overflow:hidden;
+    padding:0;
+    transition: height 1s;
+}
+
+#recipes-area div .recipe-display.show {
+    height:500px;
+    transition: height 1s;
+}
+
 /*Figure containing all the recipe boxes*/
 #recipes-area div figure {
     position: relative;
-    display: none;
     border: solid;
     overflow: auto;
     min-height: 400px;
@@ -140,7 +151,6 @@ h1 {
 /*Svg to display connection lines*/
 #recipes-area div figure svg {
     position: absolute;
-    display: none;
     border: none;
 }
 

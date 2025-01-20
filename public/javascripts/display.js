@@ -20,6 +20,7 @@ function displayBoxes(items, ids) {
         // Set up div to contain the current recipe box
         const currentBox = document.createElement('div'); // creates the element
         currentBox.id = currentPriceId;
+        currentBox.classList.add("item-section");
         document.getElementById("recipes-area").appendChild(currentBox);
         // Item description bar (shows up before slide toggling)
         const itemDescriptor = document.createElement("div");
@@ -27,13 +28,16 @@ function displayBoxes(items, ids) {
         itemDescriptor.innerText += ` (${currentItem.tier}.${currentItem.enchantment})`;
         currentBox.appendChild(itemDescriptor);
         // Display area for items
+        const recipeDisplay = document.createElement("div");
+        recipeDisplay.classList.add("recipe-display");
         const displayBox = document.createElement("figure");
         // Svg to display associated lines
         const boxLines = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
         boxLines.setAttribute("height", (2000).toString());
         boxLines.setAttribute("width", (4000).toString());
         displayBox.appendChild(boxLines);
-        currentBox.appendChild(displayBox);
+        recipeDisplay.appendChild(displayBox);
+        currentBox.appendChild(recipeDisplay);
         const currentItemBoxes = createAndLinkBoxes(currentItem, displayBox, boxLines);
         itemBoxes.push(...currentItemBoxes);
     }

@@ -6,15 +6,9 @@ import { reverseCity } from "./globals/constants.js";
 import { itemNameTrie } from "./external-data.js";
 const itemData = new ItemData();
 let itemBoxes = [];
-document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
-$("#city-selector").on("change", async () => {
-    await loadPriceProcedure();
-    console.log($("#city-selector").val());
-});
-$("#date-selector").on("change", async () => {
-    await loadPriceProcedure();
-    console.log($("#date-selector").is(":checked"));
-});
+document.getElementById("load-price-button").addEventListener("click", loadPriceProcedure);
+document.getElementById("city-selector").addEventListener("change", loadPriceProcedure);
+document.getElementById("date-selector").addEventListener("change", loadPriceProcedure);
 // Using jQuery because standard event listener may have issues due to element not existing when code is run    
 $("#recipes-area").on("click", "div figure", function (event) {
     console.log("click");
@@ -73,7 +67,7 @@ document.getElementById("recipes-area").addEventListener("change", function () {
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     try {
-        const input = ($("#item-name").val());
+        const input = document.getElementById("item-name").value;
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
         itemBoxes = displayBoxes(itemData.items, itemIds);

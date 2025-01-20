@@ -8,17 +8,11 @@ import { ItemBox } from "./classes/ItemBox.js";
 
 const itemData = new ItemData();
 let itemBoxes: ItemBox[] = [];
-document.getElementById("load-price-button")?.addEventListener("click", loadPriceProcedure);
+document.getElementById("load-price-button")!.addEventListener("click", loadPriceProcedure);
 
-$("#city-selector").on("change", async () => {
-    await loadPriceProcedure();
-    console.log($("#city-selector").val());
-});
+document.getElementById("city-selector")!.addEventListener("change", loadPriceProcedure);
 
-$("#date-selector").on("change", async () => {
-    await loadPriceProcedure();
-    console.log($("#date-selector").is(":checked"));
-});
+document.getElementById("date-selector")!.addEventListener("change", loadPriceProcedure);
 
 // Using jQuery because standard event listener may have issues due to element not existing when code is run    
 $("#recipes-area").on("click", "div figure", function (event) {
@@ -86,7 +80,7 @@ document.getElementById("recipes-area")!.addEventListener("change",function(){
 async function loadPriceProcedure() {
     const loadingInterval = displayLoadIcon();
     try {
-        const input: string = ($("#item-name").val()) as string;
+        const input = (<HTMLInputElement>document.getElementById("item-name")).value;
         const itemIds = await ItemData.getItemIds(input);
         await itemData.getProfits(itemIds);
 

@@ -1,5 +1,5 @@
 # Albion Online Crafting Calculator (STILL IN PROGRESS)
-A crafting calculator for the video game Albion Online, available at https://albioncraftingcalculator.azurewebsites.net/
+A crafting calculator for the video game Albion Online, available at https://albion-project-9585a.firebaseapp.com/ and https://albioncraftingcalculator.azurewebsites.net/ (currently my plan has been stopped)
 ## Description
 To use, enter your target item name and select the associated menu options.
 ### Code Overview
